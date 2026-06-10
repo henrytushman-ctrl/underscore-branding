@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — Built in Common</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23EDE8DE'/%3E%3Crect x='8' y='46' width='48' height='10' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+SC:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --yellow:#F5C518;
+    --ink:#1A1816;
+    --stone:#EDE8DE;
+    --stone-mid:#DCD5C5;
+    --stone-deep:#C9C2B4;
+    --stone-block-1:#E5DFD2;
+    --stone-block-2:#DCD5C5;
+    --stone-block-3:#D3CBBB;
+    --stone-block-4:#C9C2B4;
+    --ink-60:rgba(26,24,22,.64);
+    --ink-30:rgba(26,24,22,.26);
+    --s1:8px; --s2:16px; --s3:24px; --s4:40px; --s5:64px; --s6:96px; --s7:144px;
+    --maxw:1140px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+  }
+  ::selection{background:var(--yellow);color:var(--ink)}
+  body{
+    font-family:'Source Serif 4',serif;
+    background:var(--stone);
+    color:var(--ink);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .display{font-family:'Cormorant SC',serif}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 var(--s4)}
+  .engraved{
+    color:#4A453C;
+    text-shadow:0 1px 0 rgba(255,255,255,.75), 0 -1px 1px rgba(26,24,22,.3);
+  }
+
+  /* ---------- NAV ---------- */
+  nav{
+    position:sticky;top:0;z-index:50;
+    background:rgba(237,232,222,.93);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--ink-30);
+  }
+  .nav-inner{
+    max-width:var(--maxw);margin:0 auto;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:var(--s2) var(--s4);
+  }
+  .logo{
+    display:flex;align-items:baseline;gap:10px;text-decoration:none;color:var(--ink);
+    font-family:'Cormorant SC',serif;font-weight:700;font-size:1.3rem;letter-spacing:.08em;
+  }
+  .nav-links{display:flex;align-items:center;gap:var(--s4);list-style:none}
+  .nav-links a{
+    color:var(--ink);text-decoration:none;font-size:.95rem;
+    font-family:'Cormorant SC',serif;font-weight:600;letter-spacing:.1em;font-size:1.02rem;
+    border-bottom:2px solid transparent;padding-bottom:2px;transition:border-color .2s;
+  }
+  .nav-links a:hover{border-bottom-color:var(--yellow)}
+  .btn{
+    display:inline-block;text-decoration:none;
+    font-family:'Cormorant SC',serif;font-weight:700;letter-spacing:.12em;font-size:1.05rem;
+    color:var(--ink);background:var(--stone-mid);
+    padding:13px 30px;
+    border:1px solid rgba(26,24,22,.35);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.6), inset 0 -2px 3px rgba(26,24,22,.12), 0 1px 2px rgba(26,24,22,.15);
+    transition:background .2s,box-shadow .2s;
+  }
+  .btn:hover{
+    background:var(--yellow);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.5), inset 0 -2px 3px rgba(26,24,22,.18), 0 1px 2px rgba(26,24,22,.2);
+  }
+
+  /* ---------- HERO ---------- */
+  .hero{padding:var(--s7) 0 var(--s6);text-align:center}
+  .hero .est{
+    font-size:.95rem;letter-spacing:.34em;text-transform:uppercase;
+    color:var(--ink-60);margin-bottom:var(--s4);
+    font-family:'Cormorant SC',serif;font-weight:600;
+  }
+  .hero h1{
+    font-family:'Cormorant SC',serif;font-weight:600;
+    font-size:clamp(3rem,9vw,7rem);
+    letter-spacing:.14em;line-height:1.04;
+  }
+  .hero .lede{
+    margin:var(--s4) auto 0;max-width:52ch;font-size:1.2rem;color:var(--ink-60);
+  }
+  .lintel{margin:var(--s6) auto 0;max-width:880px;padding:0 var(--s4)}
+  .lintel svg{display:block;width:100%;height:auto}
+
+  /* ---------- CHARTER ---------- */
+  .charter{padding:var(--s6) 0;background:var(--stone-mid)}
+  .sec-title{
+    font-family:'Cormorant SC',serif;font-weight:600;
+    font-size:clamp(1.9rem,4.5vw,2.9rem);letter-spacing:.12em;text-align:center;
+  }
+  .sec-sub{text-align:center;color:var(--ink-60);max-width:56ch;margin:var(--s2) auto 0;font-size:1.08rem}
+  .articles{
+    max-width:760px;margin:var(--s5) auto 0;
+  }
+  .article{
+    border-top:1px solid rgba(26,24,22,.3);
+    padding:var(--s4) 0;
+    display:grid;grid-template-columns:200px 1fr;gap:var(--s4);align-items:baseline;
+  }
+  .article:last-child{border-bottom:1px solid rgba(26,24,22,.3)}
+  .article .num{
+    font-family:'Cormorant SC',serif;font-weight:700;letter-spacing:.18em;font-size:1.15rem;
+  }
+  .article p{font-size:1.12rem}
+  .article p em{font-style:italic}
+
+  /* ---------- THE WALL / CORE ---------- */
+  .wall-section{padding:var(--s6) 0 var(--s5)}
+  .wall-kicker{
+    text-align:center;font-family:'Cormorant SC',serif;font-weight:600;
+    letter-spacing:.3em;font-size:.95rem;color:var(--ink-60);margin-bottom:var(--s2);
+  }
+  .inscription{
+    text-align:center;
+    font-family:'Cormorant SC',serif;font-weight:600;
+    font-size:clamp(1.8rem,4.5vw,3rem);letter-spacing:.16em;
+  }
+  .wall-sub{text-align:center;color:var(--ink-60);max-width:56ch;margin:var(--s2) auto 0;font-size:1.08rem}
+  .wall{
+    margin-top:var(--s5);
+    columns:4;column-gap:6px;
+  }
+  .block{
+    break-inside:avoid;margin-bottom:6px;
+    padding:var(--s3);
+    border:1px solid rgba(26,24,22,.18);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.55), inset 0 -2px 3px rgba(26,24,22,.08);
+    transition:transform .2s ease;
+  }
+  .block:hover{transform:translateY(-2px)}
+  @media (prefers-reduced-motion: reduce){ .block:hover{transform:none} }
+  .block .b-name{
+    font-family:'Cormorant SC',serif;font-weight:700;letter-spacing:.1em;
+    font-size:1.12rem;display:block;
+  }
+  .block .b-city{
+    font-family:'Cormorant SC',serif;font-weight:500;letter-spacing:.18em;
+    font-size:.86rem;color:var(--ink-60);display:block;margin-top:2px;
+  }
+  .g1{background:var(--stone-block-1)} .g2{background:var(--stone-block-2)}
+  .g3{background:var(--stone-block-3)} .g4{background:var(--stone-block-4)}
+  .block.tall{padding-top:var(--s4);padding-bottom:var(--s4)}
+  .block.open{
+    background:var(--yellow);
+    text-align:center;
+    font-weight:700;font-size:1.6rem;line-height:1;
+    padding-top:var(--s4);padding-bottom:var(--s4);
+  }
+  .block.open .b-mark{
+    display:inline-block;width:44px;height:8px;background:var(--ink);
+    vertical-align:baseline;
+  }
+  .wall-note{
+    text-align:center;margin-top:var(--s3);font-size:.95rem;color:var(--ink-60);font-style:italic;
+  }
+  .carved-stats{
+    margin-top:var(--s5);
+    display:grid;grid-template-columns:repeat(4,1fr);gap:var(--s4);
+    border-top:2px solid rgba(26,24,22,.3);border-bottom:2px solid rgba(26,24,22,.3);
+    padding:var(--s4) 0;
+  }
+  .cstat{text-align:center}
+  .cstat .num{
+    font-family:'Cormorant SC',serif;font-weight:600;
+    font-size:clamp(2rem,4.5vw,3.2rem);letter-spacing:.06em;
+  }
+  .cstat .lbl{
+    font-family:'Cormorant SC',serif;font-weight:600;letter-spacing:.24em;
+    font-size:.85rem;color:var(--ink-60);margin-top:4px;
+  }
+
+  /* ---------- PLAQUE ---------- */
+  .plaque-section{padding:var(--s5) 0 var(--s6)}
+  .plaque{
+    max-width:720px;margin:0 auto;
+    background:var(--stone-mid);
+    border:1px solid rgba(26,24,22,.3);
+    box-shadow:inset 0 2px 0 rgba(255,255,255,.6), inset 0 -3px 5px rgba(26,24,22,.1), 0 2px 6px rgba(26,24,22,.12);
+    padding:var(--s5) var(--s5) var(--s4);
+    text-align:center;
+  }
+  .plaque .inlay{width:120px;height:6px;background:var(--yellow);margin:0 auto var(--s4)}
+  .plaque blockquote{
+    font-size:1.45rem;font-style:italic;line-height:1.5;
+  }
+  .plaque cite{
+    display:block;font-style:normal;margin-top:var(--s4);
+    font-family:'Cormorant SC',serif;font-weight:600;letter-spacing:.2em;font-size:.95rem;
+    color:var(--ink-60);
+  }
+
+  /* ---------- CTA ---------- */
+  .cta{background:var(--ink);color:var(--stone);padding:var(--s7) 0;text-align:center}
+  .cta .sec-title{color:var(--stone)}
+  .cta p{color:rgba(237,232,222,.68);max-width:46ch;margin:var(--s3) auto 0;font-size:1.15rem}
+  .cta .underline-mark{width:160px;height:8px;background:var(--yellow);margin:var(--s4) auto 0}
+  .cta .btn{
+    margin-top:var(--s5);font-size:1.15rem;padding:16px 44px;
+    background:var(--yellow);border-color:rgba(0,0,0,.4);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.45), inset 0 -2px 3px rgba(26,24,22,.25), 0 2px 4px rgba(0,0,0,.4);
+  }
+  .cta .btn:hover{background:var(--stone)}
+  .cta .fine{margin-top:var(--s3);font-size:.85rem;color:rgba(237,232,222,.5)}
+
+  /* ---------- FOOTER ---------- */
+  footer{background:var(--ink);color:var(--stone);border-top:1px solid rgba(237,232,222,.18);padding:var(--s5) 0}
+  .foot-inner{
+    max-width:var(--maxw);margin:0 auto;padding:0 var(--s4);
+    display:flex;justify-content:space-between;align-items:flex-start;gap:var(--s4);flex-wrap:wrap;
+  }
+  footer .logo{color:var(--stone)}
+  .foot-links{display:flex;gap:var(--s4);list-style:none;flex-wrap:wrap}
+  .foot-links a{
+    color:rgba(237,232,222,.66);text-decoration:none;
+    font-family:'Cormorant SC',serif;font-weight:600;letter-spacing:.14em;font-size:.98rem;
+    border-bottom:2px solid transparent;transition:color .2s,border-color .2s;
+  }
+  .foot-links a:hover{color:var(--stone);border-bottom-color:var(--yellow)}
+  .foot-meta{
+    max-width:var(--maxw);margin:var(--s4) auto 0;padding:0 var(--s4);
+    font-size:.85rem;color:rgba(237,232,222,.45);font-style:italic;
+  }
+
+  /* ---------- MOBILE ---------- */
+  @media (max-width:768px){
+    .wrap,.nav-inner,.foot-inner,.foot-meta{padding-left:var(--s3);padding-right:var(--s3)}
+    .nav-links li.hide-m{display:none}
+    .nav-links{gap:var(--s2)}
+    .hero{padding-top:var(--s6)}
+    .article{grid-template-columns:1fr;gap:var(--s1)}
+    .wall{columns:2}
+    .carved-stats{grid-template-columns:1fr 1fr;gap:var(--s3)}
+    .plaque{padding:var(--s4) var(--s3)}
+  }
+  @media (max-width:480px){
+    .wall{columns:1}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="logo" href="#top" aria-label="Underscore home">
+      <svg width="34" height="12" viewBox="0 0 34 12" aria-hidden="true"><rect x="0" y="6" width="34" height="6" fill="#F5C518"/></svg>
+      <span>Underscore</span>
+    </a>
+    <ul class="nav-links">
+      <li class="hide-m"><a href="#charter">Charter</a></li>
+      <li><a href="#core">Core</a></li>
+      <li class="hide-m"><a href="#plaque">Voices</a></li>
+      <li><a class="btn" href="#join">Join the Core</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <p class="est">Founded MMXXI · Held in common since</p>
+    <h1 class="display engraved">Built in Common</h1>
+    <p class="lede">Underscore is a community that treats generosity as infrastructure. Time given freely is the foundation everything else rests on.</p>
+  </div>
+  <div class="lintel" aria-label="A stone lintel resting on two columns — the underscore as foundation">
+    <svg viewBox="0 0 800 260" role="img">
+      <defs>
+        <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#D8D1C2"/>
+          <stop offset=".5" stop-color="#C9C2B4"/>
+          <stop offset="1" stop-color="#B6AE9E"/>
+        </linearGradient>
+        <linearGradient id="col" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#D8D1C2"/>
+          <stop offset=".5" stop-color="#CFC8B9"/>
+          <stop offset="1" stop-color="#B9B1A1"/>
+        </linearGradient>
+      </defs>
+      <!-- lintel beam : the underscore -->
+      <rect x="40" y="40" width="720" height="64" fill="url(#beam)" stroke="#8F877A" stroke-width="1.5"/>
+      <rect x="40" y="40" width="720" height="6" fill="rgba(255,255,255,.5)"/>
+      <!-- chisel lines -->
+      <line x1="70" y1="58" x2="730" y2="58" stroke="#A89F8F" stroke-width="1"/>
+      <line x1="70" y1="72" x2="730" y2="72" stroke="#A89F8F" stroke-width="1"/>
+      <line x1="70" y1="86" x2="730" y2="86" stroke="#A89F8F" stroke-width="1"/>
+      <!-- yellow keystone band on the beam -->
+      <rect x="352" y="40" width="96" height="64" fill="#F5C518" stroke="#8F877A" stroke-width="1.5"/>
+      <rect x="376" y="86" width="48" height="8" fill="#1A1816"/>
+      <!-- columns -->
+      <rect x="150" y="104" width="20" height="10" fill="#B6AE9E" stroke="#8F877A" stroke-width="1"/>
+      <rect x="140" y="114" width="40" height="8" fill="#C9C2B4" stroke="#8F877A" stroke-width="1"/>
+      <rect x="146" y="122" width="28" height="108" fill="url(#col)" stroke="#8F877A" stroke-width="1.5"/>
+      <rect x="138" y="230" width="44" height="12" fill="#C9C2B4" stroke="#8F877A" stroke-width="1"/>
+      <rect x="630" y="104" width="20" height="10" fill="#B6AE9E" stroke="#8F877A" stroke-width="1"/>
+      <rect x="620" y="114" width="40" height="8" fill="#C9C2B4" stroke="#8F877A" stroke-width="1"/>
+      <rect x="626" y="122" width="28" height="108" fill="url(#col)" stroke="#8F877A" stroke-width="1.5"/>
+      <rect x="618" y="230" width="44" height="12" fill="#C9C2B4" stroke="#8F877A" stroke-width="1"/>
+      <!-- ground line -->
+      <line x1="80" y1="244" x2="720" y2="244" stroke="#A89F8F" stroke-width="2"/>
+    </svg>
+  </div>
+</header>
+
+<section class="charter" id="charter">
+  <div class="wrap">
+    <h2 class="sec-title engraved display">The Charter</h2>
+    <p class="sec-sub">Five articles. Written in 2021 by eight people; unamended since, because nothing has needed amending.</p>
+    <div class="articles">
+      <div class="article">
+        <span class="num display">Article I</span>
+        <p>Time is the only dues. No member pays money to belong; every member gives hours.</p>
+      </div>
+      <div class="article">
+        <span class="num display">Article II</span>
+        <p>Give first. Help is offered before terms are discussed, and terms are rarely discussed.</p>
+      </div>
+      <div class="article">
+        <span class="num display">Article III</span>
+        <p>Asking is a contribution. A clear request gives someone else the chance to be useful.</p>
+      </div>
+      <div class="article">
+        <span class="num display">Article IV</span>
+        <p>What is built here is held in common. Knowledge shared inside the Core belongs to the Core.</p>
+      </div>
+      <div class="article">
+        <span class="num display">Article V</span>
+        <p>The door stays open. Anyone willing to live by these articles may add their name.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="wall-section" id="core">
+  <div class="wrap">
+    <p class="wall-kicker">The Core · Member Wall</p>
+    <h2 class="inscription engraved display">These 1,200 Hold the Line</h2>
+    <p class="wall-sub">The Core is Underscore's member community — builders, operators, and experts who give their time to each other. The Core gives first and asks later. A few of the names:</p>
+
+    <div class="wall" role="list">
+      <div class="block g1 tall" role="listitem"><span class="b-name">Maya Chen</span><span class="b-city">Oakland</span></div>
+      <div class="block g3" role="listitem"><span class="b-name">Sam Osei</span><span class="b-city">Boston</span></div>
+      <div class="block g2" role="listitem"><span class="b-name">Ana Reyes</span><span class="b-city">Mexico City</span></div>
+      <div class="block g4 tall" role="listitem"><span class="b-name">David Park</span><span class="b-city">Seoul</span></div>
+      <div class="block g2 tall" role="listitem"><span class="b-name">Leila Haddad</span><span class="b-city">Beirut</span></div>
+      <div class="block g1" role="listitem"><span class="b-name">Jonas Weber</span><span class="b-city">Berlin</span></div>
+      <div class="block g4" role="listitem"><span class="b-name">Priya Nair</span><span class="b-city">Bangalore</span></div>
+      <div class="block g3 tall" role="listitem"><span class="b-name">Tom Aiello</span><span class="b-city">Detroit</span></div>
+      <div class="block g3" role="listitem"><span class="b-name">Grace Mwangi</span><span class="b-city">Nairobi</span></div>
+      <div class="block g1 tall" role="listitem"><span class="b-name">Kenji Sato</span><span class="b-city">Tokyo</span></div>
+      <div class="block open" role="listitem" aria-label="An open block, waiting for the next name"><span class="b-mark"></span></div>
+      <div class="block g2" role="listitem"><span class="b-name">Claire Dubois</span><span class="b-city">Paris</span></div>
+      <div class="block g4 tall" role="listitem"><span class="b-name">Lucas Ferreira</span><span class="b-city">São Paulo</span></div>
+      <div class="block g2" role="listitem"><span class="b-name">Emma Lindqvist</span><span class="b-city">Stockholm</span></div>
+      <div class="block g1" role="listitem"><span class="b-name">Omar Farouk</span><span class="b-city">Cairo</span></div>
+      <div class="block g3 tall" role="listitem"><span class="b-name">Hana Novak</span><span class="b-city">Prague</span></div>
+    </div>
+    <p class="wall-note">One block is always left open. It is the next member's.</p>
+
+    <div class="carved-stats">
+      <div class="cstat"><div class="num engraved display">1,200+</div><div class="lbl display">Members</div></div>
+      <div class="cstat"><div class="num engraved display">40</div><div class="lbl display">Cities</div></div>
+      <div class="cstat"><div class="num engraved display">9,000</div><div class="lbl display">Hours Given</div></div>
+      <div class="cstat"><div class="num engraved display">MMXXI</div><div class="lbl display">Founded</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="plaque-section" id="plaque">
+  <div class="wrap">
+    <figure class="plaque">
+      <div class="inlay" aria-hidden="true"></div>
+      <blockquote>"I asked for one hour. I was given eleven. I have spent every year since paying that forward, and I am still in surplus."</blockquote>
+      <cite>Ana Reyes · Designer · Mexico City · Member since 2022</cite>
+    </figure>
+  </div>
+</section>
+
+<section class="cta" id="join">
+  <div class="wrap">
+    <h2 class="sec-title display">Add Your Name to the Wall</h2>
+    <p>Membership asks one thing of you: hours, given honestly, to people you may not have met yet. If that sounds like enough, it is.</p>
+    <div class="underline-mark" aria-hidden="true"></div>
+    <a class="btn display" href="#">Join the Core</a>
+    <p class="fine">Every application is read by a member of the Core. Most receive a reply within two weeks.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="foot-inner">
+    <a class="logo" href="#top">
+      <svg width="34" height="12" viewBox="0 0 34 12" aria-hidden="true"><rect x="0" y="6" width="34" height="6" fill="#F5C518"/></svg>
+      <span>Underscore</span>
+    </a>
+    <ul class="foot-links">
+      <li><a href="#charter">Charter</a></li>
+      <li><a href="#core">Core</a></li>
+      <li><a href="#plaque">Voices</a></li>
+      <li><a href="#join">Join</a></li>
+      <li><a href="#">Contact</a></li>
+    </ul>
+  </div>
+  <p class="foot-meta">Underscore — founded 2021, held in common. The Core gives first and asks later.</p>
+</footer>
+
+</body>
+</html>
