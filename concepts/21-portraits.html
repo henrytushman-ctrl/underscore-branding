@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — The Portraits</title>
+<meta name="description" content="The product is the people. Portraits from the Core, Underscore's member community.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%231A1816'/%3E%3Crect x='12' y='42' width='40' height='9' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700;8..60,900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --yellow:#F5C518;
+    --ink:#1A1816;
+    --cream:#FAF6EE;
+    --paper:#F3EDDF;
+    --rule:rgba(26,24,22,.22);
+    --rule-soft:rgba(26,24,22,.12);
+    --s1:8px; --s2:16px; --s3:24px; --s4:40px; --s5:64px; --s6:96px; --s7:144px;
+    --pad:clamp(20px, 5vw, 72px);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  ::selection{background:var(--yellow);color:var(--ink);}
+  body{
+    font-family:'Inter',system-ui,sans-serif;
+    background:var(--cream);color:var(--ink);
+    line-height:1.6;-webkit-font-smoothing:antialiased;
+  }
+  .serif{font-family:'Source Serif 4',Georgia,serif;}
+  .wrap{max-width:1200px;margin:0 auto;padding-left:var(--pad);padding-right:var(--pad);}
+  a{color:inherit;}
+
+  /* ---------- NAV ---------- */
+  .nav{
+    position:sticky;top:0;z-index:50;background:var(--cream);
+    border-bottom:1px solid var(--rule);
+  }
+  .nav-inner{
+    max-width:1200px;margin:0 auto;padding:16px var(--pad);
+    display:flex;align-items:center;gap:var(--s4);
+  }
+  .logo{
+    display:flex;align-items:baseline;gap:9px;text-decoration:none;
+    font-weight:600;font-size:16px;letter-spacing:.08em;text-transform:uppercase;
+  }
+  .logo .mark{display:inline-block;width:28px;height:7px;background:var(--yellow);transform:translateY(-2px);}
+  .nav-links{display:flex;gap:var(--s4);margin-left:auto;align-items:center;}
+  .nav-links a{
+    text-decoration:none;font-size:13px;font-weight:500;letter-spacing:.1em;
+    text-transform:uppercase;border-bottom:2px solid transparent;padding:4px 0;
+    transition:border-color .15s ease;
+  }
+  .nav-links a:hover{border-bottom-color:var(--yellow);}
+  .btn{
+    display:inline-block;text-decoration:none;font-weight:600;font-size:13px;
+    letter-spacing:.1em;text-transform:uppercase;padding:13px 28px;
+    background:var(--ink);color:var(--cream);border:1px solid var(--ink);
+    transition:background .15s ease,color .15s ease;
+  }
+  .btn:hover{background:var(--yellow);color:var(--ink);}
+  .btn.ghost{background:transparent;color:var(--ink);}
+  .btn.ghost:hover{background:var(--ink);color:var(--cream);}
+  .nav .btn{padding:9px 18px;}
+
+  /* ---------- SHARED PORTRAIT / LABEL ---------- */
+  figure.portrait{margin:0;}
+  .frame{
+    border:1px solid var(--ink);padding:10px;background:var(--cream);
+    position:relative;display:block;
+  }
+  .frame svg{display:block;width:100%;height:auto;}
+  .gives{
+    position:absolute;left:10px;right:10px;bottom:10px;
+    background:var(--ink);color:var(--cream);
+    font-size:13.5px;line-height:1.5;padding:14px 16px;
+    opacity:0;transform:translateY(8px);
+    transition:opacity .22s ease,transform .22s ease;
+    pointer-events:none;
+  }
+  .gives strong{color:var(--yellow);font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:11px;display:block;margin-bottom:3px;}
+  figure.portrait:hover .gives,
+  figure.portrait:focus-within .gives,
+  figure.portrait:focus .gives{opacity:1;transform:none;}
+  figcaption.label{
+    border-top:none;padding:14px 2px 0;
+  }
+  .label .name{font-family:'Source Serif 4',Georgia,serif;font-weight:700;font-size:19px;line-height:1.2;}
+  .label .meta{font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(26,24,22,.65);margin-top:5px;}
+  .label .since{font-size:12.5px;color:rgba(26,24,22,.55);margin-top:2px;}
+
+  /* ---------- HERO ---------- */
+  .hero{padding:var(--s6) 0 var(--s7);}
+  .hero-grid{display:grid;grid-template-columns:5fr 6fr;gap:clamp(32px,5vw,80px);align-items:center;}
+  .kicker{
+    font-size:12px;letter-spacing:.26em;text-transform:uppercase;
+    color:rgba(26,24,22,.65);margin-bottom:var(--s3);
+    display:flex;align-items:center;gap:12px;font-weight:500;
+  }
+  .kicker::before{content:"";width:34px;height:6px;background:var(--yellow);display:block;}
+  .hero h1{
+    font-family:'Source Serif 4',Georgia,serif;font-weight:900;
+    font-size:clamp(44px,6.5vw,92px);line-height:1.0;letter-spacing:-.015em;
+  }
+  .hero h1 .ul{box-shadow:inset 0 -.13em 0 var(--yellow);}
+  .hero .lede{
+    margin-top:var(--s3);font-size:clamp(17px,1.7vw,20px);
+    color:rgba(26,24,22,.8);max-width:48ch;
+  }
+  .hero .actions{margin-top:var(--s4);display:flex;gap:var(--s2);flex-wrap:wrap;}
+
+  /* ---------- WALL ---------- */
+  .wall{padding:var(--s6) 0 var(--s7);border-top:1px solid var(--rule);}
+  .sec-head{display:flex;justify-content:space-between;align-items:baseline;gap:var(--s3);flex-wrap:wrap;margin-bottom:var(--s2);}
+  .sec-head h2{font-family:'Source Serif 4',Georgia,serif;font-weight:900;font-size:clamp(32px,4.5vw,58px);letter-spacing:-.015em;line-height:1.05;}
+  .sec-head .idx{font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:rgba(26,24,22,.6);font-weight:500;}
+  .stat-line{
+    font-size:13px;letter-spacing:.14em;text-transform:uppercase;
+    color:rgba(26,24,22,.65);font-weight:500;
+    border-bottom:1px solid var(--rule);padding-bottom:var(--s3);margin-bottom:var(--s5);
+  }
+  .stat-line b{color:var(--ink);font-weight:600;}
+  .grid6{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(24px,3.5vw,48px);}
+  .wall-note{
+    margin-top:var(--s5);font-size:14px;color:rgba(26,24,22,.6);
+    border-top:1px solid var(--rule-soft);padding-top:var(--s3);
+    display:flex;justify-content:space-between;gap:var(--s3);flex-wrap:wrap;
+  }
+
+  /* ---------- PULL QUOTE ---------- */
+  .pull{background:var(--ink);color:var(--cream);padding:var(--s7) 0;}
+  .pull blockquote{margin:0;}
+  .pull p{
+    font-family:'Source Serif 4',Georgia,serif;font-weight:700;
+    font-size:clamp(30px,5vw,64px);line-height:1.12;letter-spacing:-.015em;
+    max-width:22ch;
+  }
+  .pull footer{margin-top:var(--s5);display:inline-block;}
+  .pull footer .who{
+    font-size:14px;letter-spacing:.16em;text-transform:uppercase;
+    color:rgba(250,246,238,.8);font-weight:500;
+  }
+  .pull footer .who b{color:var(--yellow);font-weight:600;}
+  .pull footer .ul-rule{display:block;height:8px;background:var(--yellow);margin-top:12px;width:100%;}
+
+  /* ---------- JOIN / EMPTY FRAME ---------- */
+  .join{padding:var(--s7) 0;}
+  .join-grid{display:grid;grid-template-columns:5fr 6fr;gap:clamp(32px,5vw,80px);align-items:center;}
+  .join h2{
+    font-family:'Source Serif 4',Georgia,serif;font-weight:900;
+    font-size:clamp(38px,5.5vw,76px);line-height:1.02;letter-spacing:-.015em;
+  }
+  .join p{margin-top:var(--s3);font-size:17px;color:rgba(26,24,22,.8);max-width:44ch;}
+  .join .actions{margin-top:var(--s4);display:flex;gap:var(--s2);flex-wrap:wrap;}
+  .join .fine{margin-top:var(--s3);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:rgba(26,24,22,.55);}
+  .empty-frame .frame{transition:border-color .2s ease;}
+  .empty-frame:hover .frame{border-color:rgba(26,24,22,.55);}
+
+  /* ---------- FOOTER ---------- */
+  footer.site{background:var(--ink);color:var(--cream);padding:var(--s5) 0;}
+  .foot{display:flex;justify-content:space-between;align-items:center;gap:var(--s3);flex-wrap:wrap;}
+  .foot .logo{color:var(--cream);}
+  .foot-links{display:flex;gap:var(--s3);flex-wrap:wrap;}
+  .foot-links a{
+    text-decoration:none;font-size:12.5px;font-weight:500;letter-spacing:.1em;
+    text-transform:uppercase;border-bottom:2px solid transparent;
+    transition:border-color .15s ease;
+  }
+  .foot-links a:hover{border-bottom-color:var(--yellow);}
+  .foot-fine{
+    width:100%;margin-top:var(--s4);padding-top:var(--s3);
+    border-top:1px solid rgba(250,246,238,.2);
+    font-size:12px;letter-spacing:.12em;text-transform:uppercase;
+    color:rgba(250,246,238,.55);
+    display:flex;justify-content:space-between;gap:var(--s2);flex-wrap:wrap;
+  }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width:980px){
+    .grid6{grid-template-columns:repeat(2,1fr);}
+  }
+  @media (max-width:768px){
+    .nav-links a:not(.btn){display:none;}
+    .hero{padding:var(--s5) 0 var(--s6);}
+    .hero-grid,.join-grid{grid-template-columns:1fr;}
+    .join-grid .empty-frame{max-width:340px;}
+    .grid6{grid-template-columns:1fr;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *,*::before,*::after{transition:none !important;animation:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<header class="nav">
+  <div class="nav-inner">
+    <a class="logo" href="#top" aria-label="Underscore home">
+      <span class="mark" aria-hidden="true"></span>
+      <span>Underscore</span>
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="#wall">Portraits</a>
+      <a href="#wall">Core</a>
+      <a href="#words">Words</a>
+      <a class="btn" href="#join">Join the Core</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="wrap">
+    <div class="hero-grid">
+      <figure class="portrait" tabindex="0">
+        <span class="frame">
+          <!-- Portrait No. 1 — Maya Chen -->
+          <svg viewBox="0 0 300 380" role="img" aria-label="Abstract duotone portrait of Maya Chen">
+            <rect width="300" height="380" fill="#F3EDDF"/>
+            <path d="M40 212 Q150 158 260 212" fill="none" stroke="#F5C518" stroke-width="12"/>
+            <circle cx="150" cy="138" r="70" fill="#1A1816"/>
+            <path d="M28 380 Q150 236 272 380 Z" fill="#1A1816"/>
+            <circle cx="150" cy="138" r="70" fill="none" stroke="#F3EDDF" stroke-width="2"/>
+            <rect x="24" y="344" width="78" height="8" fill="#F5C518"/>
+          </svg>
+          <span class="gives" aria-hidden="true"><strong>What she gives</strong>First reads on anything, and her Sunday mornings.</span>
+        </span>
+        <figcaption class="label">
+          <div class="name">Maya Chen</div>
+          <div class="meta">Founder · Oakland</div>
+          <div class="since">In the Core since 2021 · Portrait No. 1</div>
+        </figcaption>
+      </figure>
+
+      <div>
+        <p class="kicker">Underscore — The Portraits</p>
+        <h1 class="serif">The product is <span class="ul">the people.</span></h1>
+        <p class="lede">Underscore doesn't begin with a platform or a fund. It begins with the Core — 1,200 builders, operators, and experts in 40 cities who give their time to each other. These are some of their portraits.</p>
+        <div class="actions">
+          <a class="btn" href="#join">Join the Core</a>
+          <a class="btn ghost" href="#wall">View the portraits</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PORTRAIT WALL / THE CORE ============ -->
+<section class="wall" id="wall">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 class="serif">From the Core</h2>
+      <span class="idx">Gallery 02 — Members</span>
+    </div>
+    <p class="stat-line"><b>1,200+ members</b> · <b>40 cities</b> · <b>9,000 hours given</b> · founded <b>2021</b> — the Core gives first and asks later.</p>
+
+    <div class="grid6">
+      <figure class="portrait" tabindex="0">
+        <span class="frame">
+          <!-- Portrait No. 2 — Sam Osei -->
+          <svg viewBox="0 0 300 380" role="img" aria-label="Abstract duotone portrait of Sam Osei">
+            <rect width="300" height="380" fill="#1A1816"/>
+            <path d="M82 168 A68 68 0 0 1 218 168 Z" fill="#F3EDDF"/>
+            <rect x="48" y="238" width="204" height="142" fill="#F5C518"/>
+            <line x1="92" y1="238" x2="92" y2="380" stroke="#1A1816" stroke-width="3"/>
+            <line x1="150" y1="238" x2="150" y2="380" stroke="#1A1816" stroke-width="3"/>
+            <line x1="208" y1="238" x2="208" y2="380" stroke="#1A1816" stroke-width="3"/>
+            <rect x="82" y="190" width="136" height="10" fill="#F5C518"/>
+          </svg>
+          <span class="gives" aria-hidden="true"><strong>What he gives</strong>Code review at midnight, without being asked.</span>
+        </span>
+        <figcaption class="label">
+          <div class="name">Sam Osei</div>
+          <div class="meta">Engineer · Boston</div>
+          <div class="since">In the Core since 2021 · Portrait No. 2</div>
+        </figcaption>
+      </figure>
+
+      <figure class="portrait" tabindex="0">
+        <span class="frame">
+          <!-- Portrait No. 3 — Ana Reyes -->
+          <svg viewBox="0 0 300 380" role="img" aria-label="Abstract duotone portrait of Ana Reyes">
+            <rect width="300" height="380" fill="#F3EDDF"/>
+            <path d="M150 60 A104 104 0 0 1 254 164 L150 164 Z" fill="#F5C518"/>
+            <circle cx="150" cy="164" r="104" fill="none" stroke="#1A1816" stroke-width="3"/>
+            <circle cx="150" cy="164" r="72" fill="none" stroke="#1A1816" stroke-width="3"/>
+            <circle cx="150" cy="164" r="40" fill="#1A1816"/>
+            <path d="M36 380 Q150 282 264 380 Z" fill="#1A1816"/>
+            <rect x="24" y="344" width="78" height="8" fill="#F5C518"/>
+          </svg>
+          <span class="gives" aria-hidden="true"><strong>What she gives</strong>The hard feedback, delivered kindly.</span>
+        </span>
+        <figcaption class="label">
+          <div class="name">Ana Reyes</div>
+          <div class="meta">Designer · Mexico City</div>
+          <div class="since">In the Core since 2022 · Portrait No. 3</div>
+        </figcaption>
+      </figure>
+
+      <figure class="portrait" tabindex="0">
+        <span class="frame">
+          <!-- Portrait No. 4 — David Park -->
+          <svg viewBox="0 0 300 380" role="img" aria-label="Abstract duotone portrait of David Park">
+            <rect width="300" height="380" fill="#1A1816"/>
+            <circle cx="172" cy="136" r="66" fill="none" stroke="#F3EDDF" stroke-width="3"/>
+            <circle cx="128" cy="152" r="50" fill="#F5C518"/>
+            <rect x="56" y="252" width="188" height="128" fill="#F3EDDF"/>
+            <rect x="56" y="252" width="188" height="14" fill="#F5C518"/>
+            <line x1="56" y1="310" x2="244" y2="310" stroke="#1A1816" stroke-width="3"/>
+          </svg>
+          <span class="gives" aria-hidden="true"><strong>What he gives</strong>Introductions that actually land.</span>
+        </span>
+        <figcaption class="label">
+          <div class="name">David Park</div>
+          <div class="meta">Operator · Seoul</div>
+          <div class="since">In the Core since 2022 · Portrait No. 4</div>
+        </figcaption>
+      </figure>
+
+      <figure class="portrait" tabindex="0">
+        <span class="frame">
+          <!-- Portrait No. 5 — Leila Haddad -->
+          <svg viewBox="0 0 300 380" role="img" aria-label="Abstract duotone portrait of Leila Haddad">
+            <rect width="300" height="380" fill="#F3EDDF"/>
+            <circle cx="150" cy="146" r="74" fill="#1A1816"/>
+            <rect x="60" y="128" width="180" height="18" fill="#F5C518"/>
+            <path d="M58 380 L110 252 L190 252 L242 380 Z" fill="#1A1816"/>
+            <line x1="150" y1="252" x2="150" y2="380" stroke="#F3EDDF" stroke-width="3"/>
+            <rect x="24" y="344" width="78" height="8" fill="#F5C518"/>
+          </svg>
+          <span class="gives" aria-hidden="true"><strong>What she gives</strong>The question nobody thought to ask.</span>
+        </span>
+        <figcaption class="label">
+          <div class="name">Leila Haddad</div>
+          <div class="meta">Researcher · Beirut</div>
+          <div class="since">In the Core since 2023 · Portrait No. 5</div>
+        </figcaption>
+      </figure>
+
+      <figure class="portrait" tabindex="0">
+        <span class="frame">
+          <!-- Portrait No. 6 — Jonas Weber -->
+          <svg viewBox="0 0 300 380" role="img" aria-label="Abstract duotone portrait of Jonas Weber">
+            <rect width="300" height="380" fill="#1A1816"/>
+            <path d="M46 220 A104 104 0 0 1 254 220 Z" fill="#F5C518"/>
+            <circle cx="150" cy="150" r="58" fill="#1A1816" stroke="#F3EDDF" stroke-width="3"/>
+            <rect x="96" y="252" width="108" height="128" fill="#F3EDDF"/>
+            <line x1="96" y1="290" x2="204" y2="290" stroke="#1A1816" stroke-width="3"/>
+            <line x1="96" y1="328" x2="204" y2="328" stroke="#1A1816" stroke-width="3"/>
+          </svg>
+          <span class="gives" aria-hidden="true"><strong>What he gives</strong>His workshop, and the keys to it.</span>
+        </span>
+        <figcaption class="label">
+          <div class="name">Jonas Weber</div>
+          <div class="meta">Builder · Berlin</div>
+          <div class="since">In the Core since 2021 · Portrait No. 6</div>
+        </figcaption>
+      </figure>
+
+      <figure class="portrait" tabindex="0">
+        <span class="frame">
+          <!-- Portrait No. 7 — Priya Nair -->
+          <svg viewBox="0 0 300 380" role="img" aria-label="Abstract duotone portrait of Priya Nair">
+            <rect width="300" height="380" fill="#F3EDDF"/>
+            <path d="M86 176 A64 64 0 0 1 214 176 Z" fill="#1A1816"/>
+            <path d="M214 176 A64 64 0 0 1 86 176 Z" fill="#F5C518" transform="translate(0,22)"/>
+            <path d="M40 380 Q150 264 260 380 Z" fill="#1A1816"/>
+            <circle cx="216" cy="92" r="16" fill="#F5C518"/>
+            <rect x="24" y="344" width="78" height="8" fill="#F5C518"/>
+          </svg>
+          <span class="gives" aria-hidden="true"><strong>What she gives</strong>Roadmaps a spine.</span>
+        </span>
+        <figcaption class="label">
+          <div class="name">Priya Nair</div>
+          <div class="meta">Product · Bangalore</div>
+          <div class="since">In the Core since 2023 · Portrait No. 7</div>
+        </figcaption>
+      </figure>
+    </div>
+
+    <p class="wall-note">
+      <span>Hover or focus a portrait to see what each member gives.</span>
+      <span>1,193 portraits not yet hung.</span>
+    </p>
+  </div>
+</section>
+
+<!-- ============ PULL QUOTE ============ -->
+<section class="pull" id="words">
+  <div class="wrap">
+    <blockquote>
+      <p class="serif">"Nobody here asks what you do. They ask what you're making — and then they help you make it."</p>
+      <footer>
+        <span class="who"><b>Tom Aiello</b> — Manufacturer, Detroit · In the Core since 2022</span>
+        <span class="ul-rule" aria-hidden="true"></span>
+      </footer>
+    </blockquote>
+  </div>
+</section>
+
+<!-- ============ JOIN / EMPTY FRAME ============ -->
+<section class="join" id="join">
+  <div class="wrap">
+    <div class="join-grid">
+      <figure class="portrait empty-frame">
+        <span class="frame">
+          <!-- Portrait No. — , reserved -->
+          <svg viewBox="0 0 300 380" role="img" aria-label="An empty portrait frame holding a single yellow underscore">
+            <rect width="300" height="380" fill="#FAF6EE"/>
+            <rect x="14" y="14" width="272" height="352" fill="none" stroke="#1A1816" stroke-width="1.5" stroke-dasharray="5 6"/>
+            <rect x="96" y="246" width="108" height="16" fill="#F5C518"/>
+          </svg>
+        </span>
+        <figcaption class="label">
+          <div class="name">Reserved for you.</div>
+          <div class="meta">Your role · Your city</div>
+          <div class="since">Portrait No. 1,201</div>
+        </figcaption>
+      </figure>
+
+      <div>
+        <h2 class="serif">Join the Core</h2>
+        <p>Membership is plain: give time before you ask for it, answer when a member calls, and bring your work as it really is. In return, 1,200 people will treat your work as their own.</p>
+        <div class="actions">
+          <a class="btn" href="#join">Begin your application</a>
+          <a class="btn ghost" href="#wall">Meet the members first</a>
+        </div>
+        <p class="fine">Next sitting · July 2026 · Applications read by members</p>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="site">
+  <div class="wrap">
+    <div class="foot">
+      <a class="logo" href="#top" aria-label="Underscore home">
+        <span class="mark" aria-hidden="true"></span>
+        <span>Underscore</span>
+      </a>
+      <nav class="foot-links" aria-label="Footer">
+        <a href="#wall">Portraits</a>
+        <a href="#wall">Core</a>
+        <a href="#words">Words</a>
+        <a href="#join">Join</a>
+      </nav>
+      <div class="foot-fine">
+        <span>© 2026 Underscore · The Portraits, Gallery Edition</span>
+        <span>1,200+ members · 40 cities · since 2021</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

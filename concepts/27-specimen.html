@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — Type Specimen</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23FAF6EE'/%3E%3Crect x='5' y='23' width='22' height='4' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --yellow:#F5C518;
+    --ink:#1A1816;
+    --cream:#FAF6EE;
+    --rule:#DDD5C5;
+    --muted:#6E675C;
+    --s1:8px; --s2:16px; --s3:24px; --s4:40px; --s5:64px; --s6:104px; --s7:152px;
+    --maxw:1140px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--cream);color:var(--ink);
+    font-family:'Inter',sans-serif;font-size:17px;line-height:1.6;
+    font-feature-settings:"ss01";
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--yellow);color:var(--ink);}
+  a{color:inherit;text-decoration:none;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 var(--s4);}
+
+  /* ---------- nav ---------- */
+  nav{
+    position:sticky;top:0;z-index:50;
+    background:rgba(250,246,238,.93);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--ink);
+  }
+  .nav-inner{
+    max-width:var(--maxw);margin:0 auto;padding:15px var(--s4);
+    display:flex;align-items:center;gap:var(--s4);
+  }
+  .logo{display:flex;align-items:baseline;gap:10px;font-weight:700;font-size:18px;letter-spacing:-.01em;}
+  .logo .glyph{display:inline-block;width:28px;height:5px;background:var(--yellow);transform:translateY(-3px);}
+  .logo .mono{font-weight:400;font-size:12px;color:var(--muted);margin-left:4px;}
+  .nav-links{display:flex;gap:var(--s3);margin-left:auto;font-size:15px;font-weight:500;}
+  .nav-links a{border-bottom:2px solid transparent;padding:4px 1px;transition:border-color .18s ease;}
+  .nav-links a:hover{border-bottom-color:var(--yellow);}
+  .btn{
+    display:inline-block;background:var(--ink);color:var(--cream);font-weight:600;
+    font-size:15px;padding:11px 24px;border:1px solid var(--ink);
+    transition:background .18s ease,color .18s ease;
+  }
+  .btn:hover{background:var(--yellow);color:var(--ink);}
+  .btn-nav{padding:8px 18px;}
+
+  /* ---------- specimen header furniture ---------- */
+  .spec-head{
+    border-bottom:1px solid var(--ink);
+    font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:.08em;
+  }
+  .spec-head-inner{
+    max-width:var(--maxw);margin:0 auto;padding:10px var(--s4);
+    display:flex;justify-content:space-between;gap:var(--s2);color:var(--muted);flex-wrap:wrap;
+  }
+  .spec-head b{color:var(--ink);font-weight:500;}
+
+  /* ---------- hero: glyph under examination ---------- */
+  header.hero{padding:var(--s5) 0 var(--s6);}
+  .hero-title-row{display:flex;align-items:baseline;justify-content:space-between;gap:var(--s3);flex-wrap:wrap;margin-bottom:var(--s4);}
+  h1{font-size:clamp(36px,5vw,62px);font-weight:800;letter-spacing:-.03em;line-height:1.05;}
+  .hero-meta{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--muted);text-align:right;line-height:1.8;}
+  .exam{border:1px solid var(--ink);background:#FFFDF7;}
+  .exam svg{width:100%;height:auto;display:block;}
+  .exam-caption{
+    border-top:1px solid var(--ink);padding:12px var(--s3);
+    font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--muted);
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:var(--s1);
+  }
+  .hero-state{margin-top:var(--s4);max-width:58ch;font-size:19px;color:var(--muted);}
+  .hero-state b{color:var(--ink);font-weight:600;}
+
+  /* character set grid */
+  .charset{margin-top:var(--s5);border:1px solid var(--ink);display:grid;grid-template-columns:repeat(4,1fr);}
+  .char-cell{
+    border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);
+    padding:var(--s3);min-height:120px;display:flex;flex-direction:column;justify-content:space-between;
+    transition:background .18s ease;
+  }
+  .char-cell:nth-child(4n){border-right:none;}
+  .char-cell:nth-last-child(-n+4){border-bottom:none;}
+  .char-cell:hover{background:rgba(245,197,24,.1);}
+  .char-cell .sample{font-size:clamp(20px,2.4vw,30px);letter-spacing:-.02em;}
+  .char-cell .tag{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);margin-top:var(--s2);}
+  .w100{font-weight:100;}.w200{font-weight:200;}.w300{font-weight:300;}.w400{font-weight:400;}
+  .w500{font-weight:500;}.w600{font-weight:600;}.w700{font-weight:700;}.w800{font-weight:800;}.w900{font-weight:900;}
+  .charset-label{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--muted);margin:var(--s5) 0 var(--s2);
+  }
+
+  /* ---------- sections ---------- */
+  section{padding:var(--s6) 0;border-top:1px solid var(--ink);}
+  .sec-head{display:flex;align-items:baseline;gap:var(--s3);margin-bottom:var(--s5);flex-wrap:wrap;}
+  .sec-index{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--muted);letter-spacing:.1em;}
+  h2{font-size:clamp(28px,3.6vw,44px);font-weight:700;letter-spacing:-.025em;}
+  .sec-note{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--muted);}
+
+  /* weights */
+  .weight-row{
+    display:grid;grid-template-columns:130px 1fr 220px;gap:var(--s3);align-items:baseline;
+    padding:var(--s4) 0;border-bottom:1px solid var(--rule);
+    transition:background .18s ease;
+  }
+  .weight-row:hover{background:rgba(245,197,24,.07);}
+  .weight-row:first-of-type{border-top:1px solid var(--ink);}
+  .weight-tag{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--muted);}
+  .weight-sample{font-size:clamp(30px,4.6vw,56px);line-height:1.1;letter-spacing:-.025em;}
+  .weight-desc{font-size:15px;color:var(--muted);}
+  .weight-desc b{display:block;color:var(--ink);font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;margin-bottom:4px;}
+
+  /* ---------- core credits ---------- */
+  .hands-line{font-size:clamp(24px,3vw,36px);font-weight:700;letter-spacing:-.02em;max-width:24ch;margin-bottom:var(--s5);}
+  .hands-line .u{box-shadow:inset 0 -11px 0 var(--yellow);}
+  .credits{border-top:1px solid var(--ink);}
+  .credit-row{
+    display:grid;grid-template-columns:220px 1fr 160px;gap:var(--s3);
+    padding:16px 0;border-bottom:1px solid var(--rule);align-items:baseline;
+    transition:background .18s ease;
+  }
+  .credit-row:hover{background:rgba(245,197,24,.08);}
+  .credit-name{font-weight:600;font-size:17px;letter-spacing:-.01em;}
+  .credit-role{font-size:15.5px;color:var(--muted);}
+  .credit-city{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--muted);text-align:right;}
+  .credits-head{
+    display:grid;grid-template-columns:220px 1fr 160px;gap:var(--s3);
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--muted);padding-bottom:10px;
+  }
+  .credits-head span:last-child{text-align:right;}
+  .stats-strip{
+    margin-top:var(--s5);display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--ink);
+  }
+  .stat{padding:var(--s3) var(--s2) 0 0;border-right:1px solid var(--rule);}
+  .stat:last-child{border-right:none;}
+  .stat b{display:block;font-size:clamp(26px,3vw,38px);font-weight:800;letter-spacing:-.02em;}
+  .stat span{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);}
+
+  /* pangram quote */
+  .pangram{
+    margin-top:var(--s5);border:1px solid var(--ink);background:#FFFDF7;padding:var(--s4);
+  }
+  .pangram-label{font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:var(--s2);}
+  .pangram p{font-size:clamp(22px,2.8vw,32px);font-weight:500;line-height:1.35;letter-spacing:-.015em;}
+  .pangram p .u{box-shadow:inset 0 -9px 0 var(--yellow);}
+  .pangram cite{
+    display:block;margin-top:var(--s3);font-style:normal;
+    font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--muted);
+  }
+
+  /* ---------- CTA: add your weight ---------- */
+  .cta{text-align:center;}
+  .cta h2{max-width:18ch;margin:0 auto;}
+  .cta .lede{margin:var(--s3) auto 0;max-width:46ch;color:var(--muted);font-size:18px;}
+  .weight-lab{
+    margin:var(--s5) auto 0;max-width:680px;border:1px solid var(--ink);background:#FFFDF7;
+    padding:var(--s4);text-align:center;
+  }
+  .lab-word{
+    font-size:clamp(48px,8vw,92px);letter-spacing:-.03em;line-height:1;
+    font-weight:400;font-variation-settings:"wght" 400;
+    transition:font-variation-settings .15s linear, font-weight .15s linear;
+    display:block;
+  }
+  .lab-readout{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--muted);margin-top:var(--s3);}
+  .lab-readout b{color:var(--ink);font-weight:500;}
+  input[type=range]{
+    width:100%;margin-top:var(--s3);appearance:none;-webkit-appearance:none;height:4px;
+    background:var(--rule);outline:none;cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;width:22px;height:22px;background:var(--yellow);
+    border:2px solid var(--ink);border-radius:0;cursor:grab;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:18px;height:18px;background:var(--yellow);border:2px solid var(--ink);border-radius:0;cursor:grab;
+  }
+  .cta .btn{margin-top:var(--s4);font-size:16px;padding:14px 34px;}
+
+  /* ---------- footer ---------- */
+  footer{border-top:1px solid var(--ink);padding:var(--s5) 0;}
+  .foot-inner{max-width:var(--maxw);margin:0 auto;padding:0 var(--s4);}
+  .foot-spec{
+    font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--muted);
+    display:flex;justify-content:space-between;gap:var(--s2);flex-wrap:wrap;
+    padding-bottom:var(--s3);border-bottom:1px solid var(--rule);letter-spacing:.06em;
+  }
+  .foot-links{display:flex;gap:var(--s4);margin-top:var(--s3);font-size:14.5px;flex-wrap:wrap;}
+  .foot-links a{border-bottom:1px solid transparent;transition:border-color .18s;}
+  .foot-links a:hover{border-bottom-color:var(--yellow);}
+  .foot-glyph{width:100%;height:8px;background:var(--yellow);margin-top:var(--s4);}
+
+  /* ---------- responsive ---------- */
+  @media (max-width:768px){
+    .wrap{padding:0 var(--s3);}
+    .nav-inner{padding:12px var(--s3);flex-wrap:wrap;gap:var(--s2);}
+    .nav-links{order:3;width:100%;gap:var(--s2);font-size:14px;}
+    .charset{grid-template-columns:repeat(2,1fr);}
+    .char-cell:nth-child(4n){border-right:1px solid var(--rule);}
+    .char-cell:nth-child(2n){border-right:none;}
+    .char-cell:nth-last-child(-n+4){border-bottom:1px solid var(--rule);}
+    .char-cell:nth-last-child(-n+2){border-bottom:none;}
+    .weight-row{grid-template-columns:1fr;gap:var(--s1);}
+    .credit-row,.credits-head{grid-template-columns:1fr 1fr;}
+    .credit-city,.credits-head span:last-child{text-align:left;}
+    .credits-head span:nth-child(3){display:none;}
+    .credit-row .credit-city{grid-column:2;}
+    .stats-strip{grid-template-columns:repeat(2,1fr);}
+    .stat:nth-child(2){border-right:none;}
+    .sec-note{display:none;}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto;}
+    *,*::before,*::after{transition:none !important;animation:none !important;}
+  }
+</style>
+</head>
+<body id="top">
+
+<nav>
+  <div class="nav-inner">
+    <a class="logo" href="#top"><span class="glyph"></span>Underscore<span class="mono">v2021.1</span></a>
+    <div class="nav-links">
+      <a href="#weights">Weights</a>
+      <a href="#core">Core</a>
+      <a href="#charset">Character set</a>
+    </div>
+    <a class="btn btn-nav" href="#join">Join the Core</a>
+  </div>
+</nav>
+
+<div class="spec-head">
+  <div class="spec-head-inner">
+    <span><b>UNDERSCORE</b> — Regular, since 2021</span>
+    <span>1 glyph · 9 weights · 40 cities</span>
+    <span>SPECIMEN SHEET No. 27</span>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-title-row">
+      <h1>The glyph, examined.</h1>
+      <div class="hero-meta">
+        FAMILY: UNDERSCORE<br>
+        STYLE: REGULAR · UPRIGHT<br>
+        RELEASED: 2021 · STILL IN PROGRESS
+      </div>
+    </div>
+
+    <!-- the underscore anatomized -->
+    <figure class="exam" aria-label="Technical drawing of the underscore glyph with measurement annotations">
+      <svg viewBox="0 0 1080 460" fill="none" font-family="'IBM Plex Mono',monospace" font-size="13">
+        <!-- measurement grid -->
+        <g stroke="#DDD5C5" stroke-width="1">
+          <line x1="0" y1="80" x2="1080" y2="80"/>
+          <line x1="0" y1="300" x2="1080" y2="300"/>
+          <line x1="200" y1="0" x2="200" y2="460"/>
+          <line x1="880" y1="0" x2="880" y2="460"/>
+        </g>
+        <!-- cap height / x-height ghost letters -->
+        <text x="220" y="292" font-family="Inter,sans-serif" font-size="200" font-weight="300" fill="#EFE8D8" letter-spacing="-8">hold</text>
+
+        <!-- THE GLYPH -->
+        <rect x="200" y="318" width="680" height="26" fill="#1A1816"/>
+
+        <!-- baseline annotation -->
+        <g stroke="#1A1816" stroke-width="1">
+          <line x1="40" y1="300" x2="180" y2="300" stroke="#F5C518" stroke-width="2"/>
+          <line x1="180" y1="300" x2="196" y2="312" stroke="#F5C518" stroke-width="2"/>
+        </g>
+        <text x="40" y="288" fill="#1A1816">baseline</text>
+        <text x="40" y="270" fill="#6E675C" font-size="11.5">everything above rests here</text>
+
+        <!-- weight annotation -->
+        <g stroke="#F5C518" stroke-width="2">
+          <line x1="940" y1="318" x2="940" y2="344"/>
+          <line x1="934" y1="318" x2="946" y2="318"/>
+          <line x1="934" y1="344" x2="946" y2="344"/>
+          <line x1="940" y1="331" x2="1000" y2="331" stroke-dasharray="3 3" stroke-width="1"/>
+        </g>
+        <text x="942" y="376" fill="#1A1816">weight: generous</text>
+
+        <!-- width annotation -->
+        <g stroke="#F5C518" stroke-width="2">
+          <line x1="200" y1="396" x2="880" y2="396" stroke-width="1" stroke-dasharray="4 4"/>
+          <line x1="200" y1="388" x2="200" y2="404"/>
+          <line x1="880" y1="388" x2="880" y2="404"/>
+        </g>
+        <text x="200" y="428" fill="#1A1816">width: as long as it needs to be</text>
+
+        <!-- below-baseline annotation -->
+        <g stroke="#F5C518" stroke-width="2">
+          <line x1="120" y1="300" x2="120" y2="331" stroke-width="1"/>
+          <line x1="114" y1="331" x2="126" y2="331" stroke-width="1"/>
+        </g>
+        <text x="560" y="60" fill="#1A1816" text-anchor="middle">sits below — holds up everything</text>
+        <line x1="560" y1="70" x2="560" y2="310" stroke="#F5C518" stroke-width="1" stroke-dasharray="3 4"/>
+        <circle cx="560" cy="318" r="3.5" fill="#F5C518" stroke="#1A1816" stroke-width="1"/>
+
+        <!-- corner registration marks -->
+        <g stroke="#1A1816" stroke-width="1">
+          <path d="M24 24 h16 M24 24 v16"/><path d="M1056 24 h-16 M1056 24 v16"/>
+          <path d="M24 436 h16 M24 436 v-16"/><path d="M1056 436 h-16 M1056 436 v-16"/>
+        </g>
+      </svg>
+      <figcaption class="exam-caption">
+        <span>FIG. 01 — UNDERSCORE, 2600 UPM, SHOWN AT 100%</span>
+        <span>NOTES: NO TAPER. NO ORNAMENT. FULL BEARING SURFACE.</span>
+      </figcaption>
+    </figure>
+
+    <p class="hero-state">Underscore is a network typeset around one idea: <b>the strongest character is the one underneath.</b> We are builders, operators, and experts who hold each other's work up — quietly, at full weight, for as long as it takes.</p>
+
+    <p class="charset-label" id="charset">Character set — the glyph in combination</p>
+    <div class="charset">
+      <div class="char-cell"><span class="sample w200">a_b</span><span class="tag">U+005F · LIGHT PAIR</span></div>
+      <div class="char-cell"><span class="sample w400">you_me</span><span class="tag">U+005F · REGULAR JOIN</span></div>
+      <div class="char-cell"><span class="sample w600">here_now</span><span class="tag">U+005F · SEMIBOLD JOIN</span></div>
+      <div class="char-cell"><span class="sample w800">us_them→us</span><span class="tag">U+005F · BOLD MERGE</span></div>
+      <div class="char-cell"><span class="sample w300">ask_answer</span><span class="tag">LIGATURE · SAME DAY</span></div>
+      <div class="char-cell"><span class="sample w500">give_first</span><span class="tag">DEFAULT BEHAVIOR</span></div>
+      <div class="char-cell"><span class="sample w700">build_together</span><span class="tag">RECOMMENDED SETTING</span></div>
+      <div class="char-cell"><span class="sample w900">join_the_core</span><span class="tag">DISPLAY USE · SEE §04</span></div>
+    </div>
+  </div>
+</header>
+
+<section id="weights">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-index">§02</span>
+      <h2>Weights</h2>
+      <span class="sec-note">VALUES, SET IN THEIR OWN WEIGHT</span>
+    </div>
+
+    <div class="weight-row">
+      <span class="weight-tag">300 · LIGHT</span>
+      <span class="weight-sample w300">listen first</span>
+      <div class="weight-desc"><b>Usage</b>Every exchange starts here. Understand the problem before you touch it.</div>
+    </div>
+    <div class="weight-row">
+      <span class="weight-tag">400 · REGULAR</span>
+      <span class="weight-sample w400">show up</span>
+      <div class="weight-desc"><b>Usage</b>The workhorse weight. Most of membership is simply being there, on time, repeatedly.</div>
+    </div>
+    <div class="weight-row">
+      <span class="weight-tag">700 · BOLD</span>
+      <span class="weight-sample w700">give before asked</span>
+      <div class="weight-desc"><b>Usage</b>For emphasis. The weight the Core is known for — applied without being requested.</div>
+    </div>
+  </div>
+</section>
+
+<section id="core">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-index">§03</span>
+      <h2>Designers of the typeface</h2>
+      <span class="sec-note">THE CORE · FOUNDRY CREDITS</span>
+    </div>
+
+    <p class="hands-line">1,200 hands on one glyph<span class="u">_</span>every member has shaped its weight.</p>
+
+    <div class="credits-head"><span>Name</span><span>Contribution</span><span>City</span></div>
+    <div class="credits">
+      <div class="credit-row"><span class="credit-name">Maya Chen</span><span class="credit-role">Set the original baseline — founder, first to give hours</span><span class="credit-city">Oakland</span></div>
+      <div class="credit-row"><span class="credit-name">Sam Osei</span><span class="credit-role">Engineering counsel; load-bearing calculations, all weights</span><span class="credit-city">Boston</span></div>
+      <div class="credit-row"><span class="credit-name">Ana Reyes</span><span class="credit-role">Drew the joins — design reviews for forty launches</span><span class="credit-city">Mexico City</span></div>
+      <div class="credit-row"><span class="credit-name">David Park</span><span class="credit-role">Kerning between members; operations, intros, follow-through</span><span class="credit-city">Seoul</span></div>
+      <div class="credit-row"><span class="credit-name">Leila Haddad</span><span class="credit-role">Research weights; the memos everyone forwards</span><span class="credit-city">Beirut</span></div>
+      <div class="credit-row"><span class="credit-name">Jonas Weber</span><span class="credit-role">Hinting at small sizes — unglamorous fixes, done well</span><span class="credit-city">Berlin</span></div>
+      <div class="credit-row"><span class="credit-name">Priya Nair</span><span class="credit-role">Spacing and rhythm; product judgment on call</span><span class="credit-city">Bangalore</span></div>
+      <div class="credit-row"><span class="credit-name">Tom Aiello</span><span class="credit-role">Production cuts — opened the shop floor to the family</span><span class="credit-city">Detroit</span></div>
+      <div class="credit-row"><span class="credit-name">Noor Rahimi</span><span class="credit-role">Extended language support; logistics across three continents</span><span class="credit-city">Nairobi</span></div>
+    </div>
+
+    <div class="stats-strip">
+      <div class="stat"><b>1,200+</b><span>contributing hands</span></div>
+      <div class="stat"><b>40</b><span>cities of issue</span></div>
+      <div class="stat"><b>9,000</b><span>hours given</span></div>
+      <div class="stat"><b>2021</b><span>first cut</span></div>
+    </div>
+
+    <div class="pangram">
+      <p class="pangram-label">Specimen text — set by a member, 28/38</p>
+      <p>"The Core gives first and asks later. I joined to get help with a factory line<span class="u">_</span>I stayed because giving the help turned out to be the better half."</p>
+      <cite>— Tom Aiello, manufacturer, Detroit · hands on since 2024</cite>
+    </div>
+  </div>
+</section>
+
+<section class="cta" id="join">
+  <div class="wrap">
+    <div class="sec-head" style="justify-content:center;">
+      <span class="sec-index">§04</span>
+      <h2>Add your weight.</h2>
+    </div>
+    <p class="lede">The glyph gets stronger with every hand on it. Bring what you know, give an hour before you ask for one, and the family expands by exactly you.</p>
+
+    <div class="weight-lab">
+      <span class="lab-word" id="labWord">together</span>
+      <input type="range" id="weightSlider" min="100" max="900" step="10" value="400" aria-label="Adjust the weight of the sample word">
+      <p class="lab-readout">wght: <b id="weightReadout">400</b> — drag toward 900. that's what joining does.</p>
+    </div>
+
+    <a class="btn" href="#join">Join the Core</a>
+  </div>
+</section>
+
+<footer>
+  <div class="foot-inner">
+    <div class="foot-spec">
+      <span>UNDERSCORE — REGULAR, SINCE 2021</span>
+      <span>SPECIMEN No. 27 · PRINTED IN 40 CITIES</span>
+      <span>© 2026 UNDERSCORE FOUNDRY</span>
+    </div>
+    <div class="foot-links">
+      <a href="#weights">Weights</a>
+      <a href="#core">Core</a>
+      <a href="#charset">Character set</a>
+      <a href="#join">Join the Core</a>
+      <a href="mailto:foundry@underscore.org">foundry@underscore.org</a>
+    </div>
+    <div class="foot-glyph" aria-hidden="true"></div>
+  </div>
+</footer>
+
+<script>
+  // Variable-weight lab: slider drives the sample word's weight.
+  (function(){
+    var slider = document.getElementById('weightSlider');
+    var word = document.getElementById('labWord');
+    var readout = document.getElementById('weightReadout');
+    if(!slider || !word || !readout) return;
+    slider.addEventListener('input', function(){
+      var w = slider.value;
+      word.style.fontWeight = w;
+      word.style.fontVariationSettings = '"wght" ' + w;
+      readout.textContent = w;
+    });
+  })();
+</script>
+
+</body>
+</html>
