@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — The Strata</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='24' width='24' height='5' rx='2' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --yellow:#F5C518; --ink:#1A1816; --cream:#FAF6EE; --muted:#8a8378; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  ::selection { background:var(--yellow); color:var(--ink); }
+  body { font-family:'Archivo',sans-serif; background:var(--ink); color:var(--ink); -webkit-font-smoothing:antialiased; }
+
+  .layer {
+    position:sticky; top:0; min-height:100vh; display:flex; flex-direction:column;
+    padding:0 0 60px; box-shadow:0 -18px 50px rgba(0,0,0,.22);
+  }
+  .layer-line {
+    height:14px; width:100%; position:relative; flex-shrink:0;
+    background:currentColor; opacity:.92;
+  }
+  .layer-line.flash { animation:flash .9s ease; }
+  @keyframes flash { 0%{background:var(--yellow); opacity:1;} 100%{} }
+  @media (prefers-reduced-motion:reduce){ .layer-line.flash { animation:none; } }
+  .layer-label {
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; letter-spacing:.18em;
+    padding:14px 0 0 26px;
+  }
+  .layer-inner { width:min(1100px,92vw); margin:auto; padding:48px 24px; }
+
+  .l1 { background:var(--cream); color:var(--ink); z-index:1; }
+  .l2 { background:#F3E3A8; color:var(--ink); z-index:2; }
+  .l3 { background:#CFC8B8; color:var(--ink); z-index:3; }
+  .l4 { background:var(--ink); color:var(--cream); z-index:4; }
+  .l5 { background:#1E3A2F; color:var(--cream); z-index:5; }
+  .l6 { background:var(--yellow); color:var(--ink); z-index:6; }
+  .l7 { background:var(--cream); color:var(--ink); z-index:7; }
+  .l1 .layer-line { color:var(--ink); }
+  .l2 .layer-line { color:#C9A22B; }
+  .l3 .layer-line { color:#8E8674; }
+  .l4 .layer-line { color:#3A352C; }
+  .l5 .layer-line { color:#0F231B; }
+  .l6 .layer-line { color:#B98F08; }
+  .l7 .layer-line { color:var(--yellow); }
+
+  h1,h2 { font-weight:900; letter-spacing:-.03em; line-height:.98; }
+  .l1 h1 { font-size:clamp(46px,8vw,110px); }
+  .layer h2 { font-size:clamp(34px,5.5vw,72px); }
+  .sub { margin-top:22px; font-size:clamp(16px,1.6vw,20px); line-height:1.55; max-width:56ch; }
+  .l1 .sub, .l2 .sub, .l3 .sub { color:#4d4840; }
+  .l4 .sub { color:#A9A292; } .l5 .sub { color:#B9C7BC; }
+
+  .roster { margin-top:46px; display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:14px; }
+  .mem { border:1.5px solid currentColor; padding:16px 16px 14px; }
+  .mem b { display:block; font-weight:700; font-size:17px; }
+  .mem span { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.08em; opacity:.65; }
+
+  .bignums { margin-top:40px; display:flex; gap:64px; flex-wrap:wrap; }
+  .bn .n { font-size:clamp(56px,9vw,128px); font-weight:900; letter-spacing:-.04em; line-height:1; }
+  .bn .l { font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.18em; margin-top:8px; opacity:.7; }
+
+  .quotes { margin-top:40px; display:grid; gap:30px; }
+  .q p { font-size:clamp(20px,2.6vw,30px); font-weight:500; line-height:1.35; max-width:30ch; }
+  .q .a { font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.12em; margin-top:10px; opacity:.7; }
+
+  .cities { margin-top:38px; display:flex; flex-wrap:wrap; gap:10px 22px; font-family:'IBM Plex Mono',monospace; font-size:14px; letter-spacing:.06em; }
+  .cities span { border-bottom:3px solid rgba(26,24,22,.35); padding-bottom:3px; }
+
+  .principles { margin-top:42px; display:grid; gap:0; counter-reset:p; }
+  .pr { display:flex; gap:26px; align-items:baseline; padding:20px 0; border-top:2px solid rgba(26,24,22,.35); }
+  .pr .no { font-family:'IBM Plex Mono',monospace; font-size:13px; }
+  .pr .tx { font-size:clamp(18px,2.4vw,28px); font-weight:700; letter-spacing:-.01em; }
+
+  form { margin-top:36px; display:flex; gap:12px; flex-wrap:wrap; max-width:760px; }
+  input { flex:1 1 180px; border:2px solid var(--ink); background:#fff; padding:14px 16px; font-family:inherit; font-size:15px; outline:none; }
+  input:focus { border-color:var(--yellow); }
+  button { background:var(--ink); color:var(--cream); border:0; padding:14px 30px; font-family:'IBM Plex Mono',monospace; font-size:13px; letter-spacing:.12em; cursor:pointer; }
+  button:hover { box-shadow:0 4px 0 var(--yellow); }
+
+  .gauge {
+    position:fixed; right:14px; top:50%; transform:translateY(-50%); z-index:50;
+    height:46vh; width:2px; background:rgba(138,131,120,.5); border-radius:2px;
+  }
+  .gauge .marker { position:absolute; left:-5px; width:12px; height:12px; border-radius:50%; background:var(--yellow); border:2px solid var(--ink); top:0; }
+  .gauge .glabel { position:absolute; right:14px; top:-8px; font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--muted); white-space:nowrap; }
+  @media (max-width:768px){ .gauge { display:none; } .layer { position:relative; } }
+</style>
+</head>
+<body>
+
+<div class="gauge" aria-hidden="true"><div class="glabel">CORE SAMPLE</div><div class="marker" id="marker"></div></div>
+
+<!-- LAYER 01 -->
+<section class="layer l1">
+  <div class="layer-line"></div>
+  <div class="layer-label">LAYER 01 — BEDROCK: THE IDEA</div>
+  <div class="layer-inner">
+    <h1>underscore<span style="color:var(--yellow)">_</span></h1>
+    <p class="sub">Communities don't stack up. They sediment — slowly, person by person, favor by favor, until one day there's ground under everyone. This page is a core sample. Scroll down to drill.</p>
+    <p class="sub" style="font-family:'IBM Plex Mono',monospace; font-size:13px;">FOUNDING PRINCIPLE, 2021: GIVE FIRST. ASK LATER.</p>
+  </div>
+</section>
+
+<!-- LAYER 02 -->
+<section class="layer l2">
+  <div class="layer-line"></div>
+  <div class="layer-label">LAYER 02 — THE CORE</div>
+  <div class="layer-inner">
+    <h2>1,200 people, pressed together.</h2>
+    <p class="sub">The Core is Underscore's member community: builders, operators, and researchers who answer when somebody asks. A few of the strata:</p>
+    <div class="roster">
+      <div class="mem"><b>Maya Chen</b><span>FOUNDER · OAKLAND · 2021</span></div>
+      <div class="mem"><b>Sam Osei</b><span>ENGINEER · BOSTON · 2021</span></div>
+      <div class="mem"><b>Ana Reyes</b><span>DESIGNER · MEXICO CITY · 2022</span></div>
+      <div class="mem"><b>David Park</b><span>OPERATOR · SEOUL · 2022</span></div>
+      <div class="mem"><b>Jonas Weber</b><span>BUILDER · BERLIN · 2022</span></div>
+      <div class="mem"><b>Leila Haddad</b><span>RESEARCHER · BEIRUT · 2023</span></div>
+      <div class="mem"><b>Tom Aiello</b><span>MANUFACTURER · DETROIT · 2023</span></div>
+      <div class="mem"><b>Priya Nair</b><span>PRODUCT · BANGALORE · 2024</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- LAYER 03 -->
+<section class="layer l3">
+  <div class="layer-line"></div>
+  <div class="layer-label">LAYER 03 — HOURS</div>
+  <div class="layer-inner">
+    <h2>Geological accumulation.</h2>
+    <div class="bignums">
+      <div class="bn"><div class="n">9,000</div><div class="l">HOURS GIVEN</div></div>
+      <div class="bn"><div class="n">312</div><div class="l">INTROS MADE</div></div>
+      <div class="bn"><div class="n">0</div><div class="l">ASKS UNANSWERED</div></div>
+    </div>
+    <p class="sub">Deposited one hour at a time over five years. No single hour looks like much. That's how strata work.</p>
+  </div>
+</section>
+
+<!-- LAYER 04 -->
+<section class="layer l4">
+  <div class="layer-line"></div>
+  <div class="layer-label">LAYER 04 — VOICES</div>
+  <div class="layer-inner">
+    <h2>Fossil record.</h2>
+    <div class="quotes">
+      <div class="q"><p>"It's the first room I've been in where being stuck isn't embarrassing."</p><div class="a">— PRIYA NAIR, BANGALORE</div></div>
+      <div class="q"><p>"Give first works because almost nobody tries it."</p><div class="a">— MAYA CHEN, OAKLAND</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- LAYER 05 -->
+<section class="layer l5">
+  <div class="layer-line"></div>
+  <div class="layer-label">LAYER 05 — CITIES</div>
+  <div class="layer-inner">
+    <h2>40 deposits worldwide.</h2>
+    <div class="cities">
+      <span>OAKLAND</span><span>BOSTON</span><span>MEXICO CITY</span><span>SEOUL</span><span>BEIRUT</span><span>BERLIN</span><span>BANGALORE</span><span>DETROIT</span><span>LONDON</span><span>LAGOS</span><span>SÃO PAULO</span><span>WARSAW</span><span>+ 28 MORE</span>
+    </div>
+    <p class="sub">Every chapter runs an open table. You're a stranger at exactly one of them, once.</p>
+  </div>
+</section>
+
+<!-- LAYER 06 -->
+<section class="layer l6">
+  <div class="layer-line"></div>
+  <div class="layer-label">LAYER 06 — PRINCIPLES</div>
+  <div class="layer-inner">
+    <h2>Load-bearing rules.</h2>
+    <div class="principles">
+      <div class="pr"><span class="no">06.1</span><span class="tx">Give first. Ask later.</span></div>
+      <div class="pr"><span class="no">06.2</span><span class="tx">The ask is a contribution.</span></div>
+      <div class="pr"><span class="no">06.3</span><span class="tx">Nobody keeps score. Everybody keeps showing up.</span></div>
+      <div class="pr"><span class="no">06.4</span><span class="tx">Time is the only dues.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- LAYER 07 -->
+<section class="layer l7">
+  <div class="layer-line"></div>
+  <div class="layer-label">LAYER 07 — YOU</div>
+  <div class="layer-inner">
+    <h2>Every layer was someone's first day.</h2>
+    <p class="sub">The sample ends here, at the newest stratum — which is open. Join the Core: free, human-reviewed, and quietly demanding. You'll be asked to give an hour now and then. That's the whole tax.</p>
+    <form onsubmit="event.preventDefault(); this.innerHTML='<p class=sub style=\'font-weight:700\'>Received. A human replies within a week. Welcome to the top layer.</p>';">
+      <input type="text" placeholder="name" required>
+      <input type="text" placeholder="city" required>
+      <input type="text" placeholder="an hour you could give">
+      <button type="submit">JOIN THE CORE_</button>
+    </form>
+    <p class="sub" style="font-family:'IBM Plex Mono',monospace; font-size:12px; margin-top:46px;">UNDERSCORE_ — EST. 2021 · 1,200+ MEMBERS · GIVE FIRST, ASK LATER</p>
+  </div>
+</section>
+
+<script>
+  // flash each layer line as it locks in
+  const io = new IntersectionObserver(es=>{
+    es.forEach(e=>{
+      if(e.isIntersecting){
+        const line = e.target.querySelector('.layer-line');
+        line.classList.remove('flash'); void line.offsetWidth; line.classList.add('flash');
+      }
+    });
+  }, { threshold: 0.35 });
+  document.querySelectorAll('.layer').forEach(l=>io.observe(l));
+  // depth gauge
+  const marker = document.getElementById('marker');
+  addEventListener('scroll', ()=>{
+    const p = scrollY / (document.body.scrollHeight - innerHeight);
+    marker.style.top = (p * (document.querySelector('.gauge').offsetHeight - 12)) + 'px';
+  }, { passive:true });
+</script>
+</body>
+</html>

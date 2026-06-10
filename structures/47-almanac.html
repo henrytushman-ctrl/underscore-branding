@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — The Almanac</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='24' width='24' height='5' rx='2' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --yellow:#F5C518; --ink:#1A1816; --cream:#FAF6EE; --muted:#8a8378; --line:#E4DCCB; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  ::selection { background:var(--yellow); color:var(--ink); }
+  body { font-family:'Inter Tight',sans-serif; background:var(--cream); color:var(--ink); min-height:100vh; -webkit-font-smoothing:antialiased; }
+  .app { display:grid; grid-template-columns:300px 1fr; min-height:100vh; }
+
+  .rail { border-right:1px solid var(--line); padding:30px 26px; display:flex; flex-direction:column; gap:28px; }
+  .logo { font-weight:800; font-size:22px; letter-spacing:-.02em; }
+  .logo span { color:var(--yellow); }
+  .rail .blurb { font-size:13.5px; line-height:1.55; color:#4d4840; }
+  .statbox { border:1px solid var(--line); border-radius:10px; padding:18px; background:#fff; }
+  .statbox .row { display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px dotted var(--line); font-size:13px; }
+  .statbox .row:last-child { border:0; }
+  .statbox .row b { font-weight:600; }
+  .statbox .row span { font-family:'IBM Plex Mono',monospace; color:var(--muted); font-size:11.5px; letter-spacing:.06em; }
+  .monthgive { font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--muted); letter-spacing:.06em; }
+  .monthgive b { color:var(--ink); }
+  .joincard { background:var(--ink); color:var(--cream); border-radius:10px; padding:20px; margin-top:auto; }
+  .joincard h3 { font-size:16px; font-weight:600; }
+  .joincard p { font-size:12.5px; color:#B8B09E; margin:8px 0 14px; line-height:1.5; }
+  .joincard input { width:100%; margin-bottom:8px; background:#262219; border:1px solid #3A3426; color:var(--cream); padding:9px 11px; border-radius:6px; font-family:inherit; font-size:13px; outline:none; }
+  .joincard input:focus { border-color:var(--yellow); }
+  .joincard button { width:100%; background:var(--yellow); border:0; color:var(--ink); padding:11px; border-radius:6px; font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.08em; font-weight:500; cursor:pointer; }
+  .joincard button:hover { filter:brightness(1.05); }
+
+  .cal { padding:30px 34px; display:flex; flex-direction:column; }
+  .calhead { display:flex; align-items:baseline; gap:18px; margin-bottom:20px; }
+  .calhead h1 { font-size:34px; font-weight:800; letter-spacing:-.02em; }
+  .calhead .nav { display:flex; gap:8px; margin-left:auto; }
+  .calhead button { background:none; border:1px solid var(--ink); border-radius:999px; width:38px; height:38px; cursor:pointer; font-size:16px; }
+  .calhead button:hover { background:var(--yellow); border-color:var(--yellow); }
+  .legend { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--muted); letter-spacing:.05em; }
+
+  .grid { display:grid; grid-template-columns:repeat(7,1fr); border-left:1px solid var(--line); border-top:1px solid var(--line); flex:1; }
+  .dow { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.12em; color:var(--muted); padding:10px; border-right:1px solid var(--line); border-bottom:1px solid var(--line); background:#F4EEDF; }
+  .day { min-height:108px; border-right:1px solid var(--line); border-bottom:1px solid var(--line); padding:8px; position:relative; background:#FFFDF8; }
+  .day.empty { background:transparent; }
+  .day .n { font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--muted); }
+  .day.today .n { color:var(--ink); font-weight:700; border-bottom:4px solid var(--yellow); padding-bottom:1px; }
+  .chip { display:block; width:100%; text-align:left; margin-top:6px; border:0; background:#F1EADA; border-left:3px solid var(--ink); border-radius:4px; padding:5px 7px; font-family:'IBM Plex Mono',monospace; font-size:10.5px; line-height:1.35; cursor:pointer; color:var(--ink); }
+  .chip:hover { background:var(--yellow); }
+  .chip.give { border-left-color:var(--yellow); }
+  .chip.ghost { border:1px dashed #CFC6B0; border-left:1px dashed #CFC6B0; background:transparent; color:var(--muted); font-style:italic; cursor:pointer; }
+  .chip.ghost:hover { border-color:var(--yellow); color:var(--ink); background:transparent; }
+
+  .panel {
+    position:fixed; top:0; right:0; bottom:0; width:400px; max-width:94vw; z-index:40;
+    background:#fff; border-left:1px solid var(--line); box-shadow:-20px 0 50px rgba(26,24,22,.12);
+    padding:34px 30px; transform:translateX(105%); transition:transform .3s ease; overflow-y:auto;
+  }
+  .panel.open { transform:none; }
+  .panel .close { position:absolute; top:16px; right:16px; background:none; border:1px solid var(--line); border-radius:999px; width:30px; height:30px; cursor:pointer; }
+  .panel .tag { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:var(--muted); }
+  .panel h2 { font-size:24px; font-weight:700; margin:8px 0 16px; letter-spacing:-.01em; }
+  .panel p { font-size:14.5px; line-height:1.6; color:#3d3933; margin-bottom:14px; }
+  .panel .host { border:1px solid var(--line); border-radius:8px; padding:14px; margin:16px 0; }
+  .panel .host b { display:block; font-weight:600; }
+  .panel .host span { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--muted); }
+  .panel .bring { background:#FBF6E9; border-left:3px solid var(--yellow); padding:12px 14px; font-size:13.5px; }
+
+  @media (max-width:900px){
+    .app { grid-template-columns:1fr; }
+    .rail { border-right:0; border-bottom:1px solid var(--line); }
+    .grid { display:block; border:0; }
+    .dow { display:none; }
+    .day { min-height:0; border:1px solid var(--line); border-radius:8px; margin-bottom:8px; display:none; }
+    .day.has { display:block; }
+    .day .n::after { content:" — june 2026"; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="rail">
+    <div class="logo">underscore<span>_</span></div>
+    <p class="blurb">This is the Core's calendar — public, always. Gatherings, office hours, and the anniversaries of help that worked. Past months are our memory. Future months are mostly yours.</p>
+    <div class="statbox">
+      <div class="row"><b>1,247</b><span>MEMBERS</span></div>
+      <div class="row"><b>40</b><span>CITIES</span></div>
+      <div class="row"><b>9,000</b><span>HOURS GIVEN</span></div>
+      <div class="row"><b>0</b><span>ASKS UNANSWERED</span></div>
+    </div>
+    <div class="monthgive" id="monthGive">THIS MONTH: <b>41 HOURS OFFERED</b></div>
+    <div class="joincard">
+      <h3>Members see every door.</h3>
+      <p>Each chip on this calendar is a room someone will hold open. Join the Core — it costs an hour, occasionally.</p>
+      <form onsubmit="event.preventDefault(); this.innerHTML='<p style=\'font-size:13px;color:#FAF6EE\'>Received. A human replies within a week.</p>';">
+        <input type="text" placeholder="name" required>
+        <input type="text" placeholder="city" required>
+        <button type="submit">JOIN THE CORE_</button>
+      </form>
+    </div>
+  </aside>
+
+  <main class="cal">
+    <div class="calhead">
+      <h1 id="monthTitle">June 2026</h1>
+      <span class="legend">_workshop · _officehours · _give (anniversaries)</span>
+      <div class="nav">
+        <button id="prevM" aria-label="previous month">←</button>
+        <button id="nextM" aria-label="next month">→</button>
+      </div>
+    </div>
+    <div class="grid" id="grid"></div>
+  </main>
+</div>
+
+<aside class="panel" id="panel">
+  <button class="close" id="panelClose" aria-label="close">×</button>
+  <div id="panelBody"></div>
+</aside>
+
+<script>
+  const MONTHS = {
+    "2026-05": { title:"May 2026", days:31, startDow:5, hours:"58 HOURS GIVEN", events:{
+      4:[{t:"_give",label:"DET line rescue — 2yr",story:{tag:"_give · ANNIVERSARY",title:"Two years since the Detroit line rescue",body:"Tom Aiello spent a weekend getting a member's pilot line unstuck. The company shipped six weeks later and is still shipping. We keep these anniversaries on the calendar because the receipts matter.",host:["Tom Aiello","MANUFACTURER · DETROIT"],bring:"Nothing. Past events are just memory."}}],
+      7:[{t:"_officehours",label:"Leila — research OH",story:{tag:"_officehours · HELD",title:"Office hours with Leila Haddad",body:"Weekly, two years running, never missed. Eleven members brought research-design questions in May.",host:["Leila Haddad","RESEARCHER · BEIRUT"],bring:"A question, ideally half-formed."}}],
+      14:[{t:"_workshop",label:"Seoul — ops night",story:{tag:"_workshop · HELD",title:"Seoul chapter — operations night",body:"David walked four members through his supply-chain playbook. Two of them merged their freight to split a container.",host:["David Park","OPERATOR · SEOUL"],bring:"A bottleneck."}}],
+      21:[{t:"_give",label:"312th intro made",story:{tag:"_give · MILESTONE",title:"The 312th introduction",body:"Intro number 312 of the year connected a Lagos logistics founder with a London fintech operator. Time from ask to intro: 4 hours.",host:["the Core","COLLECTIVE"],bring:"—"}}],
+      28:[{t:"_workshop",label:"Berlin — pitch teardown",story:{tag:"_workshop · HELD",title:"Berlin chapter — pitch teardowns",body:"Six decks went in. Six shorter, sharper decks came out. Jonas hosted at the workshop, as usual; sawdust included.",host:["Jonas Weber","BUILDER · BERLIN"],bring:"Your deck, your skin thickened."}}],
+    }},
+    "2026-06": { title:"June 2026", days:30, startDow:1, hours:"41 HOURS OFFERED", events:{
+      4:[{t:"_officehours",label:"Priya — product OH 16:00",story:{tag:"_officehours · UPCOMING",title:"Office hours with Priya Nair",body:"Bring a roadmap, a prioritization knot, or a deck. Priya is kind and will still cut your slide count nearly in half.",host:["Priya Nair","PRODUCT · BANGALORE"],bring:"A problem, ideally."}}],
+      10:[{t:"_give",label:"TODAY — 740h this month systemwide"}],
+      11:[{t:"_workshop",label:"Berlin chapter — workshop night",story:{tag:"_workshop · THURSDAY",title:"Berlin chapter — workshop night",body:"Open table at Jonas's shop. Newcomers get the good stool. The only agenda: who needs what, and who's got it.",host:["Jonas Weber","BUILDER · BERLIN"],bring:"A problem, ideally. Beer optional."}}],
+      16:[{t:"_officehours",label:"Leila — research OH 16:00",story:{tag:"_officehours · WEEKLY",title:"Office hours with Leila Haddad",body:"Two years, never missed. Research design, study structure, and the gentle art of finding out you're asking the wrong question.",host:["Leila Haddad","RESEARCHER · BEIRUT"],bring:"A half-formed question."}}],
+      18:[{t:"_workshop",label:"Oakland — founder circle",story:{tag:"_workshop · UPCOMING",title:"Oakland founder circle",body:"Maya hosts eight founders, no observers, Chatham House rules. One seat held for whoever joined most recently.",host:["Maya Chen","FOUNDER · OAKLAND"],bring:"The thing you haven't said out loud yet."}}],
+      23:[{t:"_give",label:"BOS — Sam debugging clinic",story:{tag:"_give · UPCOMING",title:"Sam's debugging clinic",body:"Quarterly. Bring the bug that's winning. Sam's record remains 23 minutes, which he insists was a fluke.",host:["Sam Osei","ENGINEER · BOSTON"],bring:"Stack traces. All of them."}}],
+      26:[{t:"_workshop",label:"Mexico City — brand night",story:{tag:"_workshop · UPCOMING",title:"Mexico City — brand teardown night",body:"Ana runs five teardowns, first-come. Gentle in tone, surgical in effect.",host:["Ana Reyes","DESIGNER · MEXICO CITY"],bring:"Your homepage, printed."}}],
+    }},
+    "2026-07": { title:"July 2026", days:31, startDow:3, hours:"12 HOURS OFFERED SO FAR", events:{
+      2:[{t:"_officehours",label:"Priya — product OH",story:{tag:"_officehours · SCHEDULED",title:"Office hours with Priya Nair",body:"The July session. Same deal: bring the knot.",host:["Priya Nair","PRODUCT · BANGALORE"],bring:"A problem, ideally."}}],
+      9:[{t:"_workshop",label:"Berlin — workshop night",story:{tag:"_workshop · SCHEDULED",title:"Berlin chapter — workshop night",body:"Standing Thursday. The good stool awaits whoever's newest.",host:["Jonas Weber","BUILDER · BERLIN"],bring:"A problem. Beer optional."}}],
+      16:[{t:"ghost",label:"your event could sit here"}],
+      23:[{t:"ghost",label:"or here"}],
+    }},
+  };
+  const ORDER = ["2026-05","2026-06","2026-07"];
+  let cur = 1;
+  const grid = document.getElementById('grid');
+  const title = document.getElementById('monthTitle');
+  const monthGive = document.getElementById('monthGive');
+  const panel = document.getElementById('panel');
+  const panelBody = document.getElementById('panelBody');
+
+  function render(){
+    const key = ORDER[cur], m = MONTHS[key];
+    title.textContent = m.title;
+    monthGive.innerHTML = (cur===0?"LAST MONTH: ":cur===2?"NEXT MONTH: ":"THIS MONTH: ") + "<b>" + m.hours + "</b>";
+    let html = ['MON','TUE','WED','THU','FRI','SAT','SUN'].map(d=>`<div class="dow">${d}</div>`).join('');
+    for(let i=0;i<m.startDow;i++) html += `<div class="day empty"></div>`;
+    for(let d=1; d<=m.days; d++){
+      const evs = m.events[d]||[];
+      const isToday = key==="2026-06" && d===10;
+      html += `<div class="day${isToday?' today':''}${evs.length?' has':''}"><span class="n">${d}</span>`;
+      evs.forEach((e,k)=>{
+        if(e.t==='ghost') html += `<button class="chip ghost" data-d="${d}" data-k="${k}">${e.label}</button>`;
+        else html += `<button class="chip ${e.t==='_give'?'give':''}" data-d="${d}" data-k="${k}">${e.t} · ${e.label}</button>`;
+      });
+      html += `</div>`;
+    }
+    grid.innerHTML = html;
+    grid.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
+      const ev = MONTHS[key].events[c.dataset.d][c.dataset.k];
+      if(ev.t==='ghost'){
+        panelBody.innerHTML = `<div class="tag">_ghost · OPEN SLOT</div><h2>Your event could sit here</h2>
+          <p>Members host whatever helps: office hours, teardowns, open tables, clinics. The calendar has no gatekeeper — if you'll hold a door open, we'll put it on the grid.</p>
+          <div class="bring">Hosting is a member thing. Join the Core (left rail) and claim a square.</div>`;
+      } else if(!ev.story){
+        panelBody.innerHTML = `<div class="tag">_give · TODAY</div><h2>${ev.label}</h2><p>Today's running tally across all 40 chapters. It updates the old-fashioned way: people doing things.</p>`;
+      } else {
+        panelBody.innerHTML = `<div class="tag">${ev.story.tag}</div><h2>${ev.story.title}</h2><p>${ev.story.body}</p>
+          <div class="host"><b>${ev.story.host[0]}</b><span>${ev.story.host[1]}</span></div>
+          <div class="bring"><b>What to bring:</b> ${ev.story.bring}</div>`;
+      }
+      panel.classList.add('open');
+    });
+  }
+  document.getElementById('prevM').onclick=()=>{ if(cur>0){cur--; render();} };
+  document.getElementById('nextM').onclick=()=>{ if(cur<ORDER.length-1){cur++; render();} };
+  document.getElementById('panelClose').onclick=()=>panel.classList.remove('open');
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape') panel.classList.remove('open'); });
+  render();
+</script>
+</body>
+</html>

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — the switchboard</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23FAF6EE'/%3E%3Crect x='13' y='42' width='38' height='9' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --yellow:#F5C518;
+    --ink:#1A1816;
+    --cream:#FAF6EE;
+    --paper:#FFFDF8;
+    --muted:#6f685c;
+    --rule:#d9d0bd;
+    --t:.45s cubic-bezier(.4,0,.2,1);
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  ::selection{ background:var(--yellow); color:var(--ink); }
+  html,body{ height:100%; overflow:hidden; }
+  body{
+    font-family:'Inter Tight', system-ui, sans-serif;
+    background:var(--cream); color:var(--ink);
+    font-size:15px; line-height:1.55;
+  }
+  .mono{ font-family:'IBM Plex Mono', monospace; }
+
+  #board{ height:100vh; height:100dvh; display:flex; flex-direction:column; padding:10px; gap:10px; }
+  .row{ display:flex; gap:10px; flex:1; min-height:0; transition:flex-grow var(--t); }
+  .row.active{ flex-grow:4.2; }
+
+  /* ---------- panels ---------- */
+  .panel{
+    flex:1; min-width:0; min-height:0;
+    display:flex; flex-direction:column;
+    background:var(--paper);
+    border:1px solid var(--rule);
+    border-radius:10px;
+    overflow:hidden;
+    transition:flex-grow var(--t), border-color var(--t);
+  }
+  .panel.active{ flex-grow:5; border-color:var(--ink); }
+
+  .panel-head{
+    display:flex; align-items:center; gap:10px;
+    width:100%; border:none; cursor:pointer; text-align:left;
+    background:transparent; color:var(--ink);
+    font:inherit; padding:12px 14px;
+    border-bottom:1px solid transparent;
+    transition:background var(--t);
+    flex-shrink:0;
+  }
+  .panel.active .panel-head{
+    background:var(--yellow);
+    border-bottom-color:var(--ink);
+  }
+  .panel-head:focus-visible{ outline:2px solid var(--ink); outline-offset:-4px; }
+  .panel-head .idx{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px; color:var(--muted); flex-shrink:0;
+  }
+  .panel.active .panel-head .idx{ color:var(--ink); }
+  .panel-head .ttl{
+    font-weight:650; letter-spacing:.10em; font-size:12.5px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+
+  .panel-body{
+    flex:1; min-height:0; overflow-y:auto;
+    padding:18px clamp(16px,2.5vw,30px) 22px;
+    opacity:0; visibility:hidden;
+    transition:opacity .3s ease .15s, visibility 0s .45s;
+    scrollbar-width:thin; scrollbar-color:var(--rule) transparent;
+  }
+  .panel.active .panel-body{ opacity:1; visibility:visible; transition:opacity .35s ease .2s; }
+
+  .panel-body h2{
+    font-size:clamp(19px,2vw,24px); letter-spacing:-0.02em; margin-bottom:10px;
+  }
+  .panel-body p{ max-width:52ch; margin-bottom:10px; }
+  .panel-body p.lead{ font-size:clamp(15.5px,1.4vw,18px); font-weight:500; }
+  .hl{ background:var(--yellow); padding:0 .22em; border-radius:2px; }
+  .panel-body ul{ list-style:none; max-width:52ch; }
+  .panel-body li{ padding:6px 0 6px 18px; position:relative; }
+  .panel-body li::before{
+    content:''; position:absolute; left:0; top:.95em;
+    width:10px; height:3px; background:var(--yellow);
+  }
+
+  /* roster + stats */
+  .roster{ width:100%; border-collapse:collapse; font-size:13.5px; max-width:480px; }
+  .roster td{ padding:5px 14px 5px 0; border-bottom:1px solid var(--rule); white-space:nowrap; }
+  .roster td:first-child{ font-weight:600; }
+  .roster td:nth-child(2){ color:var(--muted); }
+  .stats{ display:flex; gap:26px; flex-wrap:wrap; margin-top:16px; }
+  .stat .n{ font-family:'IBM Plex Mono', monospace; font-size:clamp(18px,1.8vw,24px); font-weight:500; display:block; }
+  .stat .l{ font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+
+  blockquote{
+    border-left:3px solid var(--yellow);
+    padding:4px 0 4px 16px; margin:0 0 18px; max-width:50ch;
+    font-size:clamp(15px,1.3vw,17px);
+  }
+  blockquote footer{ font-size:12.5px; color:var(--muted); margin-top:6px; font-family:'IBM Plex Mono', monospace; }
+
+  /* timeline */
+  .timeline{ font-family:'IBM Plex Mono', monospace; font-size:13.5px; max-width:52ch; }
+  .timeline div{ display:flex; gap:16px; padding:6px 0; border-bottom:1px solid var(--rule); }
+  .timeline b{ color:var(--ink); flex-shrink:0; font-weight:500; }
+  .timeline span{ font-family:'Inter Tight', sans-serif; }
+
+  /* join form */
+  #joinForm label{
+    display:block; font-size:11px; font-weight:650; letter-spacing:.09em;
+    text-transform:uppercase; color:var(--muted); margin:10px 0 4px;
+  }
+  #joinForm input, #joinForm textarea{
+    width:100%; max-width:420px; font:inherit; font-size:14.5px;
+    border:1.5px solid var(--rule); border-radius:8px;
+    padding:9px 12px; background:var(--cream); color:var(--ink);
+  }
+  #joinForm input:focus, #joinForm textarea:focus{ outline:none; border-color:var(--ink); }
+  #joinForm textarea{ resize:vertical; min-height:60px; }
+  #joinForm button{
+    margin-top:14px; font:inherit; font-weight:650; font-size:14.5px;
+    background:var(--ink); color:var(--yellow); border:none; border-radius:8px;
+    padding:11px 22px; cursor:pointer;
+  }
+  #joinForm button:hover, #joinForm button:focus-visible{ background:#000; outline:none; }
+  #joinDone{ display:none; }
+  #joinDone .mark{ font-size:26px; font-weight:650; }
+  #joinDone .mark u{ text-decoration:none; border-bottom:5px solid var(--yellow); }
+
+  /* ---------- center panel ---------- */
+  #center{
+    flex:1.15; min-width:0;
+    background:var(--ink); color:var(--cream);
+    border-radius:10px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:14px; gap:12px;
+    overflow:hidden;
+  }
+  #center .wordmark{
+    font-weight:700; letter-spacing:-0.03em;
+    font-size:clamp(17px,2.1vw,30px); white-space:nowrap;
+  }
+  #centerBar{
+    width:clamp(44px,40%,120px); height:8px; background:var(--yellow);
+    border-radius:2px;
+    transition:transform var(--t);
+    transform-origin:center;
+  }
+  #center .tag{
+    font-size:clamp(11px,1vw,13.5px); color:#b5ad9d; max-width:24ch;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .row, .panel, .panel-body, #centerBar{ transition:none; }
+  }
+
+  /* ---------- mobile: accordion ---------- */
+  @media (max-width:767px){
+    html,body{ overflow:auto; }
+    #board{ height:auto; min-height:100dvh; display:flex; flex-direction:column; }
+    .row{ display:contents; }
+    .panel{ flex:none; }
+    #center{ order:-1; flex:none; padding:28px 14px; }
+    .panel-body{ display:none; }
+    .panel.active .panel-body{
+      display:block; opacity:1; visibility:visible;
+      max-height:60vh;
+    }
+    #centerBar{ transform:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div id="board">
+
+  <div class="row">
+    <section class="panel" data-idx="1">
+      <button class="panel-head" aria-expanded="false" aria-controls="body-1">
+        <span class="idx">01</span><span class="ttl">WHAT</span>
+      </button>
+      <div class="panel-body" id="body-1">
+        <h2>What this is</h2>
+        <p class="lead">Underscore is a community of builders, operators, and experts who <span class="hl">give time to each other</span> — first, and without keeping score.</p>
+        <p>The underscore is the character you type before the thing that matters. It holds a place. It carries weight. It never asks for credit. That's the posture of every member here.</p>
+        <p>No content feed. No badge wall. Just 1,200+ people across 40 cities who pick up when another member calls.</p>
+      </div>
+    </section>
+    <section class="panel" data-idx="2">
+      <button class="panel-head" aria-expanded="false" aria-controls="body-2">
+        <span class="idx">02</span><span class="ttl">THE CORE</span>
+      </button>
+      <div class="panel-body" id="body-2">
+        <h2>The Core</h2>
+        <p>Our member community. A sample of who answers:</p>
+        <table class="roster">
+          <tr><td>Maya Chen</td><td>founder</td><td>Oakland</td></tr>
+          <tr><td>Sam Osei</td><td>engineer</td><td>Boston</td></tr>
+          <tr><td>Ana Reyes</td><td>designer</td><td>Mexico City</td></tr>
+          <tr><td>David Park</td><td>operator</td><td>Seoul</td></tr>
+          <tr><td>Leila Haddad</td><td>researcher</td><td>Beirut</td></tr>
+          <tr><td>Jonas Weber</td><td>builder</td><td>Berlin</td></tr>
+          <tr><td>Priya Nair</td><td>product</td><td>Bangalore</td></tr>
+          <tr><td>Tom Aiello</td><td>manufacturer</td><td>Detroit</td></tr>
+        </table>
+        <div class="stats">
+          <div class="stat"><span class="n">1,200+</span><span class="l">members</span></div>
+          <div class="stat"><span class="n">40</span><span class="l">cities</span></div>
+          <div class="stat"><span class="n">9,000</span><span class="l">hours given</span></div>
+          <div class="stat"><span class="n">2021</span><span class="l">founded</span></div>
+        </div>
+      </div>
+    </section>
+    <section class="panel" data-idx="3">
+      <button class="panel-head" aria-expanded="false" aria-controls="body-3">
+        <span class="idx">03</span><span class="ttl">GIVING</span>
+      </button>
+      <div class="panel-body" id="body-3">
+        <h2>What members give</h2>
+        <ul>
+          <li>An hour on a call when your hiring plan is wrong.</li>
+          <li>A code review at 11pm before your launch.</li>
+          <li>An intro to the one person who has solved your exact problem.</li>
+          <li>A walk through their factory, their P&amp;L, their mistakes.</li>
+          <li>The honest "no" nobody else will say to your face.</li>
+        </ul>
+        <p style="margin-top:12px"><span class="hl">9,000 hours</span> of this so far. Nobody invoiced anybody.</p>
+      </div>
+    </section>
+  </div>
+
+  <div class="row">
+    <section class="panel" data-idx="4">
+      <button class="panel-head" aria-expanded="false" aria-controls="body-4">
+        <span class="idx">04</span><span class="ttl">CITIES</span>
+      </button>
+      <div class="panel-body" id="body-4">
+        <h2>40 cities, one room</h2>
+        <p>Oakland · Boston · Mexico City · Seoul · Beirut · Berlin · Bangalore · Detroit · Lagos · Lisbon · São Paulo · Warsaw · Nairobi · Austin · Hanoi — and 25 more.</p>
+        <p>Help moves sideways here. A factory floor in Detroit fixes a supply problem in Bangalore. A researcher in Beirut reframes a product decision in Oakland. Time zones mean someone is always awake.</p>
+      </div>
+    </section>
+
+    <div id="center" aria-label="Underscore">
+      <div class="wordmark">underscore</div>
+      <div id="centerBar" aria-hidden="true"></div>
+      <div class="tag">A community that gives first.</div>
+    </div>
+
+    <section class="panel" data-idx="5">
+      <button class="panel-head" aria-expanded="false" aria-controls="body-5">
+        <span class="idx">05</span><span class="ttl">HOURS</span>
+      </button>
+      <div class="panel-body" id="body-5">
+        <h2>We count hours, not likes</h2>
+        <p class="lead"><span class="hl">9,000 hours</span> given member-to-member this year.</p>
+        <ul>
+          <li>3,400 hours of working sessions and reviews</li>
+          <li>2,800 hours of calls that started "quick question"</li>
+          <li>1,900 hours of intros, references, and follow-through</li>
+          <li>900 hours of showing up in person</li>
+        </ul>
+        <p>The only metric we publish, because it's the only one that means anything.</p>
+      </div>
+    </section>
+  </div>
+
+  <div class="row">
+    <section class="panel" data-idx="6">
+      <button class="panel-head" aria-expanded="false" aria-controls="body-6">
+        <span class="idx">06</span><span class="ttl">VOICES</span>
+      </button>
+      <div class="panel-body" id="body-6">
+        <h2>In their words</h2>
+        <blockquote>
+          "I posted a factory problem at 9:41 on a Tuesday. By 10:04 I had a materials engineer in Berlin, a defect dataset, and a phone call lined up. My order shipped on time."
+          <footer>— Tom Aiello, manufacturer · Detroit</footer>
+        </blockquote>
+        <blockquote>
+          "Every other community I joined was a content feed with a logo. This one is a room where people pick up. The rule is you give first — and the strange thing is, everyone does."
+          <footer>— Leila Haddad, researcher · Beirut</footer>
+        </blockquote>
+      </div>
+    </section>
+    <section class="panel" data-idx="7">
+      <button class="panel-head" aria-expanded="false" aria-controls="body-7">
+        <span class="idx">07</span><span class="ttl">HISTORY</span>
+      </button>
+      <div class="panel-body" id="body-7">
+        <h2>Short history, long memory</h2>
+        <div class="timeline">
+          <div><b>2021</b><span>Founded. Twelve people, one rule: give first.</span></div>
+          <div><b>2022</b><span>First 100 members. First cross-city rescue — Seoul to Oakland, overnight.</span></div>
+          <div><b>2023</b><span>Ten cities. We started counting hours instead of members.</span></div>
+          <div><b>2024</b><span>1,000th member. 5,000th hour.</span></div>
+          <div><b>now</b><span>1,200+ members, 40 cities, 9,000 hours. Still answering.</span></div>
+        </div>
+      </div>
+    </section>
+    <section class="panel" data-idx="8">
+      <button class="panel-head" aria-expanded="false" aria-controls="body-8">
+        <span class="idx">08</span><span class="ttl">PRINCIPLES</span>
+      </button>
+      <div class="panel-body" id="body-8">
+        <h2>Three principles</h2>
+        <ul>
+          <li><strong>Give first.</strong> Help arrives before the ask is finished. Nobody tracks favors.</li>
+          <li><strong>Stay plain.</strong> No titles at the door, no performance inside. What you know matters; what you're called doesn't.</li>
+          <li><strong>Connect sideways.</strong> The best answer usually lives in a different industry, a different city, a different life. We make that call happen.</li>
+        </ul>
+      </div>
+    </section>
+    <section class="panel" data-idx="9">
+      <button class="panel-head" aria-expanded="false" aria-controls="body-9">
+        <span class="idx">09</span><span class="ttl">JOIN</span>
+      </button>
+      <div class="panel-body" id="body-9">
+        <h2>Join the Core</h2>
+        <form id="joinForm">
+          <label for="jName">Name</label>
+          <input id="jName" type="text" required autocomplete="name">
+          <label for="jCity">City</label>
+          <input id="jCity" type="text" required autocomplete="address-level2">
+          <label for="jGive">What can you give?</label>
+          <textarea id="jGive" required placeholder="An hour a month. A skill. An intro. The honest read."></textarea>
+          <button type="submit">Ask to join</button>
+        </form>
+        <div id="joinDone">
+          <p class="mark">received<u>_</u></p>
+          <p style="margin-top:8px">A Core member near you replies within a week — and their first move is to help <em>you</em> with something. That's the point.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  'use strict';
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const isDesktop = () => window.matchMedia('(min-width: 768px)').matches;
+  const panels = Array.from(document.querySelectorAll('.panel'));
+  const rows = Array.from(document.querySelectorAll('.row'));
+  const bar = document.getElementById('centerBar');
+  const center = document.getElementById('center');
+  let activePanel = null;
+
+  function pointBar(panel){
+    if (reduced || !isDesktop()){ bar.style.transform = ''; return; }
+    if (!panel){ bar.style.transform = ''; return; }
+    const c = center.getBoundingClientRect();
+    const p = panel.getBoundingClientRect();
+    const dx = (p.left + p.width/2) - (c.left + c.width/2);
+    const dy = (p.top + p.height/2) - (c.top + c.height/2);
+    let deg = Math.atan2(dy, dx) * 180 / Math.PI;
+    // keep it an underscore that leans, not a compass needle
+    if (deg > 90) deg = 180 - deg;        // mirror so the bar tilts, stays horizontal-ish
+    if (deg < -90) deg = -180 - deg;
+    deg = Math.max(-16, Math.min(16, deg * 0.35));
+    const stretch = 1.18;
+    bar.style.transform = 'rotate(' + deg.toFixed(1) + 'deg) scaleX(' + stretch + ')';
+  }
+
+  function setActive(panel){
+    if (panel === activePanel) return;
+    activePanel = panel;
+    panels.forEach(p => {
+      const on = p === panel;
+      p.classList.toggle('active', on);
+      p.querySelector('.panel-head').setAttribute('aria-expanded', String(on));
+    });
+    rows.forEach(r => r.classList.toggle('active', !!panel && r.contains(panel)));
+    pointBar(panel);
+  }
+  function toggle(panel){
+    setActive(panel === activePanel ? null : panel);
+  }
+
+  panels.forEach(p => {
+    const head = p.querySelector('.panel-head');
+    head.addEventListener('click', () => toggle(p));
+    head.addEventListener('focus', () => { if (isDesktop()) setActive(p); });
+    p.addEventListener('mouseenter', () => { if (isDesktop()) setActive(p); });
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') setActive(null);
+  });
+  window.addEventListener('resize', () => pointBar(activePanel));
+
+  // open WHAT by default on desktop so the structure reads instantly
+  if (isDesktop()) setActive(panels[0]);
+
+  // join form
+  const form = document.getElementById('joinForm');
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    form.style.display = 'none';
+    document.getElementById('joinDone').style.display = 'block';
+  });
+})();
+</script>
+</body>
+</html>

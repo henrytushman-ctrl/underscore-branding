@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>the_core — Underscore</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23FAF6EE'/%3E%3Crect x='13' y='42' width='38' height='9' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --yellow:#F5C518;
+    --ink:#1A1816;
+    --cream:#FAF6EE;
+    --paper:#FFFDF8;
+    --muted:#6f685c;
+    --faint:#a89f8d;
+    --rule:#e7dfd0;
+    /* member accent rails — muted, not rainbow */
+    --acc-maya:#b88a2a;
+    --acc-tom:#8a6a4f;
+    --acc-sam:#5f7d6a;
+    --acc-ana:#7d6a8a;
+    --acc-david:#5f6f85;
+    --acc-leila:#9a6a5a;
+    --acc-jonas:#6a7a52;
+    --acc-priya:#8a7252;
+    --acc-admin:#1A1816;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  ::selection{ background:var(--yellow); color:var(--ink); }
+  html,body{ height:100%; }
+  body{
+    font-family:'Inter', system-ui, sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    display:flex; flex-direction:column;
+    font-size:15.5px; line-height:1.55;
+  }
+  .mono{ font-family:'IBM Plex Mono', monospace; }
+
+  /* ---------- header ---------- */
+  header{
+    background:var(--ink); color:var(--cream);
+    padding:14px clamp(16px,4vw,32px);
+    display:flex; align-items:center; gap:14px;
+    flex-shrink:0; z-index:10;
+  }
+  .room-mark{
+    width:34px; height:34px; border-radius:8px;
+    background:var(--yellow); flex-shrink:0;
+    display:flex; align-items:flex-end; justify-content:center; padding-bottom:8px;
+  }
+  .room-mark span{ display:block; width:16px; height:3.5px; background:var(--ink); }
+  .room-name{ font-weight:650; letter-spacing:-0.01em; }
+  .room-sub{ font-size:12.5px; color:#b5ad9d; font-family:'IBM Plex Mono', monospace; }
+
+  /* ---------- pinned bar ---------- */
+  #pinned{
+    background:var(--yellow); color:var(--ink);
+    padding:8px clamp(16px,4vw,32px);
+    font-size:13.5px; font-weight:550;
+    display:flex; gap:10px; align-items:center;
+    flex-shrink:0; border-bottom:1px solid #d9ad0e;
+  }
+  #pinned svg{ flex-shrink:0; }
+
+  /* ---------- thread ---------- */
+  #thread{
+    flex:1; overflow-y:auto;
+    padding:28px clamp(14px,4vw,32px) 40px;
+    scrollbar-width:thin; scrollbar-color:var(--rule) transparent;
+  }
+  .day-divider{
+    text-align:center; margin:26px 0 22px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px; color:var(--faint);
+    letter-spacing:.08em; text-transform:uppercase;
+    display:flex; align-items:center; gap:14px;
+  }
+  .day-divider::before, .day-divider::after{
+    content:''; flex:1; height:1px; background:var(--rule);
+  }
+  .msg{
+    max-width:min(620px, 92%);
+    margin:0 0 18px;
+    opacity:0; transform:translateY(14px);
+    transition:opacity .5s ease, transform .5s ease;
+  }
+  .msg.shown{ opacity:1; transform:none; }
+  @media (prefers-reduced-motion: reduce){
+    .msg{ opacity:1; transform:none; transition:none; }
+  }
+  .msg .meta{
+    display:flex; align-items:baseline; gap:10px; margin:0 0 4px 14px;
+  }
+  .msg .who{
+    font-size:11.5px; font-weight:650; letter-spacing:.09em;
+    text-transform:uppercase; font-variant:all-small-caps;
+  }
+  .msg .when{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px; color:var(--faint);
+  }
+  .msg .bubble{
+    background:var(--paper);
+    border:1px solid var(--rule);
+    border-left:3px solid var(--acc, var(--rule));
+    border-radius:4px 14px 14px 14px;
+    padding:12px 16px;
+    box-shadow:0 1px 2px rgba(26,24,22,.04);
+  }
+  .msg .bubble + .bubble{ margin-top:6px; border-radius:14px; }
+  .msg.admin .bubble{
+    background:var(--ink); color:var(--cream);
+    border-color:var(--ink);
+    border-left:3px solid var(--yellow);
+  }
+  .msg.admin .who{ color:var(--ink); }
+  .hl{ background:var(--yellow); padding:0 .25em; font-weight:600; color:var(--ink); border-radius:2px; }
+  .msg.admin .hl{ color:var(--ink); }
+  .statline{
+    font-family:'IBM Plex Mono', monospace; font-size:13.5px;
+    display:block; padding:2px 0;
+  }
+
+  /* per-sender accent assignment */
+  .m-maya  { --acc:var(--acc-maya);  } .m-maya  .who{ color:var(--acc-maya); }
+  .m-tom   { --acc:var(--acc-tom);   } .m-tom   .who{ color:var(--acc-tom); }
+  .m-sam   { --acc:var(--acc-sam);   } .m-sam   .who{ color:var(--acc-sam); }
+  .m-ana   { --acc:var(--acc-ana);   } .m-ana   .who{ color:var(--acc-ana); }
+  .m-david { --acc:var(--acc-david); } .m-david .who{ color:var(--acc-david); }
+  .m-leila { --acc:var(--acc-leila); } .m-leila .who{ color:var(--acc-leila); }
+  .m-jonas { --acc:var(--acc-jonas); } .m-jonas .who{ color:var(--acc-jonas); }
+  .m-priya { --acc:var(--acc-priya); } .m-priya .who{ color:var(--acc-priya); }
+
+  /* ---------- composer ---------- */
+  #composer{
+    flex-shrink:0;
+    background:var(--paper);
+    border-top:1px solid var(--rule);
+    padding:14px clamp(16px,4vw,32px);
+  }
+  #composerBtn{
+    width:100%; max-width:760px; margin:0 auto; display:flex; align-items:center; gap:12px;
+    background:var(--cream); border:1.5px solid var(--rule);
+    border-radius:12px; padding:13px 18px;
+    font:inherit; color:var(--muted); cursor:pointer; text-align:left;
+    transition:border-color .2s;
+  }
+  #composerBtn:hover, #composerBtn:focus-visible{
+    border-color:var(--yellow); outline:none;
+  }
+  #composerBtn .arrow{ margin-left:auto; color:var(--ink); font-weight:600; white-space:nowrap; }
+  #composerBtn .arrow b{ background:var(--yellow); padding:2px 8px; border-radius:6px; font-weight:650; }
+
+  /* ---------- join panel ---------- */
+  #joinPanel{
+    position:fixed; inset:0; display:none;
+    align-items:flex-end; justify-content:center;
+    background:rgba(26,24,22,.45); z-index:50;
+  }
+  #joinPanel.open{ display:flex; }
+  #joinCard{
+    background:var(--paper); width:min(560px, 100%);
+    border-radius:18px 18px 0 0; padding:28px clamp(20px,5vw,36px) 34px;
+    border-top:4px solid var(--yellow);
+  }
+  @media (min-width:640px){
+    #joinPanel{ align-items:center; }
+    #joinCard{ border-radius:18px; }
+  }
+  #joinCard h2{ font-size:21px; letter-spacing:-0.02em; margin-bottom:6px; }
+  #joinCard .sub{ color:var(--muted); font-size:14px; margin-bottom:20px; }
+  #joinCard label{
+    display:block; font-size:11.5px; font-weight:650; letter-spacing:.09em;
+    text-transform:uppercase; color:var(--muted); margin:14px 0 5px;
+  }
+  #joinCard input, #joinCard textarea{
+    width:100%; font:inherit; font-size:15px;
+    border:1.5px solid var(--rule); border-radius:9px;
+    padding:10px 13px; background:var(--cream); color:var(--ink);
+  }
+  #joinCard input:focus, #joinCard textarea:focus{
+    outline:none; border-color:var(--yellow);
+  }
+  #joinCard textarea{ resize:vertical; min-height:74px; }
+  .join-actions{ display:flex; gap:10px; margin-top:22px; }
+  .btn{
+    font:inherit; font-weight:650; font-size:15px;
+    border-radius:9px; padding:11px 20px; cursor:pointer; border:1.5px solid var(--ink);
+  }
+  .btn-primary{ background:var(--ink); color:var(--yellow); }
+  .btn-primary:hover, .btn-primary:focus-visible{ background:#000; outline:none; }
+  .btn-ghost{ background:transparent; color:var(--ink); border-color:var(--rule); }
+  .btn-ghost:hover, .btn-ghost:focus-visible{ border-color:var(--ink); outline:none; }
+  #joinDone{ display:none; padding:14px 0 4px; }
+  #joinDone .mark{ font-size:30px; color:var(--ink); }
+  #joinDone .mark u{ text-decoration:none; border-bottom:6px solid var(--yellow); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="room-mark" aria-hidden="true"><span></span></div>
+  <div>
+    <div class="room-name">the_core</div>
+    <div class="room-sub">1,247 members · 40 cities · founded 2021</div>
+  </div>
+</header>
+
+<div id="pinned" role="note">
+  <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M8.5 1l4.5 4.5-2 2-.7-.7L7 10.1V13H5.9L1 8.1V7l2.9-3.3-.7-.7 2-2z" fill="#1A1816"/></svg>
+  <span><strong>Pinned:</strong> The Core gives first and asks later.</span>
+</div>
+
+<main id="thread" aria-label="group conversation">
+
+  <div class="day-divider">tuesday · 09:41</div>
+
+  <div class="msg m-tom">
+    <div class="meta"><span class="who">Tom Aiello · Detroit</span><span class="when">09:41</span></div>
+    <div class="bubble">Long shot, but I'm stuck. Our anodizing line is rejecting 30% of parts since Friday and my supplier swears nothing changed on their end. I ship a customer order in nine days. Anyone been through this?</div>
+  </div>
+
+  <div class="msg m-jonas">
+    <div class="meta"><span class="who">Jonas Weber · Berlin</span><span class="when">09:47</span></div>
+    <div class="bubble">Been through exactly this. It's almost never the chemistry — check incoming material certs first. We found our "unchanged" supplier had switched alloy lots without re-certifying. Send me two reject photos and I'll tell you in ten minutes if it's the same failure.</div>
+  </div>
+
+  <div class="msg m-priya">
+    <div class="meta"><span class="who">Priya Nair · Bangalore</span><span class="when">09:52</span></div>
+    <div class="bubble">Also: I run product for a metals QA platform. I can pull our anonymized defect data for anodizing rejects and tell you the three most common root causes by symptom. Free, obviously. Give me an hour.</div>
+  </div>
+
+  <div class="msg m-maya">
+    <div class="meta"><span class="who">Maya Chen · Oakland</span><span class="when">09:58</span></div>
+    <div class="bubble">Tom — my co-founder ran a finishing shop for 12 years before we started the company. Calling him now, he owes me one. Expect a call from a Michigan number this afternoon.</div>
+  </div>
+
+  <div class="msg m-tom">
+    <div class="meta"><span class="who">Tom Aiello · Detroit</span><span class="when">10:04</span></div>
+    <div class="bubble">It's been 23 minutes. I have a materials engineer in Berlin, a defect dataset, and a phone call lined up. This place is not normal.</div>
+  </div>
+
+  <div class="day-divider">tuesday · 14:20</div>
+
+  <div class="msg m-sam">
+    <div class="meta"><span class="who">Sam Osei · Boston</span><span class="when">14:20</span></div>
+    <div class="bubble">New here — joined this morning. Honest question: is this place for real? Every "community" I've joined was a content feed with a logo. What's the catch?</div>
+  </div>
+
+  <div class="msg m-leila">
+    <div class="meta"><span class="who">Leila Haddad · Beirut</span><span class="when">14:26</span></div>
+    <div class="bubble">No catch, but there is a rule, and it's the whole thing: <span class="hl">you give first</span>. Nobody tracks favors, nobody invoices anybody. You help because last month somebody helped you, and next month somebody will again.</div>
+  </div>
+
+  <div class="msg m-david">
+    <div class="meta"><span class="who">David Park · Seoul</span><span class="when">14:31</span></div>
+    <div class="bubble">The name explains it better than any pitch. An underscore is the character you type before the thing that matters — it holds the place, carries the weight, never asks for credit. That's the job description here.</div>
+    <div class="bubble">We're builders, operators, researchers, manufacturers. No titles at the door. Scroll up and watch what happened to Tom this morning — that's the product.</div>
+  </div>
+
+  <div class="msg m-ana">
+    <div class="meta"><span class="who">Ana Reyes · Mexico City</span><span class="when">14:38</span></div>
+    <div class="bubble">What sold me: I asked for ten minutes of feedback on a packaging design and got a working session with two people who'd shipped the exact product category. Then a month later someone needed Spanish-market research and I had it sitting on my drive. Sideways help, both directions. That's the loop.</div>
+  </div>
+
+  <div class="msg m-sam">
+    <div class="meta"><span class="who">Sam Osei · Boston</span><span class="when">14:44</span></div>
+    <div class="bubble">Alright. I review backend architectures for a living. Consider that on the table for whoever needs it.</div>
+  </div>
+
+  <div class="msg m-leila">
+    <div class="meta"><span class="who">Leila Haddad · Beirut</span><span class="when">14:45</span></div>
+    <div class="bubble">And now you're one of us. That took four hours.</div>
+  </div>
+
+  <div class="day-divider">friday · 17:02</div>
+
+  <div class="msg m-maya">
+    <div class="meta"><span class="who">Maya Chen · Oakland</span><span class="when">17:02</span></div>
+    <div class="bubble">
+      End-of-week numbers, because we count hours, not likes:
+      <span class="statline" style="margin-top:8px">members&nbsp;&nbsp;&nbsp;1,247 · 40 cities</span>
+      <span class="statline">hours given&nbsp;&nbsp;<span class="hl">9,000 this year</span></span>
+      <span class="statline">tom's reject rate&nbsp;&nbsp;30% → 2% (it was the alloy lot — Jonas called it)</span>
+    </div>
+  </div>
+
+  <div class="msg m-tom">
+    <div class="meta"><span class="who">Tom Aiello · Detroit</span><span class="when">17:09</span></div>
+    <div class="bubble">Order ships Monday. Whoever's next with a problem — I owe this room about forty hours. Spend them.</div>
+  </div>
+
+  <div class="msg admin">
+    <div class="meta"><span class="who">Underscore · admin</span><span class="when">17:15</span></div>
+    <div class="bubble">
+      Pinned for everyone arriving from the outside: this thread is what Underscore is. If you build, operate, or know something deeply — and you're willing to give time before you ask for it — you belong here.
+      <br><br>
+      <strong>How to join:</strong> tell us your name, your city, and what you can give. A member near you replies within a week, and their first move is to help <em>you</em> with something. Use the composer below. ↓
+    </div>
+  </div>
+
+</main>
+
+<div id="composer">
+  <button id="composerBtn" aria-haspopup="dialog" aria-controls="joinPanel">
+    <span>Message the_core…</span>
+    <span class="arrow">Want in? <b>Ask to join →</b></span>
+  </button>
+</div>
+
+<div id="joinPanel" role="dialog" aria-modal="true" aria-labelledby="joinTitle">
+  <div id="joinCard">
+    <form id="joinForm">
+      <h2 id="joinTitle">Ask to join the Core</h2>
+      <p class="sub">Three fields. The last one is the one we read first.</p>
+      <label for="jName">Name</label>
+      <input id="jName" name="name" type="text" required autocomplete="name">
+      <label for="jCity">City</label>
+      <input id="jCity" name="city" type="text" required autocomplete="address-level2">
+      <label for="jGive">What can you give?</label>
+      <textarea id="jGive" name="give" required placeholder="An hour a month. A skill. An intro. The honest read nobody else will give."></textarea>
+      <div class="join-actions">
+        <button type="submit" class="btn btn-primary">Send it</button>
+        <button type="button" class="btn btn-ghost" id="joinCancel">Not yet</button>
+      </div>
+    </form>
+    <div id="joinDone">
+      <div class="mark">received<u>_</u></div>
+      <p class="sub" style="margin-top:10px">A Core member near <span id="doneCity">you</span> will reply within a week — and they'll help you with something before you've given anything. That's the point.</p>
+      <button type="button" class="btn btn-ghost" id="joinClose">Back to the thread</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // progressive reveal of messages on scroll
+  const msgs = document.querySelectorAll('.msg');
+  if (reduced || !('IntersectionObserver' in window)){
+    msgs.forEach(m => m.classList.add('shown'));
+  } else {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting){ e.target.classList.add('shown'); io.unobserve(e.target); }
+      });
+    }, { root: document.getElementById('thread'), threshold: 0.15 });
+    msgs.forEach(m => io.observe(m));
+  }
+
+  // join panel
+  const panel = document.getElementById('joinPanel');
+  const form = document.getElementById('joinForm');
+  const done = document.getElementById('joinDone');
+  const openBtn = document.getElementById('composerBtn');
+  let lastFocus = null;
+
+  function open(){
+    lastFocus = document.activeElement;
+    panel.classList.add('open');
+    form.style.display = '';
+    done.style.display = 'none';
+    document.getElementById('jName').focus();
+  }
+  function close(){
+    panel.classList.remove('open');
+    if (lastFocus) lastFocus.focus();
+  }
+  openBtn.addEventListener('click', open);
+  document.getElementById('joinCancel').addEventListener('click', close);
+  document.getElementById('joinClose').addEventListener('click', close);
+  panel.addEventListener('click', e => { if (e.target === panel) close(); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && panel.classList.contains('open')) close();
+  });
+  // simple focus trap
+  panel.addEventListener('keydown', e => {
+    if (e.key !== 'Tab') return;
+    const focusables = panel.querySelectorAll('input, textarea, button');
+    const list = Array.from(focusables).filter(el => el.offsetParent !== null);
+    if (!list.length) return;
+    const first = list[0], last = list[list.length - 1];
+    if (e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+  });
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const city = document.getElementById('jCity').value.trim();
+    document.getElementById('doneCity').textContent = city || 'you';
+    form.style.display = 'none';
+    done.style.display = 'block';
+    document.getElementById('joinClose').focus();
+  });
+})();
+</script>
+</body>
+</html>

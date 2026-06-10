@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — The Exchange</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23171511'/%3E%3Crect x='12' y='44' width='40' height='9' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Archivo:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --board:#171511;
+    --board-2:#1d1a15;
+    --line:#2c2820;
+    --amber:#F5C518;
+    --amber-dim:#b8961e;
+    --text:#e8dfcd;
+    --text-dim:#8f8674;
+    --cream:#FAF6EE;
+    --ink:#1A1816;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  ::selection{background:var(--amber);color:var(--ink)}
+  html,body{height:100%}
+  body{
+    background:var(--board);
+    color:var(--text);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+  button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+  a{color:var(--amber)}
+
+  /* ---------- TICKER ---------- */
+  .ticker{
+    flex:0 0 auto;
+    border-bottom:1px solid var(--line);
+    overflow:hidden;
+    white-space:nowrap;
+    background:var(--board-2);
+    position:relative;
+  }
+  .ticker:focus-within .ticker-track,
+  .ticker:hover .ticker-track{animation-play-state:paused}
+  .ticker-track{
+    display:inline-block;
+    padding:9px 0;
+    animation:tape 70s linear infinite;
+    will-change:transform;
+  }
+  @keyframes tape{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  .ticker .give{color:var(--text-dim);letter-spacing:.02em}
+  .ticker .give strong{color:var(--text);font-weight:500}
+  .ticker .us{color:var(--amber);font-weight:600;padding:0 14px}
+  .ticker-label{
+    position:absolute;left:0;top:0;bottom:0;
+    background:var(--amber);color:var(--ink);
+    display:flex;align-items:center;
+    padding:0 12px;font-weight:600;font-size:11px;letter-spacing:.12em;
+    z-index:2;
+  }
+  .ticker-track{padding-left:140px}
+
+  /* ---------- LAYOUT ---------- */
+  .floor{flex:1 1 auto;display:flex;min-height:0}
+  .main{flex:1 1 auto;display:flex;flex-direction:column;min-width:0}
+
+  /* masthead */
+  .masthead{
+    display:flex;align-items:baseline;gap:18px;
+    padding:18px 24px 10px;
+    border-bottom:1px solid var(--line);
+    flex-wrap:wrap;
+  }
+  .wordmark{font-size:20px;font-weight:600;color:var(--cream);letter-spacing:-.01em}
+  .wordmark .u{color:var(--amber)}
+  .masthead .sub{color:var(--text-dim);font-size:12px}
+  .masthead .clock{margin-left:auto;color:var(--text-dim);font-size:12px;font-variant-numeric:tabular-nums}
+
+  /* tabs */
+  .tabs{display:flex;gap:0;border-bottom:1px solid var(--line);padding:0 24px}
+  .tab{
+    padding:11px 18px;font-size:12px;letter-spacing:.1em;
+    color:var(--text-dim);border-bottom:2px solid transparent;
+    margin-bottom:-1px;
+  }
+  .tab[aria-selected="true"]{color:var(--amber);border-bottom-color:var(--amber)}
+  .tab:focus-visible{outline:2px solid var(--amber);outline-offset:-2px}
+  .tabs .hint{margin-left:auto;align-self:center;color:var(--text-dim);font-size:11px}
+
+  /* board table */
+  .board-scroll{flex:1 1 auto;overflow-y:auto;min-height:0}
+  table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+  thead th{
+    position:sticky;top:0;background:var(--board);
+    text-align:left;color:var(--text-dim);font-weight:400;
+    font-size:11px;letter-spacing:.1em;
+    padding:10px 12px;border-bottom:1px solid var(--line);
+    z-index:1;
+  }
+  tbody tr{border-bottom:1px solid var(--line);cursor:pointer}
+  tbody tr:hover,tbody tr:focus-visible{background:var(--board-2);outline:none}
+  tbody tr:focus-visible td:first-child{box-shadow:inset 3px 0 0 var(--amber)}
+  td{padding:12px;vertical-align:top}
+  td:first-child,th:first-child{padding-left:24px}
+  td:last-child,th:last-child{padding-right:24px;text-align:right}
+  th:last-child{text-align:right}
+  .side{font-weight:600;font-size:11px;letter-spacing:.1em}
+  .side.ask{color:var(--amber)}
+  .side.offer{color:var(--text)}
+  .row-need{color:var(--text)}
+  .row-city{color:var(--text-dim)}
+  .row-status{color:var(--amber-dim)}
+  .row-status.matched{color:var(--amber)}
+  .flash{animation:rowflash 1.4s ease-out 1}
+  @keyframes rowflash{
+    0%{background:rgba(245,197,24,.28)}
+    100%{background:transparent}
+  }
+
+  /* ---------- STAT RAIL ---------- */
+  .rail{
+    flex:0 0 232px;border-left:1px solid var(--line);
+    padding:22px 20px;display:flex;flex-direction:column;gap:26px;
+    background:var(--board-2);overflow-y:auto;
+  }
+  .stat .k{font-size:11px;letter-spacing:.12em;color:var(--text-dim);margin-bottom:6px}
+  .stat .v{font-size:26px;color:var(--cream);font-variant-numeric:tabular-nums;font-weight:500}
+  .stat.proud{
+    border:1px solid var(--amber);padding:14px 14px 12px;
+    background:rgba(245,197,24,.06);
+  }
+  .stat.proud .k{color:var(--amber)}
+  .stat.proud .v{color:var(--amber);font-size:34px}
+  .stat.proud .note{margin-top:8px;font-size:11px;color:var(--text-dim);line-height:1.5;font-family:'Archivo',sans-serif}
+  .rail .since{margin-top:auto;font-size:11px;color:var(--text-dim);line-height:1.6}
+
+  /* ---------- BOTTOM BAR ---------- */
+  .bottombar{
+    flex:0 0 auto;border-top:1px solid var(--line);
+    background:var(--amber);color:var(--ink);
+    display:flex;align-items:center;justify-content:space-between;
+    gap:16px;padding:13px 24px;flex-wrap:wrap;
+  }
+  .bottombar .line{font-weight:600;font-size:13px}
+  .joinbtn{
+    background:var(--ink);color:var(--amber);
+    padding:9px 20px;font-weight:600;font-size:12px;letter-spacing:.08em;
+  }
+  .joinbtn:hover{background:#000}
+  .joinbtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+  /* ---------- DRAWERS ---------- */
+  .drawer{
+    position:fixed;top:0;right:0;bottom:0;width:400px;max-width:100vw;
+    background:var(--board-2);border-left:1px solid var(--line);
+    transform:translateX(100%);transition:transform .28s ease;
+    z-index:30;display:flex;flex-direction:column;
+    padding:26px 26px 30px;overflow-y:auto;
+  }
+  .drawer.open{transform:translateX(0)}
+  .drawer h2{
+    font-family:'Archivo',sans-serif;font-size:22px;font-weight:600;
+    color:var(--cream);line-height:1.25;margin:14px 0 14px;
+  }
+  .drawer .tag{font-size:11px;letter-spacing:.12em;color:var(--amber)}
+  .drawer p{
+    font-family:'Archivo',sans-serif;font-size:15px;line-height:1.65;
+    color:var(--text);margin-bottom:14px;
+  }
+  .drawer .people{border-top:1px solid var(--line);margin-top:6px;padding-top:14px}
+  .drawer .people .k{font-size:11px;letter-spacing:.12em;color:var(--text-dim);margin-bottom:10px}
+  .drawer .person{display:flex;justify-content:space-between;gap:12px;padding:6px 0;font-size:12px}
+  .drawer .person .where{color:var(--text-dim)}
+  .closebtn{
+    align-self:flex-end;color:var(--text-dim);font-size:12px;letter-spacing:.1em;
+    padding:4px 6px;
+  }
+  .closebtn:hover{color:var(--amber)}
+  .closebtn:focus-visible{outline:2px solid var(--amber)}
+  .overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,.45);
+    opacity:0;pointer-events:none;transition:opacity .28s ease;z-index:20;
+  }
+  .overlay.show{opacity:1;pointer-events:auto}
+
+  /* join form */
+  .drawer form{display:flex;flex-direction:column;gap:14px;margin-top:6px}
+  .drawer label{font-size:11px;letter-spacing:.1em;color:var(--text-dim);display:block;margin-bottom:6px}
+  .drawer input,.drawer textarea{
+    width:100%;background:var(--board);border:1px solid var(--line);
+    color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:13px;
+    padding:10px 12px;
+  }
+  .drawer input:focus,.drawer textarea:focus{outline:none;border-color:var(--amber)}
+  .submit{
+    background:var(--amber);color:var(--ink);font-weight:600;
+    padding:12px;letter-spacing:.08em;font-size:12px;margin-top:4px;
+  }
+  .submit:hover{background:#ffd83a}
+  .submit:focus-visible{outline:2px solid var(--cream);outline-offset:2px}
+  .form-ok{
+    font-family:'Archivo',sans-serif;color:var(--amber);font-size:15px;line-height:1.6;
+    border:1px solid var(--amber);padding:16px;display:none;
+  }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width:900px){
+    .rail{flex-basis:180px;padding:16px 14px}
+    .stat .v{font-size:20px}
+    .stat.proud .v{font-size:26px}
+  }
+  @media (max-width:768px){
+    body{overflow:auto}
+    .floor{flex-direction:column;overflow:visible}
+    .rail{
+      border-left:none;border-top:1px solid var(--line);
+      flex-direction:row;flex-wrap:wrap;gap:14px;flex-basis:auto;
+    }
+    .stat{flex:1 1 40%}
+    .rail .since{display:none}
+    .board-scroll{overflow:visible}
+    td,th{padding:10px 8px}
+    td:first-child,th:first-child{padding-left:14px}
+    td:last-child,th:last-child{padding-right:14px}
+    .drawer{width:100%}
+    .masthead{padding:14px 14px 8px}
+    .tabs{padding:0 14px}
+    .bottombar{padding:12px 14px}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .ticker-track{animation:none;white-space:normal;padding:9px 14px 9px 140px;display:block}
+    .ticker-track .dup{display:none}
+    .flash{animation:none}
+    .drawer{transition:none}
+    .overlay{transition:none}
+  }
+</style>
+</head>
+<body>
+
+  <!-- TICKER TAPE -->
+  <div class="ticker" aria-label="Recent gives across the Core. Hover to pause.">
+    <span class="ticker-label">RECENT GIVES</span>
+    <div class="ticker-track" id="tickerTrack"></div>
+  </div>
+
+  <div class="floor">
+    <main class="main">
+      <header class="masthead">
+        <span class="wordmark"><span class="u">_</span>underscore</span>
+        <span class="sub">THE EXCHANGE · where help trades hands</span>
+        <span class="clock" id="clock"></span>
+      </header>
+
+      <div class="tabs" role="tablist" aria-label="Board views">
+        <button class="tab" role="tab" id="tab-asks" aria-selected="true" aria-controls="panel-asks">OPEN ASKS</button>
+        <button class="tab" role="tab" id="tab-offers" aria-selected="false" aria-controls="panel-offers" tabindex="-1">STANDING OFFERS</button>
+        <span class="hint">click any row for the story</span>
+      </div>
+
+      <div class="board-scroll">
+        <div id="panel-asks" role="tabpanel" aria-labelledby="tab-asks">
+          <table>
+            <thead><tr><th>SIDE</th><th>NEED</th><th>CITY</th><th>STATUS</th></tr></thead>
+            <tbody id="askBody"></tbody>
+          </table>
+        </div>
+        <div id="panel-offers" role="tabpanel" aria-labelledby="tab-offers" hidden>
+          <table>
+            <thead><tr><th>SIDE</th><th>OFFER</th><th>CITY</th><th>STATUS</th></tr></thead>
+            <tbody id="offerBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <!-- STAT RAIL -->
+    <aside class="rail" aria-label="Live community statistics">
+      <div class="stat"><div class="k">HOURS GIVEN</div><div class="v" id="hoursStat">9,000</div></div>
+      <div class="stat"><div class="k">MEMBERS</div><div class="v">1,247</div></div>
+      <div class="stat"><div class="k">CITIES</div><div class="v">40</div></div>
+      <div class="stat proud">
+        <div class="k">ASKS UNANSWERED</div>
+        <div class="v">0</div>
+        <div class="note">Our proudest number. Every ask on this board since 2021 has found a hand.</div>
+      </div>
+      <div class="since">FOUNDED 2021<br>This board is public.<br>It has never closed.</div>
+    </aside>
+  </div>
+
+  <!-- BOTTOM BAR -->
+  <div class="bottombar">
+    <span class="line">This market only goes up when you give.</span>
+    <button class="joinbtn" id="joinOpen" aria-haspopup="dialog">JOIN THE CORE →</button>
+  </div>
+
+  <!-- ROW DETAIL DRAWER -->
+  <div class="overlay" id="overlay"></div>
+  <aside class="drawer" id="detailDrawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
+    <button class="closebtn" data-close>CLOSE ✕</button>
+    <span class="tag" id="drawerTag"></span>
+    <h2 id="drawerTitle"></h2>
+    <p id="drawerStory"></p>
+    <div class="people">
+      <div class="k">MEMBERS INVOLVED</div>
+      <div id="drawerPeople"></div>
+    </div>
+  </aside>
+
+  <!-- JOIN DRAWER -->
+  <aside class="drawer" id="joinDrawer" role="dialog" aria-modal="true" aria-labelledby="joinTitle">
+    <button class="closebtn" data-close>CLOSE ✕</button>
+    <span class="tag">JOIN THE CORE</span>
+    <h2 id="joinTitle">Take a seat on the floor.</h2>
+    <p>Underscore is the line under other people's work. The Core is 1,247 builders, operators, and experts in 40 cities who trade time, not favors owed. Tell us what you make and what you could give an hour to.</p>
+    <form id="joinForm">
+      <div><label for="jf-name">NAME</label><input id="jf-name" name="name" required autocomplete="name"></div>
+      <div><label for="jf-city">CITY</label><input id="jf-city" name="city" required autocomplete="address-level2"></div>
+      <div><label for="jf-do">WHAT YOU DO</label><input id="jf-do" name="role" required placeholder="founder · engineer · manufacturer …"></div>
+      <div><label for="jf-give">ONE THING YOU COULD GIVE AN HOUR TO</label><textarea id="jf-give" name="give" rows="3" required></textarea></div>
+      <button class="submit" type="submit">PLACE YOUR FIRST OFFER →</button>
+    </form>
+    <div class="form-ok" id="joinOk">Received. A member of the Core reads every application — expect a reply within the week. Your first hour starts the day you're in.</div>
+  </aside>
+
+<script>
+(function(){
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- DATA ---------- */
+  var gives = [
+    ['MAYA','JONAS','supplier intro','OAK–BER'],
+    ['SAM','PRIYA','code review','BOS–BLR'],
+    ['ANA','TOM','packaging design','MEX–DET'],
+    ['DAVID','LEILA','ops playbook','SEL–BEY'],
+    ['JONAS','MAYA','CNC referral','BER–OAK'],
+    ['PRIYA','SAM','user research','BLR–BOS'],
+    ['LEILA','ANA','survey design','BEY–MEX'],
+    ['TOM','DAVID','factory tour','DET–SEL'],
+    ['NADIA','MARCUS','freight quote','NBO–LON'],
+    ['YUKI','CARLA','PCB rework','TYO–SAO'],
+    ['MARCUS','OMAR','term sheet read','LON–CAI'],
+    ['INGRID','YUKI','battery sourcing','OSL–TYO']
+  ];
+
+  var asks = [
+    {need:'needs CNC time, two aluminum brackets', city:'Detroit', status:'matched in 3h', matched:true,
+     story:'Tom Aiello needed CNC time for a two-bracket prototype and posted at 9:12am. Jonas Weber pinged a Berlin shop with Detroit ties; parts were on a machine by lunch.',
+     people:[['Tom Aiello','manufacturer · Detroit'],['Jonas Weber','builder · Berlin']]},
+    {need:'pitch deck gut-check before Friday', city:'Mexico City', status:'matched in 19m', matched:true,
+     story:'Ana Reyes asked for honest eyes on a deck two days before a partner meeting. Maya Chen, who has sat on both sides of that table, marked it up the same evening.',
+     people:[['Ana Reyes','designer · Mexico City'],['Maya Chen','founder · Oakland']]},
+    {need:'intro to a battery cell supplier, small MOQ', city:'Oakland', status:'open · 41m', matched:false,
+     story:'Maya Chen is hunting a cell supplier that will take a 500-unit order seriously. Ingrid Solberg has flagged two contacts in Oslo and is making the intro now.',
+     people:[['Maya Chen','founder · Oakland'],['Ingrid Solberg','energy · Oslo']]},
+    {need:'staging environment review, FastAPI + Postgres', city:'Bangalore', status:'matched in 1h', matched:true,
+     story:'Priya Nair asked for a second pair of hands before a launch. Sam Osei walked her staging setup line by line on a Sunday call and found the connection-pool bug.',
+     people:[['Priya Nair','product · Bangalore'],['Sam Osei','engineer · Boston']]},
+    {need:'researcher to sanity-check a survey instrument', city:'Beirut', status:'matched in 2h', matched:true,
+     story:'Leila Haddad needed methodology eyes on a 40-question field survey. David Park had run the same study shape in Seoul and cut it to 18 questions that actually move.',
+     people:[['Leila Haddad','researcher · Beirut'],['David Park','operator · Seoul']]},
+    {need:'someone who has shipped hardware through customs in EU', city:'Seoul', status:'open · 12m', matched:false,
+     story:'David Park has 200 units sitting at Rotterdam and a form he has never seen. Omar Farouk, who clears freight for a living, raised a hand eleven minutes in.',
+     people:[['David Park','operator · Seoul'],['Omar Farouk','logistics · Cairo']]},
+    {need:'first sales hire — what to look for, what to pay', city:'Berlin', status:'matched in 4h', matched:true,
+     story:'Jonas Weber was about to make his first sales hire on instinct alone. Marcus Reid sent the comp bands he uses and sat in on the final interview.',
+     people:[['Jonas Weber','builder · Berlin'],['Marcus Reid','finance · London']]},
+    {need:'help naming a product line, three candidates', city:'São Paulo', status:'matched in 6h', matched:true,
+     story:'Carla Mendes had three names and no conviction. Ana Reyes ran them past twelve members in four markets and one of them came back unanimous.',
+     people:[['Carla Mendes','growth · São Paulo'],['Ana Reyes','designer · Mexico City']]}
+  ];
+
+  var offers = [
+    {need:'2h/week of code review, Python or TypeScript', city:'Boston', status:'standing · taken 31×',
+     story:'Sam Osei has reviewed code for thirty-one members since 2022 and says it is the highest-leverage hour he gives. The queue is rarely longer than two days.',
+     people:[['Sam Osei','engineer · Boston']]},
+    {need:'factory floor walkthroughs for anyone making a physical thing', city:'Detroit', status:'standing · taken 14×',
+     story:'Tom Aiello opens his shop floor to any member who has never stood next to their own product being made. Fourteen members have taken the walk; most redesigned something after.',
+     people:[['Tom Aiello','manufacturer · Detroit']]},
+    {need:'fundraise debriefs — bring your term sheet, leave with notes', city:'Oakland', status:'standing · taken 22×',
+     story:'Maya Chen reads term sheets the way other people read menus. Twenty-two members have brought her theirs; nobody has signed a bad one since.',
+     people:[['Maya Chen','founder · Oakland']]},
+    {need:'design critique, 45 minutes, any stage of rough', city:'Mexico City', status:'standing · taken 27×',
+     story:'Ana Reyes holds open critique slots every Thursday. The only rule: bring the version you are embarrassed by, not the one you cleaned up.',
+     people:[['Ana Reyes','designer · Mexico City']]},
+    {need:'ops audits for teams under ten people', city:'Seoul', status:'standing · taken 9×',
+     story:'David Park spends one morning a month inside another member’s operation, then sends a one-page memo of what to stop doing. Nine teams have taken it. All nine got smaller to-do lists.',
+     people:[['David Park','operator · Seoul']]},
+    {need:'literature reviews — tell me your question, I find the papers', city:'Beirut', status:'standing · taken 11×',
+     story:'Leila Haddad turns vague hunches into reading lists. Eleven members have asked; the average turnaround is a weekend.',
+     people:[['Leila Haddad','researcher · Beirut']]},
+    {need:'intro routing across the Core — say who you need, not who you know', city:'Berlin', status:'standing · taken 38×',
+     story:'Jonas Weber keeps the informal map of who knows whom across 40 cities. Thirty-eight intros routed. He counts a give only when both sides say it was worth it.',
+     people:[['Jonas Weber','builder · Berlin']]}
+  ];
+
+  /* ---------- TICKER ---------- */
+  function tickerHTML(){
+    var s='';
+    gives.forEach(function(g){
+      s+='<span class="give"><strong>'+g[0]+'→'+g[1]+'</strong> · '+g[2]+' · '+g[3]+'</span><span class="us">_</span>';
+    });
+    return s;
+  }
+  var track=document.getElementById('tickerTrack');
+  track.innerHTML=tickerHTML()+'<span class="dup">'+tickerHTML()+'</span>';
+
+  /* ---------- TABLES ---------- */
+  function buildRows(list, body, side){
+    body.innerHTML='';
+    list.forEach(function(item, i){
+      var tr=document.createElement('tr');
+      tr.tabIndex=0;
+      tr.setAttribute('role','button');
+      tr.setAttribute('aria-label', side+': '+item.need+', '+item.city+', '+item.status+'. Press Enter for the story.');
+      tr.innerHTML='<td><span class="side '+side.toLowerCase()+'">'+side+'</span></td>'+
+        '<td class="row-need">'+item.need+'</td>'+
+        '<td class="row-city">'+item.city+'</td>'+
+        '<td class="row-status'+(item.matched?' matched':'')+'">'+item.status+'</td>';
+      function open(){ openDetail(side, item); }
+      tr.addEventListener('click', open);
+      tr.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){e.preventDefault();open();} });
+      body.appendChild(tr);
+    });
+  }
+  var askBody=document.getElementById('askBody'), offerBody=document.getElementById('offerBody');
+  buildRows(asks, askBody, 'ASK');
+  buildRows(offers, offerBody, 'OFFER');
+
+  /* ---------- TABS ---------- */
+  var tabs=[document.getElementById('tab-asks'),document.getElementById('tab-offers')];
+  var panels=[document.getElementById('panel-asks'),document.getElementById('panel-offers')];
+  function selectTab(idx){
+    tabs.forEach(function(t,i){
+      t.setAttribute('aria-selected', i===idx?'true':'false');
+      t.tabIndex = i===idx?0:-1;
+      panels[i].hidden = i!==idx;
+    });
+    tabs[idx].focus();
+  }
+  tabs.forEach(function(t,i){
+    t.addEventListener('click',function(){selectTab(i);});
+    t.addEventListener('keydown',function(e){
+      if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();selectTab((i+1)%2);}
+    });
+  });
+
+  /* ---------- DRAWERS ---------- */
+  var overlay=document.getElementById('overlay');
+  var detail=document.getElementById('detailDrawer');
+  var join=document.getElementById('joinDrawer');
+  var lastFocus=null;
+
+  function openDrawer(d){
+    lastFocus=document.activeElement;
+    d.classList.add('open'); overlay.classList.add('show');
+    var c=d.querySelector('.closebtn'); if(c)c.focus();
+    document.addEventListener('keydown', escClose);
+  }
+  function closeDrawers(){
+    [detail,join].forEach(function(d){d.classList.remove('open');});
+    overlay.classList.remove('show');
+    document.removeEventListener('keydown', escClose);
+    if(lastFocus)lastFocus.focus();
+  }
+  function escClose(e){ if(e.key==='Escape')closeDrawers(); }
+  overlay.addEventListener('click', closeDrawers);
+  document.querySelectorAll('[data-close]').forEach(function(b){b.addEventListener('click',closeDrawers);});
+
+  function openDetail(side, item){
+    document.getElementById('drawerTag').textContent=side+' · '+item.city.toUpperCase()+' · '+item.status.toUpperCase();
+    document.getElementById('drawerTitle').textContent=item.need;
+    document.getElementById('drawerStory').textContent=item.story;
+    var p=document.getElementById('drawerPeople'); p.innerHTML='';
+    item.people.forEach(function(pp){
+      var div=document.createElement('div'); div.className='person';
+      div.innerHTML='<span>'+pp[0]+'</span><span class="where">'+pp[1]+'</span>';
+      p.appendChild(div);
+    });
+    openDrawer(detail);
+  }
+
+  document.getElementById('joinOpen').addEventListener('click',function(){openDrawer(join);});
+  document.getElementById('joinForm').addEventListener('submit',function(e){
+    e.preventDefault();
+    this.style.display='none';
+    document.getElementById('joinOk').style.display='block';
+  });
+
+  /* ---------- CLOCK ---------- */
+  var clock=document.getElementById('clock');
+  function tickClock(){
+    var d=new Date();
+    clock.textContent='BOARD LIVE · '+d.toLocaleTimeString('en-US',{hour12:false});
+  }
+  tickClock();
+  if(!reduced) setInterval(tickClock,1000);
+
+  /* ---------- LIVE BOARD ACTIVITY ---------- */
+  var hours=9000, hoursEl=document.getElementById('hoursStat');
+  var freshAsks=[
+    {need:'beta testers for a scheduling tool, 20 minutes each', city:'London', status:'open · just now', matched:false,
+     story:'Marcus Reid needs twenty minutes from twelve people who calendar for a living. Asks like this usually fill before dinner.',
+     people:[['Marcus Reid','finance · London']]},
+    {need:'second opinion on a co-founder agreement', city:'Cairo', status:'open · just now', matched:false,
+     story:'Omar Farouk is splitting equity for the first time. Maya Chen has already raised a hand — she keeps a folder of these.',
+     people:[['Omar Farouk','logistics · Cairo'],['Maya Chen','founder · Oakland']]},
+    {need:'someone fluent in injection molding tolerances', city:'Tokyo', status:'open · just now', matched:false,
+     story:'Yuki Tanaka has a part that warps one time in forty. Tom Aiello thinks he knows why before seeing the drawing.',
+     people:[['Yuki Tanaka','hardware · Tokyo'],['Tom Aiello','manufacturer · Detroit']]},
+    {need:'warehouse contact near Nairobi for a 3-month lease', city:'Nairobi', status:'open · just now', matched:false,
+     story:'Nadia Osman needs 200 square meters and a landlord who answers the phone. Two members have leads in motion.',
+     people:[['Nadia Osman','supply chain · Nairobi']]}
+  ];
+  var matchPhrases=['matched in 8m','matched in 22m','matched in 1h','2 hands raised'];
+
+  function pulse(){
+    var r=Math.random();
+    if(r<0.45 && freshAsks.length){
+      var item=freshAsks.shift();
+      asks.unshift(item);
+      buildRows(asks, askBody, 'ASK');
+      var first=askBody.querySelector('tr');
+      if(first)first.classList.add('flash');
+    }else{
+      var openOnes=[];
+      askBody.querySelectorAll('tr').forEach(function(tr,i){ if(!asks[i].matched)openOnes.push(i); });
+      if(openOnes.length){
+        var idx=openOnes[Math.floor(Math.random()*openOnes.length)];
+        asks[idx].matched=true;
+        asks[idx].status=matchPhrases[Math.floor(Math.random()*matchPhrases.length)];
+        var tr=askBody.querySelectorAll('tr')[idx];
+        var cell=tr.querySelector('.row-status');
+        cell.textContent=asks[idx].status;
+        cell.classList.add('matched');
+        tr.classList.add('flash');
+        setTimeout(function(){tr.classList.remove('flash');},1500);
+      }
+    }
+    hours+=1;
+    hoursEl.textContent=hours.toLocaleString('en-US');
+  }
+  if(!reduced) setInterval(pulse, 5200);
+})();
+</script>
+</body>
+</html>

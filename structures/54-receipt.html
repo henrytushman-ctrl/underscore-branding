@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — The Receipt</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='24' width='24' height='5' rx='2' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root { --yellow:#F5C518; --ink:#1A1816; --desk:#B9B2A4; --paper:#FFFEF8; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  ::selection { background:var(--yellow); color:var(--ink); }
+  body {
+    font-family:'IBM Plex Mono',monospace; background:var(--desk); color:var(--ink);
+    display:flex; justify-content:center; padding:60px 14px 100px; min-height:100vh;
+    background-image:linear-gradient(rgba(0,0,0,.04) 1px, transparent 1px); background-size:100% 28px;
+  }
+  .receipt {
+    width:420px; max-width:96vw; background:var(--paper); position:relative;
+    box-shadow:0 24px 60px rgba(26,24,22,.35), 0 3px 10px rgba(26,24,22,.2);
+    padding:34px 28px 0; font-size:13px; line-height:1.65;
+    animation:print 2s ease-out; transform-origin:top;
+  }
+  @keyframes print { from { clip-path:inset(0 0 100% 0); } to { clip-path:inset(0 0 0% 0); } }
+  @media (prefers-reduced-motion:reduce){ .receipt { animation:none; } }
+  .zig { position:absolute; left:0; right:0; height:12px; }
+  .zig.top { top:-11px; }
+  .zig.bot { bottom:-11px; transform:scaleY(-1); }
+  .zig svg { width:100%; height:12px; display:block; }
+
+  .center { text-align:center; }
+  h1 { font-size:20px; letter-spacing:.3em; font-weight:600; }
+  .small { font-size:11px; letter-spacing:.08em; }
+  .dashed { border:0; border-top:2px dashed #C9C2B0; margin:18px 0; }
+  .item { display:flex; align-items:baseline; gap:6px; }
+  .item .l { white-space:nowrap; }
+  .item .dots { flex:1; border-bottom:2px dotted #C9C2B0; transform:translateY(-3px); }
+  .item .v { white-space:nowrap; font-weight:600; }
+  .total { font-size:15px; font-weight:600; }
+  .yellow { color:#9a7d06; }
+  .stamp {
+    display:inline-block; margin:10px auto 0; background:var(--yellow); color:var(--ink);
+    padding:6px 22px; font-weight:600; letter-spacing:.2em; transform:rotate(-2deg);
+  }
+  .barcode { margin:16px auto 4px; display:block; }
+  .quoteblk { font-size:12.5px; padding:0 6px; }
+  .tear {
+    margin:22px -28px 0; border-top:3px dotted var(--yellow); padding:20px 28px 30px; position:relative;
+    background:repeating-linear-gradient(0deg, var(--paper), var(--paper) 27px, #FBF7EA 27px, #FBF7EA 28px);
+  }
+  .tear::before {
+    content:"✂ TEAR HERE"; position:absolute; top:-9px; left:24px; background:var(--paper);
+    font-size:10px; letter-spacing:.2em; padding:0 8px; color:#9a7d06;
+  }
+  .field { margin:14px 0; }
+  .field label { display:block; font-size:11px; letter-spacing:.14em; margin-bottom:2px; }
+  .field input {
+    width:100%; border:0; border-bottom:2px solid var(--ink); background:transparent;
+    font-family:'IBM Plex Mono',monospace; font-size:14px; padding:4px 2px; outline:none;
+  }
+  .field input:focus { border-color:var(--yellow); }
+  .submit {
+    width:100%; margin-top:16px; background:var(--ink); color:var(--paper); border:0;
+    font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.18em; padding:14px; cursor:pointer;
+  }
+  .submit:hover { box-shadow:0 3px 0 var(--yellow); }
+</style>
+</head>
+<body>
+
+<div class="receipt">
+  <div class="zig top"><svg viewBox="0 0 420 12" preserveAspectRatio="none"><path d="M0 12 L10 0 L20 12 L30 0 L40 12 L50 0 L60 12 L70 0 L80 12 L90 0 L100 12 L110 0 L120 12 L130 0 L140 12 L150 0 L160 12 L170 0 L180 12 L190 0 L200 12 L210 0 L220 12 L230 0 L240 12 L250 0 L260 12 L270 0 L280 12 L290 0 L300 12 L310 0 L320 12 L330 0 L340 12 L350 0 L360 12 L370 0 L380 12 L390 0 L400 12 L410 0 L420 12 Z" fill="#FFFEF8"/></svg></div>
+
+  <div class="center">
+    <h1>UNDERSCORE</h1>
+    <div class="small">EST. 2021 · 40 CITIES · REGISTER #001</div>
+    <div class="small">"YOU WERE NEVER MEANT TO BUILD ALONE"</div>
+  </div>
+
+  <hr class="dashed">
+  <div class="small center">ANNUAL STATEMENT — TWELVE MONTHS OF GIVING<br>CASHIER: THE CORE · ALL SALES FINAL (NOTHING WAS SOLD)</div>
+  <hr class="dashed">
+
+  <div class="item"><span class="l">INTROS MADE</span><span class="dots"></span><span class="v">312</span></div>
+  <div class="item"><span class="l">OFFICE HOURS HELD</span><span class="dots"></span><span class="v">540</span></div>
+  <div class="item"><span class="l">EQUIPMENT LOANS</span><span class="dots"></span><span class="v">87</span></div>
+  <div class="item"><span class="l">MIDNIGHT CALLS TAKEN</span><span class="dots"></span><span class="v">63</span></div>
+  <div class="item"><span class="l">DECKS SURGICALLY SHORTENED</span><span class="dots"></span><span class="v">141</span></div>
+  <div class="item"><span class="l">FACTORY DOORS OPENED</span><span class="dots"></span><span class="v">19</span></div>
+  <div class="item"><span class="l">ASKS UNANSWERED</span><span class="dots"></span><span class="v yellow">0</span></div>
+
+  <hr class="dashed">
+  <div class="item total"><span class="l">SUBTOTAL — HOURS GIVEN</span><span class="dots"></span><span class="v">9,000</span></div>
+  <div class="item"><span class="l">TAX</span><span class="dots"></span><span class="v">NONE — TIME ISN'T TAXED</span></div>
+  <div class="item total"><span class="l">TOTAL</span><span class="dots"></span><span class="v">ONE COMMUNITY</span></div>
+  <hr class="dashed">
+
+  <div class="small">MEMBERS ON SHIFT (PARTIAL — 1,247 TOTAL):</div>
+  <div class="item"><span class="l">MAYA CHEN</span><span class="dots"></span><span class="v">OAKLAND</span></div>
+  <div class="item"><span class="l">SAM OSEI</span><span class="dots"></span><span class="v">BOSTON</span></div>
+  <div class="item"><span class="l">ANA REYES</span><span class="dots"></span><span class="v">MEXICO CITY</span></div>
+  <div class="item"><span class="l">DAVID PARK</span><span class="dots"></span><span class="v">SEOUL</span></div>
+  <div class="item"><span class="l">LEILA HADDAD</span><span class="dots"></span><span class="v">BEIRUT</span></div>
+  <div class="item"><span class="l">JONAS WEBER</span><span class="dots"></span><span class="v">BERLIN</span></div>
+  <div class="item"><span class="l">PRIYA NAIR</span><span class="dots"></span><span class="v">BANGALORE</span></div>
+  <div class="item"><span class="l">TOM AIELLO</span><span class="dots"></span><span class="v">DETROIT</span></div>
+
+  <hr class="dashed">
+  <div class="small center">— CUSTOMER COPY —</div>
+  <div class="quoteblk center">"I CAME FOR ONE INTRO.<br>I'VE STAYED THREE YEARS."<br><span class="small">— DAVID PARK, SEOUL</span></div>
+
+  <div class="center">
+    <svg class="barcode" width="220" height="46" viewBox="0 0 220 46" aria-label="decorative barcode of underscores">
+      <g fill="#1A1816">
+        <rect x="0" y="0" width="3" height="38"/><rect x="6" y="0" width="2" height="38"/><rect x="12" y="0" width="5" height="38"/><rect x="20" y="0" width="2" height="38"/><rect x="26" y="0" width="3" height="38"/><rect x="33" y="0" width="6" height="38"/><rect x="42" y="0" width="2" height="38"/><rect x="48" y="0" width="4" height="38"/><rect x="55" y="0" width="2" height="38"/><rect x="60" y="0" width="3" height="38"/><rect x="67" y="0" width="5" height="38"/><rect x="75" y="0" width="2" height="38"/><rect x="81" y="0" width="3" height="38"/><rect x="88" y="0" width="6" height="38"/><rect x="97" y="0" width="2" height="38"/><rect x="103" y="0" width="4" height="38"/><rect x="110" y="0" width="2" height="38"/><rect x="116" y="0" width="5" height="38"/><rect x="124" y="0" width="3" height="38"/><rect x="130" y="0" width="2" height="38"/><rect x="136" y="0" width="6" height="38"/><rect x="145" y="0" width="2" height="38"/><rect x="151" y="0" width="3" height="38"/><rect x="158" y="0" width="5" height="38"/><rect x="166" y="0" width="2" height="38"/><rect x="172" y="0" width="4" height="38"/><rect x="179" y="0" width="2" height="38"/><rect x="185" y="0" width="3" height="38"/><rect x="192" y="0" width="6" height="38"/><rect x="201" y="0" width="2" height="38"/><rect x="207" y="0" width="3" height="38"/><rect x="214" y="0" width="6" height="38"/>
+      </g>
+      <text x="110" y="45" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#1A1816">_</text>
+    </svg>
+    <div class="stamp">GIVE FIRST</div>
+  </div>
+
+  <div class="tear">
+    <div class="small center" style="margin-bottom:4px;">KEEP THIS PORTION — APPLICATION</div>
+    <div class="small center">JOIN THE CORE · NO FEES · A HUMAN READS EVERYTHING</div>
+    <form onsubmit="event.preventDefault(); this.innerHTML='<div class=&quot;small center&quot; style=&quot;padding:20px 0&quot;>RECEIVED.<br>A HUMAN REPLIES WITHIN A WEEK.<br>RETAIN THIS STUB FOR YOUR RECORDS.</div>';">
+      <div class="field"><label>NAME:</label><input type="text" required></div>
+      <div class="field"><label>CITY:</label><input type="text" required></div>
+      <div class="field"><label>AN HOUR YOU COULD GIVE:</label><input type="text" placeholder="e.g., reading hardware pitch decks"></div>
+      <button class="submit" type="submit">SUBMIT STUB_</button>
+    </form>
+    <div class="small center" style="margin-top:18px; color:#9a7d06;">THANK YOU FOR GIVING AT UNDERSCORE</div>
+  </div>
+
+  <div class="zig bot"><svg viewBox="0 0 420 12" preserveAspectRatio="none"><path d="M0 12 L10 0 L20 12 L30 0 L40 12 L50 0 L60 12 L70 0 L80 12 L90 0 L100 12 L110 0 L120 12 L130 0 L140 12 L150 0 L160 12 L170 0 L180 12 L190 0 L200 12 L210 0 L220 12 L230 0 L240 12 L250 0 L260 12 L270 0 L280 12 L290 0 L300 12 L310 0 L320 12 L330 0 L340 12 L350 0 L360 12 L370 0 L380 12 L390 0 L400 12 L410 0 L420 12 Z" fill="#FFFEF8"/></svg></div>
+</div>
+
+</body>
+</html>

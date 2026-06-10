@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — Read this sideways</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231A1816'/%3E%3Crect x='6' y='22' width='20' height='4' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --yellow:#F5C518;
+    --ink:#1A1816;
+    --cream:#FAF6EE;
+    --line-y:62vh;       /* the y-position the continuous line travels at */
+    --line-x:28px;       /* mobile: x-position of the vertical line */
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  ::selection{background:var(--yellow);color:var(--ink)}
+  html,body{height:100%}
+  body{
+    font-family:'Space Grotesk',sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    overflow:hidden;
+  }
+  .mono{font-family:'IBM Plex Mono',monospace}
+
+  /* ---------- the travel track ---------- */
+  #track{
+    display:flex;
+    height:100vh;
+    width:100vw;
+    overflow-x:auto;
+    overflow-y:hidden;
+    scroll-behavior:smooth;
+    scrollbar-width:none;
+  }
+  #track::-webkit-scrollbar{display:none}
+  @media (prefers-reduced-motion: reduce){
+    #track{scroll-behavior:auto}
+  }
+
+  .panel{
+    position:relative;
+    flex:0 0 100vw;
+    height:100vh;
+    padding:8vh 8vw;
+    overflow:hidden;
+  }
+  .panel.wide{flex:0 0 220vw}
+
+  /* ---------- THE continuous yellow line ---------- */
+  .panel::before{
+    content:"";
+    position:absolute;
+    left:0; right:0;
+    top:var(--line-y);
+    height:3px;
+    background:var(--yellow);
+    z-index:1;
+  }
+  /* the line terminates inside the final panel, at the CTA */
+  #p-join::before{ right:auto; width:46vw; }
+  #p-join .line-end{
+    position:absolute;
+    top:calc(var(--line-y) - 5px);
+    left:46vw;
+    width:13px;height:13px;
+    background:var(--yellow);
+    border-radius:50%;
+    z-index:2;
+  }
+
+  /* things that SIT on the line */
+  .on-line{
+    position:absolute;
+    top:var(--line-y);
+    transform:translateY(-100%);
+    z-index:2;
+    padding-bottom:14px;
+  }
+  /* things that HANG from the line */
+  .off-line{
+    position:absolute;
+    top:var(--line-y);
+    z-index:2;
+    padding-top:18px;
+  }
+
+  /* mono labels pinned to the line, like km markers */
+  .marker{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--ink);
+    opacity:.55;
+  }
+  .marker::before{content:"_ ";color:var(--yellow);opacity:1}
+
+  /* ---------- fixed chrome ---------- */
+  header{
+    position:fixed;top:0;left:0;right:0;
+    display:flex;justify-content:space-between;align-items:center;
+    padding:20px 28px;
+    z-index:10;
+    pointer-events:none;
+  }
+  header .wordmark{font-weight:700;font-size:18px;letter-spacing:-.01em;pointer-events:auto}
+  header .wordmark u{color:var(--yellow);text-decoration:none;font-weight:700}
+  header .hint{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;opacity:.5}
+
+  #progress{
+    position:fixed;left:0;bottom:0;
+    height:6px;width:100vw;
+    background:rgba(26,24,22,.08);
+    z-index:10;
+  }
+  #progress-bar{
+    height:100%;width:0;
+    background:var(--yellow);
+    transition:width .08s linear;
+  }
+  @media (prefers-reduced-motion: reduce){
+    #progress-bar{transition:none}
+  }
+  #progress-label{
+    position:fixed;right:16px;bottom:14px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;letter-spacing:.12em;
+    opacity:.5;z-index:10;
+  }
+
+  /* ---------- panel 1 ---------- */
+  #p-open h1{
+    font-size:clamp(56px,9vw,150px);
+    font-weight:700;letter-spacing:-.03em;line-height:.95;
+  }
+  #p-open h1 span{color:var(--yellow)}
+  #p-open .sub{font-size:clamp(18px,2.2vw,30px);max-width:22ch;font-weight:500}
+  #p-open .arrow{
+    position:absolute;right:8vw;top:calc(var(--line-y) - 10px);
+    font-size:22px;z-index:2;color:var(--ink)
+  }
+
+  /* ---------- panel 2 ---------- */
+  #p-what{background:var(--ink);color:var(--cream)}
+  #p-what .marker{color:var(--cream)}
+  #p-what h2{font-size:clamp(34px,4.6vw,72px);font-weight:700;letter-spacing:-.02em;line-height:1.05;max-width:18ch}
+  #p-what h2 em{font-style:normal;color:var(--yellow)}
+  #p-what p{max-width:42ch;font-size:clamp(15px,1.4vw,19px);line-height:1.65;opacity:.85}
+
+  /* ---------- panel 3: the Core roster ---------- */
+  #p-core h2{font-size:clamp(34px,4.4vw,68px);font-weight:700;letter-spacing:-.02em}
+  .roster{
+    display:flex;align-items:flex-end;gap:clamp(14px,2.4vw,40px);
+    flex-wrap:wrap;
+  }
+  .member{display:flex;flex-direction:column}
+  .member .name{font-weight:700;font-size:clamp(15px,1.5vw,21px);letter-spacing:-.01em}
+  .member .role{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.55;margin-top:4px}
+  .member.vert .name{
+    writing-mode:vertical-rl;
+    transform:rotate(180deg);
+    border-left:3px solid var(--yellow);
+    padding-left:8px;
+  }
+  .member.vert{flex-direction:row;gap:10px;align-items:flex-end}
+  .member.vert .role{writing-mode:vertical-rl;transform:rotate(180deg)}
+  .stats-row{display:flex;gap:clamp(20px,4vw,64px)}
+  .stat .n{font-size:clamp(28px,3.6vw,56px);font-weight:700;letter-spacing:-.02em}
+  .stat .n::after{content:"_";color:var(--yellow)}
+  .stat .l{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.55}
+
+  /* ---------- panel 4: giving story ---------- */
+  #p-story{background:var(--yellow)}
+  #p-story::before{background:var(--ink)}
+  #p-story .marker::before{color:var(--ink)}
+  .story-steps{display:flex;gap:clamp(18px,3vw,56px);align-items:flex-start}
+  .step{max-width:24ch}
+  .step .t{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;margin-bottom:8px}
+  .step p{font-size:clamp(14px,1.3vw,17px);line-height:1.55;font-weight:500}
+  #p-story h2{font-size:clamp(30px,4vw,60px);font-weight:700;letter-spacing:-.02em;max-width:20ch;line-height:1.05}
+  /* steps hang below the ink line, headline sits above it */
+  #p-story .off-line .step{border-top:3px solid var(--ink);padding-top:14px}
+
+  /* ---------- panel 5: quote ---------- */
+  #p-quote{background:var(--ink);color:var(--cream)}
+  #p-quote blockquote{
+    font-size:clamp(26px,3.6vw,54px);
+    font-weight:500;letter-spacing:-.02em;line-height:1.18;
+    max-width:24ch;
+  }
+  #p-quote blockquote strong{color:var(--yellow);font-weight:500}
+  #p-quote cite{font-style:normal;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.12em;opacity:.7}
+  #p-quote cite::before{content:"_ ";color:var(--yellow);opacity:1}
+
+  /* ---------- panel 6: cities ---------- */
+  .city{
+    position:absolute;z-index:2;
+    font-weight:700;letter-spacing:-.01em;
+    font-size:clamp(18px,2vw,30px);
+    white-space:nowrap;
+  }
+  .city small{display:block;font-family:'IBM Plex Mono',monospace;font-weight:400;font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.5;margin-top:2px}
+  .city.above{top:var(--line-y);transform:translateY(calc(-100% - 14px))}
+  .city.below{top:calc(var(--line-y) + 16px)}
+  .city::after{
+    content:"";position:absolute;left:0;
+    width:9px;height:9px;border-radius:50%;
+    background:var(--yellow);border:2px solid var(--cream);
+  }
+  .city.above::after{bottom:-19px}
+  .city.below::after{top:-19px}
+  #p-cities h2{font-size:clamp(30px,3.6vw,58px);font-weight:700;letter-spacing:-.02em}
+
+  /* ---------- panel 7: join ---------- */
+  #p-join h2{font-size:clamp(36px,5vw,84px);font-weight:700;letter-spacing:-.03em;line-height:1}
+  #p-join h2 span{color:var(--yellow)}
+  .join-form{display:flex;flex-direction:column;gap:14px;max-width:380px}
+  .join-form label{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;opacity:.6}
+  .join-form input,.join-form textarea{
+    font-family:'Space Grotesk',sans-serif;font-size:16px;
+    border:none;border-bottom:2px solid var(--ink);
+    background:transparent;padding:8px 2px;color:var(--ink);
+    border-radius:0;
+  }
+  .join-form input:focus,.join-form textarea:focus{outline:none;border-bottom-color:var(--yellow)}
+  .join-form textarea{resize:none;height:54px}
+  .join-form button{
+    margin-top:10px;
+    font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;
+    background:var(--ink);color:var(--cream);
+    border:none;padding:16px 28px;cursor:pointer;
+    text-align:left;
+  }
+  .join-form button span{color:var(--yellow)}
+  .join-form button:hover,.join-form button:focus-visible{background:var(--yellow);color:var(--ink)}
+  .join-form button:hover span,.join-form button:focus-visible span{color:var(--ink)}
+  .join-form button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+  #join-done{display:none;font-size:18px;font-weight:500;max-width:32ch;line-height:1.5}
+  #join-done .mono{display:block;font-size:11px;letter-spacing:.12em;opacity:.6;margin-top:10px}
+
+  /* layout helpers */
+  .top-zone{position:absolute;top:10vh;left:8vw;right:8vw;z-index:2}
+  .stack{display:flex;flex-direction:column;gap:18px}
+
+  /* ================= MOBILE: vertical fallback ================= */
+  @media (max-width:767px){
+    body{overflow:auto}
+    #track{
+      display:block;
+      height:auto;width:auto;
+      overflow:visible;
+    }
+    .panel,.panel.wide{
+      flex:none;width:auto;min-height:100svh;height:auto;
+      padding:14vh 24px 12vh calc(var(--line-x) + 28px);
+    }
+    /* the line turns vertical and runs down the left edge */
+    .panel::before{
+      left:var(--line-x);right:auto;top:0;bottom:0;
+      width:3px;height:auto;
+    }
+    #p-join::before{width:3px;height:38vh;bottom:auto}
+    #p-join .line-end{left:calc(var(--line-x) - 5px);top:38vh;width:13px;height:13px}
+    .on-line,.off-line,.top-zone{position:static;transform:none;padding:0;margin-bottom:28px}
+    .top-zone{margin-bottom:36px}
+    .city{position:static;margin-bottom:22px}
+    .city.above,.city.below{transform:none}
+    .city::after,.city.above::after,.city.below::after{
+      left:auto;right:auto;top:auto;bottom:auto;
+      position:static;display:inline-block;margin-left:10px;
+      border-color:transparent;
+    }
+    #p-open .arrow{display:none}
+    .roster{align-items:flex-start}
+    .member.vert{flex-direction:column;gap:0;align-items:flex-start}
+    .member.vert .name{writing-mode:horizontal-tb;transform:none;border-left:none;border-bottom:3px solid var(--yellow);padding-left:0;padding-bottom:4px}
+    .member.vert .role{writing-mode:horizontal-tb;transform:none}
+    .story-steps{flex-direction:column;gap:24px}
+    header .hint{display:none}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wordmark">underscore<u>_</u></div>
+  <div class="hint mono" aria-hidden="true">SCROLL OR &rarr; TO TRAVEL</div>
+</header>
+
+<main id="track" tabindex="0" aria-label="Underscore — a page you read sideways">
+
+  <!-- 1 · OPEN -->
+  <section class="panel" id="p-open" aria-label="Welcome">
+    <div class="top-zone stack">
+      <h1>under<br>score<span>_</span></h1>
+    </div>
+    <div class="on-line">
+      <p class="sub">Read this sideways. Most good things are.</p>
+    </div>
+    <div class="off-line">
+      <span class="marker">km 00 · start of the line</span>
+    </div>
+    <span class="arrow" aria-hidden="true">&rarr;</span>
+  </section>
+
+  <!-- 2 · WHAT -->
+  <section class="panel" id="p-what" aria-label="What Underscore is">
+    <div class="top-zone">
+      <h2>Underscore is the line <em>under</em> the work — the support nobody sees and everybody needs.</h2>
+    </div>
+    <div class="on-line">
+      <p>We're a community for people who build things — companies, products, factories, research. Not a network you mine. A line you stand on, and a line you become for someone else. Founded in 2021. Still run on one rule: give first.</p>
+    </div>
+    <div class="off-line">
+      <span class="marker">km 01 · what this is</span>
+    </div>
+  </section>
+
+  <!-- 3 · THE CORE -->
+  <section class="panel" id="p-core" aria-label="The Core community">
+    <div class="top-zone stack">
+      <span class="marker">the core · our member community</span>
+      <h2>The people on the line.</h2>
+    </div>
+    <div class="on-line">
+      <div class="roster">
+        <div class="member vert"><span class="name">Maya Chen</span><span class="role">Founder · Oakland</span></div>
+        <div class="member"><span class="name">Sam Osei</span><span class="role">Engineer · Boston</span></div>
+        <div class="member vert"><span class="name">Ana Reyes</span><span class="role">Designer · Mexico City</span></div>
+        <div class="member"><span class="name">David Park</span><span class="role">Operator · Seoul</span></div>
+        <div class="member vert"><span class="name">Leila Haddad</span><span class="role">Researcher · Beirut</span></div>
+        <div class="member"><span class="name">Jonas Weber</span><span class="role">Builder · Berlin</span></div>
+        <div class="member vert"><span class="name">Priya Nair</span><span class="role">Product · Bangalore</span></div>
+        <div class="member"><span class="name">Tom Aiello</span><span class="role">Manufacturer · Detroit</span></div>
+      </div>
+    </div>
+    <div class="off-line">
+      <div class="stats-row" style="margin-top:18px">
+        <div class="stat"><div class="n">1,200+</div><div class="l">members</div></div>
+        <div class="stat"><div class="n">40</div><div class="l">cities</div></div>
+        <div class="stat"><div class="n">9,000</div><div class="l">hours given</div></div>
+        <div class="stat"><div class="n">2021</div><div class="l">founded</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · A GIVING STORY -->
+  <section class="panel" id="p-story" aria-label="How giving works — a true story">
+    <div class="top-zone stack">
+      <span class="marker">km 03 · one ask, end to end</span>
+      <h2>What 41 hours of the Core looks like.</h2>
+    </div>
+    <div class="on-line">
+      <div class="story-steps">
+        <div class="step"><div class="t">TUE 09:14</div><p>Maya Chen posts an ask: her hardware startup's enclosure keeps cracking at the hinge. She's never run an injection-mold tool.</p></div>
+        <div class="step"><div class="t">TUE 11:02</div><p>Three members reply. Jonas in Berlin shares the gate-placement mistake that cost him a tooling run.</p></div>
+        <div class="step"><div class="t">WED 16:40</div><p>Tom Aiello — thirty years on Detroit factory floors — gets on a call, reads her CAD, finds the thin wall in nine minutes.</p></div>
+      </div>
+    </div>
+    <div class="off-line">
+      <div class="story-steps">
+        <div class="step"><div class="t">THU 02:31</div><p>Tom intros his mold shop. They re-cut one insert instead of the whole tool. Saved: about $18,000 and six weeks.</p></div>
+        <div class="step"><div class="t">SIX MONTHS LATER</div><p>Maya spends a weekend helping a Lagos member through her first contract-manufacturing negotiation. That's the whole model. The line continues.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · QUOTE -->
+  <section class="panel" id="p-quote" aria-label="Member quote">
+    <div class="on-line">
+      <blockquote>&ldquo;I came for the answers. I stayed because <strong>giving the answers</strong> turned out to be the better deal.&rdquo;</blockquote>
+    </div>
+    <div class="off-line">
+      <cite>Sam Osei — engineer, Boston · member since 2022</cite>
+    </div>
+  </section>
+
+  <!-- 6 · CITIES (wide) -->
+  <section class="panel wide" id="p-cities" aria-label="Cities along the line">
+    <div class="top-zone stack">
+      <span class="marker">km 05 · the line runs through 40 cities</span>
+      <h2>Same line, every timezone.</h2>
+    </div>
+    <div class="city above" style="left:8vw">Oakland<small>founding chapter</small></div>
+    <div class="city below" style="left:24vw">Detroit<small>est. 2021</small></div>
+    <div class="city above" style="left:41vw">Mexico City<small>est. 2022</small></div>
+    <div class="city below" style="left:58vw">Boston<small>est. 2021</small></div>
+    <div class="city above" style="left:74vw">São Paulo<small>est. 2023</small></div>
+    <div class="city below" style="left:90vw">Berlin<small>est. 2022</small></div>
+    <div class="city above" style="left:106vw">Beirut<small>est. 2022</small></div>
+    <div class="city below" style="left:122vw">Lagos<small>est. 2023</small></div>
+    <div class="city above" style="left:138vw">Nairobi<small>est. 2024</small></div>
+    <div class="city below" style="left:154vw">Bangalore<small>est. 2022</small></div>
+    <div class="city above" style="left:170vw">Seoul<small>est. 2021</small></div>
+    <div class="city below" style="left:186vw">Tokyo<small>est. 2024</small></div>
+  </section>
+
+  <!-- 7 · JOIN — the line ends here -->
+  <section class="panel" id="p-join" aria-label="Join the Core">
+    <span class="line-end" aria-hidden="true"></span>
+    <div class="top-zone stack">
+      <span class="marker">km 06 · end of the line. or your start.</span>
+      <h2>The line ends where <span>you</span> pick it up.</h2>
+    </div>
+    <div class="off-line" style="left:8vw;right:8vw">
+      <form class="join-form" id="join-form" style="margin-top:24px">
+        <div>
+          <label for="j-name">Your name</label>
+          <input id="j-name" name="name" type="text" autocomplete="name" required>
+        </div>
+        <div>
+          <label for="j-city">Your city</label>
+          <input id="j-city" name="city" type="text" autocomplete="address-level2" required>
+        </div>
+        <div>
+          <label for="j-give">One thing you could give an hour to</label>
+          <textarea id="j-give" name="give" required></textarea>
+        </div>
+        <button type="submit">Join the Core <span>_</span></button>
+      </form>
+      <p id="join-done" style="margin-top:24px">Got it. A current member reads every application — expect a real reply, from a real person, within a week.<span class="mono">UNDERSCORE · GIVE FIRST · SINCE 2021</span></p>
+    </div>
+  </section>
+
+</main>
+
+<div id="progress" role="progressbar" aria-label="Travel progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+  <div id="progress-bar"></div>
+</div>
+<div id="progress-label" class="mono">_ 0%</div>
+
+<script>
+(function(){
+  var track = document.getElementById('track');
+  var bar = document.getElementById('progress-bar');
+  var progress = document.getElementById('progress');
+  var label = document.getElementById('progress-label');
+  var desktop = window.matchMedia('(min-width: 768px)');
+
+  function isHorizontal(){ return desktop.matches; }
+
+  /* wheel: vertical input -> horizontal travel (desktop only) */
+  track.addEventListener('wheel', function(e){
+    if(!isHorizontal()) return;
+    e.preventDefault();
+    var d = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+    track.scrollLeft += d;
+  }, {passive:false});
+
+  /* arrow keys travel one viewport at a time */
+  window.addEventListener('keydown', function(e){
+    if(!isHorizontal()) return;
+    var tag = document.activeElement && document.activeElement.tagName;
+    if(tag === 'INPUT' || tag === 'TEXTAREA') return;
+    if(e.key === 'ArrowRight'){ e.preventDefault(); track.scrollBy({left: window.innerWidth, behavior:'smooth'}); }
+    if(e.key === 'ArrowLeft'){ e.preventDefault(); track.scrollBy({left: -window.innerWidth, behavior:'smooth'}); }
+  });
+
+  /* progress underscore */
+  function updateProgress(){
+    var frac;
+    if(isHorizontal()){
+      var max = track.scrollWidth - track.clientWidth;
+      frac = max > 0 ? track.scrollLeft / max : 0;
+    } else {
+      var maxV = document.documentElement.scrollHeight - window.innerHeight;
+      frac = maxV > 0 ? window.scrollY / maxV : 0;
+    }
+    var pct = Math.round(frac * 100);
+    bar.style.width = (frac * 100) + '%';
+    progress.setAttribute('aria-valuenow', pct);
+    label.textContent = '_ ' + pct + '%';
+  }
+  track.addEventListener('scroll', updateProgress, {passive:true});
+  window.addEventListener('scroll', updateProgress, {passive:true});
+  window.addEventListener('resize', updateProgress);
+  updateProgress();
+
+  /* join form */
+  document.getElementById('join-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    this.style.display = 'none';
+    document.getElementById('join-done').style.display = 'block';
+  });
+})();
+</script>
+</body>
+</html>

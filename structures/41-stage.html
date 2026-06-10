@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — The Stage</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231A1816'/%3E%3Crect x='14' y='44' width='36' height='8' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --yellow:#F5C518;
+    --ink:#1A1816;
+    --cream:#FAF6EE;
+    --hair:rgba(26,24,22,.14);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  ::selection{background:var(--yellow);color:var(--ink)}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Space Grotesk',system-ui,sans-serif;
+    background:var(--cream);color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---------- layout: pinned stage + scrolling narration ---------- */
+  #layout{display:flex;align-items:flex-start}
+  #stage{
+    position:sticky;top:0;
+    width:55%;height:100vh;
+    background:var(--ink);
+    overflow:hidden;flex-shrink:0;
+  }
+  #narration{width:45%}
+
+  /* ---------- stage scenes ---------- */
+  .scene{
+    position:absolute;inset:0;
+    opacity:0;visibility:hidden;
+    transition:opacity .9s ease, transform .9s ease;
+    transform:scale(.985);
+  }
+  .scene.active{opacity:1;visibility:visible;transform:scale(1)}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto}
+    .scene{transform:none !important;transition:opacity .5s ease}
+    .dash, .node, .cityDot{transition:none !important}
+  }
+
+  #stageLabel{
+    position:absolute;left:28px;bottom:24px;z-index:5;
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.18em;
+    text-transform:uppercase;color:rgba(250,246,238,.5);
+  }
+  #stageLabel b{color:var(--yellow);font-weight:600}
+  #stageBrand{
+    position:absolute;left:28px;top:24px;z-index:5;
+    font-weight:700;font-size:17px;letter-spacing:-.01em;color:var(--cream);
+  }
+  #stageBrand span{color:var(--yellow)}
+
+  /* scene 1 — one line */
+  #s1 .lone{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:170px;height:20px;background:var(--yellow);border-radius:3px;
+  }
+  /* scene 2 — the crowd */
+  .dash{
+    position:absolute;width:30px;height:5px;border-radius:2px;
+    background:var(--yellow);opacity:0;
+    transition:opacity .7s ease;
+  }
+  #s2.active .dash{opacity:.92}
+  /* scene 3 — the network */
+  #netSvg{position:absolute;inset:0;width:100%;height:100%}
+  #netSvg line{stroke:var(--yellow);stroke-opacity:.45;stroke-width:1.5}
+  .node{
+    position:absolute;width:34px;height:6px;border-radius:2px;
+    background:var(--yellow);transform:translate(-50%,-50%);
+  }
+  /* scene 4 — the map */
+  .cityDot{position:absolute;transform:translate(-50%,-50%);text-align:center}
+  .cityDot i{
+    display:block;width:9px;height:9px;border-radius:50%;
+    background:var(--yellow);margin:0 auto 7px;
+  }
+  .cityDot em{
+    font-style:normal;font-family:'IBM Plex Mono',monospace;
+    font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--cream);white-space:nowrap;
+  }
+  #s4 .mapNote{
+    position:absolute;left:50%;bottom:72px;transform:translateX(-50%);
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.16em;
+    text-transform:uppercase;color:rgba(250,246,238,.45);
+  }
+  /* scene 5 — the ledger */
+  #s5 .counters{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:min(440px,80%);
+  }
+  #s5 .crow{
+    display:flex;justify-content:space-between;align-items:baseline;
+    padding:20px 0;border-bottom:1px solid rgba(250,246,238,.15);
+  }
+  #s5 .crow:last-child{border-bottom:none}
+  #s5 .cnum{font-size:56px;font-weight:700;letter-spacing:-.03em;color:var(--yellow);font-variant-numeric:tabular-nums}
+  #s5 .clbl{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:rgba(250,246,238,.7)}
+  /* scene 6 — the signature */
+  #s6 .sigWrap{
+    position:absolute;left:10%;right:10%;top:50%;transform:translateY(-50%);
+  }
+  #s6 .sigLine{
+    height:14px;border-radius:3px;background:rgba(250,246,238,.16);
+    overflow:hidden;
+  }
+  #s6 .sigFill{
+    height:100%;width:72%;background:var(--yellow);border-radius:3px;
+    transition:width 1.1s cubic-bezier(.22,.8,.3,1);
+  }
+  #s6.complete .sigFill{width:100%}
+  #s6 .sigCap{
+    margin-top:22px;text-align:center;
+    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.16em;
+    text-transform:uppercase;color:rgba(250,246,238,.55);
+  }
+  #s6.complete .sigCap{color:var(--yellow)}
+
+  /* ---------- narration ---------- */
+  .block{
+    min-height:100vh;
+    display:flex;flex-direction:column;justify-content:center;
+    padding:96px clamp(28px,6vw,84px);
+  }
+  .block .label{
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.2em;
+    text-transform:uppercase;color:rgba(26,24,22,.5);margin-bottom:22px;
+  }
+  .block .label b{color:var(--ink);font-weight:600}
+  .block .label::before{content:"_ ";color:var(--yellow);font-weight:600}
+  .block p{
+    font-size:clamp(21px,2.1vw,28px);line-height:1.45;font-weight:500;
+    letter-spacing:-.01em;max-width:34ch;
+  }
+  .block p + p{margin-top:20px}
+  .block .small{font-size:16px;line-height:1.6;font-weight:400;color:rgba(26,24,22,.75);max-width:46ch}
+  .roster{margin-top:26px;border-top:1px solid var(--hair)}
+  .roster li{
+    list-style:none;display:flex;justify-content:space-between;gap:16px;
+    padding:11px 0;border-bottom:1px solid var(--hair);
+    font-size:15.5px;
+  }
+  .roster li b{font-weight:600}
+  .roster li span{font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(26,24,22,.6);white-space:nowrap}
+
+  /* join form */
+  #joinForm{margin-top:30px;max-width:420px}
+  #joinForm label{
+    display:block;font-family:'IBM Plex Mono',monospace;font-size:10.5px;
+    letter-spacing:.14em;text-transform:uppercase;color:rgba(26,24,22,.6);
+    margin:16px 0 6px;
+  }
+  #joinForm input,#joinForm textarea{
+    width:100%;font-family:'Space Grotesk',sans-serif;font-size:16px;color:var(--ink);
+    background:transparent;border:none;border-bottom:2px solid var(--ink);
+    padding:8px 2px;border-radius:0;
+  }
+  #joinForm textarea{resize:vertical;min-height:56px}
+  #joinForm input:focus,#joinForm textarea:focus{outline:none;border-bottom-color:var(--yellow);box-shadow:0 2px 0 var(--yellow)}
+  #joinForm button{
+    margin-top:26px;cursor:pointer;
+    font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;
+    background:var(--ink);color:var(--yellow);
+    border:none;border-radius:8px;padding:15px 28px;
+  }
+  #joinForm button:hover{background:#000}
+  #joinForm button:focus-visible{outline:2px solid var(--yellow);outline-offset:2px}
+  #joinDone{
+    display:none;margin-top:18px;padding:14px 16px;border-radius:8px;
+    background:var(--yellow);color:var(--ink);font-weight:600;font-size:15px;max-width:420px;
+  }
+
+  /* ---------- mobile: stage pins to top half ---------- */
+  @media (max-width:767px){
+    #layout{flex-direction:column}
+    #stage{width:100%;height:50vh;z-index:10}
+    #narration{width:100%}
+    .block{min-height:80vh;padding:64px 24px}
+    .block p{font-size:20px}
+    #s5 .cnum{font-size:40px}
+    #s5 .crow{padding:12px 0}
+    .cityDot em{font-size:10px}
+    #stageLabel{left:18px;bottom:14px}
+    #stageBrand{left:18px;top:14px}
+  }
+</style>
+</head>
+<body>
+
+<div id="layout">
+
+  <div id="stage" aria-hidden="true">
+    <div id="stageBrand">Underscore<span>_</span></div>
+
+    <div class="scene active" id="s1"><div class="lone"></div></div>
+    <div class="scene" id="s2"></div>
+    <div class="scene" id="s3"><svg id="netSvg" preserveAspectRatio="none"></svg></div>
+    <div class="scene" id="s4"><div class="mapNote">40 cities · no headquarters</div></div>
+    <div class="scene" id="s5">
+      <div class="counters">
+        <div class="crow"><span class="cnum" id="n1" data-target="1200">0</span><span class="clbl">Members</span></div>
+        <div class="crow"><span class="cnum" id="n2" data-target="40">0</span><span class="clbl">Cities</span></div>
+        <div class="crow"><span class="cnum" id="n3" data-target="9000">0</span><span class="clbl">Hours given</span></div>
+      </div>
+    </div>
+    <div class="scene" id="s6">
+      <div class="sigWrap">
+        <div class="sigLine"><div class="sigFill"></div></div>
+        <div class="sigCap" id="sigCap">The line is waiting for a name</div>
+      </div>
+    </div>
+
+    <div id="stageLabel"><b>SCENE 01</b> — THE LINE</div>
+  </div>
+
+  <div id="narration">
+
+    <section class="block" data-scene="1" data-label="SCENE 01 — THE LINE">
+      <div class="label"><b>Scene 01</b> — The line</div>
+      <p>Start with a single line.</p>
+      <p>An underscore is what a page shows you before the answer arrives. A held space. Unfinished, on purpose.</p>
+      <p class="small">Underscore is a community built on that posture. We are people who build things — companies, products, machines, research — and who keep room open for whoever is building next to us.</p>
+    </section>
+
+    <section class="block" data-scene="2" data-label="SCENE 02 — THE CROWD">
+      <div class="label"><b>Scene 02</b> — The crowd</div>
+      <p>Since 2021, one line has become many.</p>
+      <p class="small">We call the people behind them the Core: builders, operators, and experts who give their time to each other. No gurus, no stage, no pitch at the end. Just people who answer when you ask.</p>
+    </section>
+
+    <section class="block" data-scene="3" data-label="SCENE 03 — THE NETWORK">
+      <div class="label"><b>Scene 03</b> — The network</div>
+      <p>The Core isn't an audience. It's a lattice.</p>
+      <ul class="roster">
+        <li><b>Maya Chen</b><span>founder · Oakland</span></li>
+        <li><b>Sam Osei</b><span>engineer · Boston</span></li>
+        <li><b>Ana Reyes</b><span>designer · Mexico City</span></li>
+        <li><b>David Park</b><span>operator · Seoul</span></li>
+        <li><b>Leila Haddad</b><span>researcher · Beirut</span></li>
+        <li><b>Jonas Weber</b><span>builder · Berlin</span></li>
+        <li><b>Priya Nair</b><span>product · Bangalore</span></li>
+        <li><b>Tom Aiello</b><span>manufacturer · Detroit</span></li>
+      </ul>
+      <p class="small" style="margin-top:22px">Each one connected to the others by hours given, not favors owed.</p>
+    </section>
+
+    <section class="block" data-scene="4" data-label="SCENE 04 — THE MAP">
+      <div class="label"><b>Scene 04</b> — The map</div>
+      <p>Forty cities so far.</p>
+      <p class="small">The map doesn't show a headquarters because there isn't one. Wherever a member picks up a call at midnight — Oakland, Beirut, Seoul, Detroit — that's an office.</p>
+    </section>
+
+    <section class="block" data-scene="5" data-label="SCENE 05 — THE LEDGER">
+      <div class="label"><b>Scene 05</b> — The ledger</div>
+      <p>We count one thing.</p>
+      <p class="small">9,000 hours given, member to member, since 2021. More than 1,200 people across 40 cities. Time is the only dues, and the ledger only goes up.</p>
+    </section>
+
+    <section class="block" data-scene="6" data-label="SCENE 06 — THE SIGNATURE">
+      <div class="label"><b>Scene 06</b> — The signature</div>
+      <p>The line is waiting for a name.</p>
+      <p class="small">Membership costs time, not money. Tell us what you build and what you can give an hour of. A current Core member reads every application — a person, not a sequence.</p>
+      <form id="joinForm" novalidate>
+        <label for="jf-name">Name</label>
+        <input id="jf-name" type="text" autocomplete="name" required>
+        <label for="jf-email">Email</label>
+        <input id="jf-email" type="email" autocomplete="email" required>
+        <label for="jf-give">What can you give an hour of?</label>
+        <textarea id="jf-give" placeholder="e.g. pricing reviews, firmware debugging, hiring plans"></textarea>
+        <button type="submit">Join the Core</button>
+      </form>
+      <div id="joinDone" role="status">Received. Your line is on the stage — a Core member will reply within a week.</div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var stage = document.getElementById('stage');
+
+  // deterministic pseudo-random (LCG) so the crowd is stable
+  function lcg(seed){
+    var s = seed;
+    return function(){ s = (s * 48271) % 2147483647; return s / 2147483647; };
+  }
+
+  // ---- scene 2: the crowd ----
+  (function(){
+    var s2 = document.getElementById('s2');
+    var rnd = lcg(7);
+    for (var i = 0; i < 64; i++){
+      var d = document.createElement('div');
+      d.className = 'dash';
+      d.style.left = (6 + rnd() * 88) + '%';
+      d.style.top = (8 + rnd() * 84) + '%';
+      d.style.transitionDelay = reduced ? '0s' : (rnd() * .6) + 's';
+      var sc = .6 + rnd() * .9;
+      d.style.transform = 'scale(' + sc.toFixed(2) + ')';
+      s2.appendChild(d);
+    }
+  })();
+
+  // ---- scene 3: the network ----
+  var netNodes = [];
+  (function(){
+    var s3 = document.getElementById('s3');
+    var svg = document.getElementById('netSvg');
+    var rnd = lcg(23);
+    var i;
+    for (i = 0; i < 14; i++){
+      netNodes.push({ x: 10 + rnd() * 80, y: 12 + rnd() * 76 });
+    }
+    svg.setAttribute('viewBox', '0 0 100 100');
+    var ns = 'http://www.w3.org/2000/svg';
+    // connect each node to its 2 nearest neighbours
+    netNodes.forEach(function(a, ai){
+      var dists = netNodes.map(function(b, bi){
+        if (ai === bi) return { i: bi, d: Infinity };
+        var dx = a.x - b.x, dy = a.y - b.y;
+        return { i: bi, d: dx*dx + dy*dy };
+      }).sort(function(p, q){ return p.d - q.d; });
+      for (var k = 0; k < 2; k++){
+        var b = netNodes[dists[k].i];
+        var ln = document.createElementNS(ns, 'line');
+        ln.setAttribute('x1', a.x); ln.setAttribute('y1', a.y);
+        ln.setAttribute('x2', b.x); ln.setAttribute('y2', b.y);
+        svg.appendChild(ln);
+      }
+    });
+    netNodes.forEach(function(n){
+      var d = document.createElement('div');
+      d.className = 'node';
+      d.style.left = n.x + '%';
+      d.style.top = n.y + '%';
+      s3.appendChild(d);
+    });
+  })();
+
+  // ---- scene 4: the map ----
+  (function(){
+    var s4 = document.getElementById('s4');
+    var cities = [
+      ['Oakland',13,40],['Detroit',24,33],['Boston',30,28],['Mexico City',20,60],
+      ['São Paulo',32,78],['London',47,24],['Berlin',53,27],['Beirut',58,44],
+      ['Lagos',49,64],['Nairobi',58,70],['Bangalore',69,58],['Seoul',82,36],
+      ['Hanoi',76,52],['Sydney',86,80]
+    ];
+    cities.forEach(function(c){
+      var d = document.createElement('div');
+      d.className = 'cityDot';
+      d.style.left = c[1] + '%';
+      d.style.top = c[2] + '%';
+      d.innerHTML = '<i></i><em>' + c[0] + '</em>';
+      s4.appendChild(d);
+    });
+  })();
+
+  // ---- counters ----
+  var counted = false;
+  function runCounters(){
+    if (counted) return;
+    counted = true;
+    [['n1','1,200+'],['n2','40'],['n3','9,000']].forEach(function(spec){
+      var el = document.getElementById(spec[0]);
+      var target = parseInt(el.getAttribute('data-target'), 10);
+      var finalText = spec[1];
+      if (reduced){ el.textContent = finalText; return; }
+      var t0 = null, dur = 1400;
+      function step(ts){
+        if (!t0) t0 = ts;
+        var p = Math.min(1, (ts - t0) / dur);
+        var eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(target * eased).toLocaleString('en-US');
+        if (p < 1) requestAnimationFrame(step);
+        else el.textContent = finalText;
+      }
+      requestAnimationFrame(step);
+    });
+  }
+
+  // ---- scene switching ----
+  var blocks = Array.prototype.slice.call(document.querySelectorAll('.block'));
+  var label = document.getElementById('stageLabel');
+  var current = '1';
+  function activate(n, lab){
+    if (n === current) return;
+    current = n;
+    Array.prototype.slice.call(stage.querySelectorAll('.scene')).forEach(function(s){
+      s.classList.toggle('active', s.id === 's' + n);
+    });
+    var parts = lab.split('—');
+    label.innerHTML = '<b>' + parts[0].trim() + '</b> —' + parts[1];
+    if (n === '5') runCounters();
+  }
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (en.isIntersecting){
+        activate(en.target.getAttribute('data-scene'), en.target.getAttribute('data-label'));
+      }
+    });
+  }, { threshold: 0.55 });
+  blocks.forEach(function(b){ io.observe(b); });
+
+  // ---- join form completes the stage line ----
+  document.getElementById('joinForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var name = document.getElementById('jf-name');
+    var email = document.getElementById('jf-email');
+    if (!name.value.trim()){ name.focus(); return; }
+    if (!email.value.trim() || email.value.indexOf('@') < 0){ email.focus(); return; }
+    document.getElementById('s6').classList.add('complete');
+    document.getElementById('sigCap').textContent = 'Signed: ' + name.value.trim() + ' _';
+    document.getElementById('joinDone').style.display = 'block';
+    var btn = this.querySelector('button');
+    btn.textContent = 'You’re on the line _';
+    btn.disabled = true;
+  });
+})();
+</script>
+</body>
+</html>

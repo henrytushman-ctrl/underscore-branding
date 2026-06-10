@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — The Canvas</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231A1816'/%3E%3Crect x='14' y='44' width='36' height='8' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --yellow:#F5C518;
+    --ink:#1A1816;
+    --cream:#FAF6EE;
+    --paper:#FFFFFF;
+    --hair:rgba(26,24,22,.14);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  ::selection{background:var(--yellow);color:var(--ink)}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Inter',system-ui,sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---------- viewport + world ---------- */
+  #viewport{
+    position:fixed;inset:0;
+    overflow:hidden;
+    cursor:grab;
+    touch-action:none;
+  }
+  #viewport.dragging{cursor:grabbing}
+  #world{
+    position:absolute;top:0;left:0;
+    width:3500px;height:2400px;
+    background-color:var(--cream);
+    background-image:radial-gradient(rgba(26,24,22,.16) 1.2px, transparent 1.2px);
+    background-size:34px 34px;
+    will-change:transform;
+  }
+  #world.glide{transition:transform .55s cubic-bezier(.22,.8,.3,1)}
+  @media (prefers-reduced-motion: reduce){
+    #world.glide{transition:none}
+  }
+
+  /* ---------- thread layer ---------- */
+  #threads{position:absolute;top:0;left:0;pointer-events:none}
+  #threads line{
+    stroke:var(--yellow);
+    stroke-width:2.5;
+    opacity:.85;
+  }
+
+  /* ---------- cards ---------- */
+  .card{
+    position:absolute;
+    background:var(--paper);
+    border:1px solid var(--hair);
+    border-radius:10px;
+    box-shadow:0 6px 22px rgba(26,24,22,.08), 0 1px 3px rgba(26,24,22,.06);
+    padding:24px;
+  }
+  .card:focus-within{outline:2px solid var(--yellow);outline-offset:3px}
+  .tag{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:rgba(26,24,22,.55);
+    display:block;
+    margin-bottom:12px;
+  }
+  .tag::before{content:"_ ";color:var(--yellow);-webkit-text-fill-color:var(--yellow)}
+  .card h2{font-size:21px;font-weight:700;letter-spacing:-.01em;margin-bottom:8px}
+  .card p{font-size:14.5px;line-height:1.55;color:rgba(26,24,22,.78)}
+  .card p + p{margin-top:10px}
+
+  /* wordmark plaque */
+  #c-wordmark{width:400px;padding:38px 36px;text-align:left;border-width:1.5px}
+  #c-wordmark .mark{
+    font-size:64px;font-weight:800;letter-spacing:-.03em;line-height:1;
+  }
+  #c-wordmark .mark .u{color:var(--yellow)}
+  #c-wordmark .sub{
+    margin-top:14px;font-size:15px;line-height:1.5;color:rgba(26,24,22,.78);
+  }
+
+  /* member dossiers */
+  .member{width:262px}
+  .member .avatar{
+    width:46px;height:46px;border-radius:50%;
+    background:var(--ink);
+    display:flex;align-items:flex-end;justify-content:center;
+    margin-bottom:14px;
+  }
+  .member .avatar span{
+    color:var(--yellow);font-weight:800;font-size:22px;line-height:1;
+    transform:translateY(-9px);
+  }
+  .member h2{font-size:18px}
+  .member .role{
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;
+    color:rgba(26,24,22,.6);margin-bottom:10px;display:block;
+  }
+  .member p{font-size:13.5px}
+  .member .gave{
+    margin-top:12px;padding-top:10px;border-top:1px solid var(--hair);
+    font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(26,24,22,.55);
+  }
+  .member .gave b{color:var(--ink);font-weight:600}
+
+  /* stats board */
+  #c-stats{width:320px;background:var(--ink);color:var(--cream);border-color:rgba(250,246,238,.12)}
+  #c-stats .tag{color:rgba(250,246,238,.55)}
+  #c-stats .row{display:flex;justify-content:space-between;align-items:baseline;padding:11px 0;border-bottom:1px solid rgba(250,246,238,.12)}
+  #c-stats .row:last-child{border-bottom:0}
+  #c-stats .num{font-size:30px;font-weight:800;letter-spacing:-.02em;color:var(--yellow)}
+  #c-stats .lbl{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(250,246,238,.7)}
+
+  /* quotes */
+  .quote{width:300px}
+  .quote blockquote{font-size:17px;font-weight:600;line-height:1.45;letter-spacing:-.01em}
+  .quote blockquote::before{content:"“";color:var(--yellow);font-size:26px;margin-right:2px}
+  .quote cite{
+    display:block;margin-top:12px;font-style:normal;
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:rgba(26,24,22,.6);
+  }
+
+  /* cities cluster */
+  #c-cities{width:340px}
+  #c-cities .cluster{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}
+  #c-cities .city{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;
+    border:1px solid var(--hair);border-radius:999px;
+    padding:4px 10px;color:rgba(26,24,22,.75);
+    background:var(--cream);
+  }
+  #c-cities .city.hot{background:var(--yellow);border-color:var(--yellow);color:var(--ink);font-weight:600}
+  #c-cities .more{font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(26,24,22,.5);margin-top:12px;display:block}
+
+  /* manifesto */
+  #c-manifesto{width:330px}
+  #c-manifesto p strong{font-weight:700;color:var(--ink)}
+
+  /* giving story */
+  #c-giving{width:330px}
+  #c-giving .ledger{
+    margin-top:12px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;
+    line-height:1.9;color:rgba(26,24,22,.7);
+    border-top:1px solid var(--hair);padding-top:10px;
+  }
+  #c-giving .ledger b{color:var(--ink);font-weight:600}
+
+  /* join desk */
+  #c-join{width:360px;border:2px solid var(--ink);box-shadow:8px 8px 0 var(--yellow)}
+  #c-join h2{font-size:24px}
+  #c-join p{margin-bottom:16px}
+  #c-join label{
+    display:block;font-family:'IBM Plex Mono',monospace;font-size:10.5px;
+    letter-spacing:.12em;text-transform:uppercase;color:rgba(26,24,22,.6);
+    margin:14px 0 5px;
+  }
+  #c-join input,#c-join textarea{
+    width:100%;font-family:'Inter',sans-serif;font-size:14.5px;color:var(--ink);
+    background:var(--cream);border:1px solid var(--hair);border-radius:6px;
+    padding:10px 12px;
+  }
+  #c-join textarea{resize:vertical;min-height:64px}
+  #c-join input:focus,#c-join textarea:focus{outline:2px solid var(--yellow);outline-offset:1px;border-color:var(--ink)}
+  #c-join button{
+    margin-top:18px;width:100%;cursor:pointer;
+    font-family:'Inter',sans-serif;font-size:15px;font-weight:700;
+    background:var(--ink);color:var(--yellow);
+    border:none;border-radius:8px;padding:14px;
+  }
+  #c-join button:hover{background:#000}
+  #c-join button:focus-visible{outline:2px solid var(--yellow);outline-offset:2px}
+  #c-join .done{
+    display:none;margin-top:16px;padding:12px;border-radius:8px;
+    background:var(--yellow);color:var(--ink);font-weight:600;font-size:14px;
+  }
+
+  /* ---------- fixed UI ---------- */
+  #hint{
+    position:fixed;top:18px;left:18px;z-index:30;
+    background:var(--ink);color:var(--cream);
+    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.02em;
+    padding:11px 16px;border-radius:999px;
+    box-shadow:0 4px 14px rgba(26,24,22,.18);
+    display:flex;align-items:center;gap:9px;
+  }
+  #hint .dash{display:inline-block;width:16px;height:4px;background:var(--yellow);border-radius:2px}
+  #hint .keys{display:none}
+  @media (hover:hover) and (min-width:768px){ #hint .keys{display:inline;color:rgba(250,246,238,.55)} }
+
+  #jumpJoin{
+    position:fixed;top:18px;right:18px;z-index:30;cursor:pointer;
+    background:var(--yellow);color:var(--ink);border:none;border-radius:999px;
+    font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;letter-spacing:.06em;
+    padding:11px 16px;box-shadow:0 4px 14px rgba(26,24,22,.18);
+  }
+  #jumpJoin:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+  #minimap{
+    position:fixed;right:18px;bottom:18px;z-index:30;
+    width:175px;height:120px;cursor:pointer;
+    background:var(--ink);border-radius:8px;
+    box-shadow:0 6px 20px rgba(26,24,22,.25);
+    border:1px solid rgba(250,246,238,.15);
+    overflow:hidden;
+  }
+  #minimap .mcard{position:absolute;background:rgba(250,246,238,.55);border-radius:1px}
+  #minimap .mcard.gold{background:var(--yellow)}
+  #minimap #mviewport{
+    position:absolute;border:1.5px solid var(--yellow);border-radius:2px;
+    background:rgba(245,197,24,.12);pointer-events:none;
+  }
+  #minimap:focus-visible{outline:2px solid var(--yellow);outline-offset:2px}
+  #mmlabel{
+    position:fixed;right:18px;bottom:142px;z-index:30;
+    font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.14em;
+    text-transform:uppercase;color:rgba(26,24,22,.5);text-align:right;width:175px;
+  }
+
+  @media (max-width:767px){
+    #hint{font-size:11px;padding:9px 13px;max-width:62vw}
+    #jumpJoin{font-size:11px;padding:9px 13px}
+    #minimap{width:140px;height:96px}
+    #mmlabel{width:140px;bottom:118px}
+  }
+</style>
+</head>
+<body>
+
+<div id="viewport" aria-label="Pannable canvas. Use arrow keys to wander." tabindex="0">
+  <div id="world">
+
+    <svg id="threads" width="3500" height="2400" viewBox="0 0 3500 2400" aria-hidden="true"></svg>
+
+    <!-- WORDMARK PLAQUE — start position -->
+    <section class="card" id="c-wordmark" style="left:1560px;top:1010px" data-mini="gold">
+      <span class="tag">Underscore / Start here</span>
+      <div class="mark">Underscore<span class="u">_</span></div>
+      <p class="sub">A community for people who build. The underscore is the line under the blank — the space we hold for each other. Founded 2021.</p>
+    </section>
+
+    <!-- MANIFESTO -->
+    <section class="card" id="c-manifesto" style="left:2090px;top:900px">
+      <span class="tag">Manifesto</span>
+      <h2>The line holds the place.</h2>
+      <p>Every builder hits the blank: the bug nobody documented, the price nobody publishes, the decision nobody can make for you.</p>
+      <p><strong>Underscore exists so the blank is never empty.</strong> Members give hours, not advice from a distance. We answer, we show our work, we leave the door open behind us.</p>
+    </section>
+
+    <!-- STATS BOARD -->
+    <section class="card" id="c-stats" style="left:2560px;top:1170px">
+      <span class="tag">The Core / Ledger</span>
+      <div class="row"><span class="num">1,200+</span><span class="lbl">Members</span></div>
+      <div class="row"><span class="num">40</span><span class="lbl">Cities</span></div>
+      <div class="row"><span class="num">9,000</span><span class="lbl">Hours given</span></div>
+      <div class="row"><span class="num">2021</span><span class="lbl">Founded</span></div>
+    </section>
+
+    <!-- MEMBERS -->
+    <section class="card member" id="c-maya" style="left:1170px;top:740px">
+      <span class="tag">The Core / 001</span>
+      <div class="avatar" aria-hidden="true"><span>_</span></div>
+      <h2>Maya Chen</h2>
+      <span class="role">Founder · Oakland</span>
+      <p>Two companies in, one sold, one shut down. She picks up the phone for first-time founders because nobody picked up for her.</p>
+      <div class="gave">Hours given: <b>212</b> · since 2021</div>
+    </section>
+
+    <section class="card member" id="c-sam" style="left:800px;top:1060px">
+      <span class="tag">The Core / 002</span>
+      <div class="avatar" aria-hidden="true"><span>_</span></div>
+      <h2>Sam Osei</h2>
+      <span class="role">Engineer · Boston</span>
+      <p>Distributed-systems engineer. Known in the Core for answering midnight debugging calls — and for the post-mortems he writes afterward.</p>
+      <div class="gave">Hours given: <b>187</b> · since 2022</div>
+    </section>
+
+    <section class="card member" id="c-ana" style="left:1430px;top:1620px">
+      <span class="tag">The Core / 003</span>
+      <div class="avatar" aria-hidden="true"><span>_</span></div>
+      <h2>Ana Reyes</h2>
+      <span class="role">Designer · Mexico City</span>
+      <p>Brand and product designer. Runs a monthly portfolio clinic for Core members shipping their first public thing.</p>
+      <div class="gave">Hours given: <b>156</b> · since 2022</div>
+    </section>
+
+    <section class="card member" id="c-david" style="left:1980px;top:1690px">
+      <span class="tag">The Core / 004</span>
+      <div class="avatar" aria-hidden="true"><span>_</span></div>
+      <h2>David Park</h2>
+      <span class="role">Operator · Seoul</span>
+      <p>Scaled ops at two marketplaces. Keeps a standing open hour every Thursday: bring a messy spreadsheet, leave with a system.</p>
+      <div class="gave">Hours given: <b>168</b> · since 2021</div>
+    </section>
+
+    <section class="card member" id="c-leila" style="left:2980px;top:1330px">
+      <span class="tag">The Core / 005</span>
+      <div class="avatar" aria-hidden="true"><span>_</span></div>
+      <h2>Leila Haddad</h2>
+      <span class="role">Researcher · Beirut</span>
+      <p>Materials researcher. Sends members the paper before it's published — with notes on which claims to trust.</p>
+      <div class="gave">Hours given: <b>141</b> · since 2023</div>
+    </section>
+
+    <section class="card member" id="c-jonas" style="left:1840px;top:400px">
+      <span class="tag">The Core / 006</span>
+      <div class="avatar" aria-hidden="true"><span>_</span></div>
+      <h2>Jonas Weber</h2>
+      <span class="role">Builder · Berlin</span>
+      <p>Hardware and firmware. Hosts the Berlin workbench nights where prototypes get taken apart and put back together better.</p>
+      <div class="gave">Hours given: <b>203</b> · since 2021</div>
+    </section>
+
+    <!-- QUOTES -->
+    <section class="card quote" id="c-quote1" style="left:930px;top:1490px">
+      <span class="tag">Heard in the Core</span>
+      <blockquote>I asked at 11pm expecting silence. By midnight I had a fix, a diagram, and a person.</blockquote>
+      <cite>— Priya Nair, product · Bangalore</cite>
+    </section>
+
+    <section class="card quote" id="c-quote2" style="left:2390px;top:520px">
+      <span class="tag">Heard in the Core</span>
+      <blockquote>Nobody here is selling you anything. That's rarer than it should be.</blockquote>
+      <cite>— Tom Aiello, manufacturer · Detroit</cite>
+    </section>
+
+    <!-- CITIES CLUSTER -->
+    <section class="card" id="c-cities" style="left:2560px;top:1620px">
+      <span class="tag">The Core / 40 cities</span>
+      <h2>No headquarters. Forty rooms.</h2>
+      <div class="cluster">
+        <span class="city hot">Oakland</span><span class="city">Boston</span><span class="city hot">Mexico City</span>
+        <span class="city">Seoul</span><span class="city hot">Beirut</span><span class="city">Berlin</span>
+        <span class="city">Bangalore</span><span class="city hot">Detroit</span><span class="city">Lagos</span>
+        <span class="city">São Paulo</span><span class="city">London</span><span class="city">Nairobi</span>
+        <span class="city">Warsaw</span><span class="city">Hanoi</span>
+      </div>
+      <span class="more">+ 26 more. Wherever a member answers, that's an office.</span>
+    </section>
+
+    <!-- GIVING STORY -->
+    <section class="card" id="c-giving" style="left:2920px;top:790px">
+      <span class="tag">How giving works</span>
+      <h2>One week, one thread.</h2>
+      <p>In March, a member in Detroit needed injection-molding quotes she could trust. Here's how the thread moved:</p>
+      <div class="ledger">
+        MON — Tom shares his real quote sheet · <b>1h</b><br>
+        TUE — Jonas reviews the tolerances · <b>2h</b><br>
+        WED — David models the unit economics · <b>1.5h</b><br>
+        FRI — Parts ordered. Thread closed. · <b>4.5h given</b>
+      </div>
+    </section>
+
+    <!-- JOIN DESK — far edge -->
+    <section class="card" id="c-join" style="left:3080px;top:1900px" data-mini="gold">
+      <span class="tag">The far edge / Join desk</span>
+      <h2>Join the Core.</h2>
+      <p>Membership costs time, not money. Tell us what you build and what you can give. A current member reads every application.</p>
+      <form id="joinForm" novalidate>
+        <label for="jf-name">Name</label>
+        <input id="jf-name" name="name" type="text" autocomplete="name" required>
+        <label for="jf-email">Email</label>
+        <input id="jf-email" name="email" type="email" autocomplete="email" required>
+        <label for="jf-give">What can you give an hour of?</label>
+        <textarea id="jf-give" name="give" placeholder="e.g. pricing reviews, firmware debugging, intro decks"></textarea>
+        <button type="submit">Request membership</button>
+        <div class="done" role="status">Received. A Core member will reply within a week — a person, not a sequence.</div>
+      </form>
+    </section>
+
+  </div>
+</div>
+
+<div id="hint"><span class="dash" aria-hidden="true"></span>Drag to wander. Follow the yellow lines.<span class="keys">· arrows pan</span></div>
+<button id="jumpJoin" type="button">Join the Core →</button>
+<span id="mmlabel">You are here</span>
+<div id="minimap" role="button" tabindex="0" aria-label="Minimap. Click a spot to jump there.">
+  <div id="mviewport"></div>
+</div>
+
+<script>
+(function(){
+  var W = 3500, H = 2400;
+  var world = document.getElementById('world');
+  var viewport = document.getElementById('viewport');
+  var minimap = document.getElementById('minimap');
+  var mview = document.getElementById('mviewport');
+  var threads = document.getElementById('threads');
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var x = 0, y = 0; // world translate (<= 0)
+
+  function clamp(){
+    var minX = Math.min(window.innerWidth - W, 0);
+    var minY = Math.min(window.innerHeight - H, 0);
+    x = Math.max(minX, Math.min(0, x));
+    y = Math.max(minY, Math.min(0, y));
+  }
+  function apply(){
+    world.style.transform = 'translate3d(' + x + 'px,' + y + 'px,0)';
+    drawMini();
+  }
+  function centerOn(wx, wy, glide){
+    x = window.innerWidth/2 - wx;
+    y = window.innerHeight/2 - wy;
+    clamp();
+    if (glide && !reduced){
+      world.classList.add('glide');
+      setTimeout(function(){ world.classList.remove('glide'); }, 600);
+    }
+    apply();
+  }
+
+  // ---- threads (drawn between card centers) ----
+  function center(id){
+    var el = document.getElementById(id);
+    return { x: el.offsetLeft + el.offsetWidth/2, y: el.offsetTop + el.offsetHeight/2 };
+  }
+  var pairs = [
+    ['c-wordmark','c-manifesto'], ['c-manifesto','c-stats'],
+    ['c-wordmark','c-maya'], ['c-maya','c-sam'], ['c-sam','c-quote1'],
+    ['c-quote1','c-ana'], ['c-ana','c-david'], ['c-david','c-cities'],
+    ['c-stats','c-cities'], ['c-cities','c-leila'], ['c-leila','c-giving'],
+    ['c-giving','c-quote2'], ['c-quote2','c-jonas'], ['c-jonas','c-wordmark'],
+    ['c-giving','c-join'], ['c-cities','c-join']
+  ];
+  function drawThreads(){
+    var ns = 'http://www.w3.org/2000/svg';
+    threads.innerHTML = '';
+    pairs.forEach(function(p){
+      var a = center(p[0]), b = center(p[1]);
+      var ln = document.createElementNS(ns, 'line');
+      ln.setAttribute('x1', a.x); ln.setAttribute('y1', a.y);
+      ln.setAttribute('x2', b.x); ln.setAttribute('y2', b.y);
+      threads.appendChild(ln);
+    });
+  }
+
+  // ---- minimap ----
+  var cards = Array.prototype.slice.call(document.querySelectorAll('.card'));
+  function buildMini(){
+    Array.prototype.slice.call(minimap.querySelectorAll('.mcard')).forEach(function(n){ n.remove(); });
+    var sx = minimap.clientWidth / W, sy = minimap.clientHeight / H;
+    cards.forEach(function(c){
+      var d = document.createElement('div');
+      d.className = 'mcard' + (c.getAttribute('data-mini') === 'gold' ? ' gold' : '');
+      d.style.left = (c.offsetLeft * sx) + 'px';
+      d.style.top = (c.offsetTop * sy) + 'px';
+      d.style.width = Math.max(3, c.offsetWidth * sx) + 'px';
+      d.style.height = Math.max(2, c.offsetHeight * sy) + 'px';
+      minimap.appendChild(d);
+    });
+  }
+  function drawMini(){
+    var sx = minimap.clientWidth / W, sy = minimap.clientHeight / H;
+    mview.style.left = (-x * sx) + 'px';
+    mview.style.top = (-y * sy) + 'px';
+    mview.style.width = (window.innerWidth * sx) + 'px';
+    mview.style.height = (window.innerHeight * sy) + 'px';
+  }
+  function miniJump(e){
+    var r = minimap.getBoundingClientRect();
+    var wx = ((e.clientX - r.left) / r.width) * W;
+    var wy = ((e.clientY - r.top) / r.height) * H;
+    centerOn(wx, wy, true);
+  }
+  minimap.addEventListener('click', miniJump);
+  minimap.addEventListener('keydown', function(e){
+    if (e.key === 'Enter' || e.key === ' '){
+      e.preventDefault();
+      var join = center('c-join');
+      centerOn(join.x, join.y, true);
+    }
+  });
+
+  // ---- panning: pointer drag ----
+  var dragging = false, sx0 = 0, sy0 = 0, ox = 0, oy = 0, moved = false;
+  viewport.addEventListener('pointerdown', function(e){
+    if (e.target.closest('input, textarea, button, a, select, label')) return;
+    dragging = true; moved = false;
+    sx0 = e.clientX; sy0 = e.clientY; ox = x; oy = y;
+    viewport.classList.add('dragging');
+    viewport.setPointerCapture(e.pointerId);
+  });
+  viewport.addEventListener('pointermove', function(e){
+    if (!dragging) return;
+    var dx = e.clientX - sx0, dy = e.clientY - sy0;
+    if (Math.abs(dx) + Math.abs(dy) > 4) moved = true;
+    x = ox + dx; y = oy + dy;
+    clamp(); apply();
+  });
+  function endDrag(){ dragging = false; viewport.classList.remove('dragging'); }
+  viewport.addEventListener('pointerup', endDrag);
+  viewport.addEventListener('pointercancel', endDrag);
+  // suppress accidental text selection while dragging
+  viewport.addEventListener('dragstart', function(e){ e.preventDefault(); });
+
+  // ---- keyboard panning ----
+  viewport.addEventListener('keydown', function(e){
+    var step = e.shiftKey ? 320 : 90;
+    var k = e.key;
+    if (k === 'ArrowLeft'){ x += step; }
+    else if (k === 'ArrowRight'){ x -= step; }
+    else if (k === 'ArrowUp'){ y += step; }
+    else if (k === 'ArrowDown'){ y -= step; }
+    else return;
+    e.preventDefault();
+    clamp(); apply();
+  });
+
+  // ---- jump to join ----
+  document.getElementById('jumpJoin').addEventListener('click', function(){
+    var join = center('c-join');
+    centerOn(join.x, join.y, true);
+    setTimeout(function(){ document.getElementById('jf-name').focus({preventScroll:true}); }, reduced ? 0 : 600);
+  });
+
+  // ---- join form ----
+  document.getElementById('joinForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var name = document.getElementById('jf-name');
+    var email = document.getElementById('jf-email');
+    if (!name.value.trim()){ name.focus(); return; }
+    if (!email.value.trim() || email.value.indexOf('@') < 0){ email.focus(); return; }
+    var done = this.querySelector('.done');
+    done.style.display = 'block';
+    this.querySelector('button').textContent = 'Request sent _';
+    this.querySelector('button').disabled = true;
+  });
+
+  // ---- init ----
+  window.addEventListener('resize', function(){ clamp(); apply(); buildMini(); });
+  drawThreads();
+  buildMini();
+  var start = center('c-wordmark');
+  centerOn(start.x, start.y, false);
+})();
+</script>
+</body>
+</html>

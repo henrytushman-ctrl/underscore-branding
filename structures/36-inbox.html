@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore Mail — Inbox</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231A1816'/%3E%3Crect x='6' y='22' width='20' height='4' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --yellow:#F5C518;
+    --ink:#1A1816;
+    --cream:#FAF6EE;
+    --hair:rgba(26,24,22,.12);
+    --muted:rgba(26,24,22,.55);
+    --hover:#F3EDDF;
+    --selected:#F0E8D5;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  ::selection{background:var(--yellow);color:var(--ink)}
+  html,body{height:100%}
+  body{
+    font-family:'Inter',sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    font-size:14px;
+    overflow:hidden;
+  }
+  .mono{font-family:'IBM Plex Mono',monospace}
+  button{font-family:inherit}
+
+  /* ---------- app frame ---------- */
+  #app{display:grid;grid-template-rows:56px 1fr;height:100vh}
+
+  /* top bar */
+  #topbar{
+    display:flex;align-items:center;gap:14px;
+    padding:0 18px;
+    border-bottom:1px solid var(--hair);
+    background:var(--cream);
+  }
+  #logo{
+    width:30px;height:30px;flex:0 0 30px;
+    background:var(--ink);
+    display:flex;align-items:flex-end;justify-content:center;
+    padding-bottom:7px;
+  }
+  #logo span{display:block;width:16px;height:3px;background:var(--yellow)}
+  #topbar .title{font-weight:700;font-size:15px;letter-spacing:-.01em}
+  #topbar .title em{font-style:normal;color:var(--muted);font-weight:500}
+  #topbar .addr{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.04em}
+
+  /* main split */
+  #main{display:grid;grid-template-columns:208px 380px 1fr;min-height:0}
+
+  /* ---------- folders ---------- */
+  #folders{
+    border-right:1px solid var(--hair);
+    padding:18px 10px;
+  }
+  #folders .f{
+    display:flex;align-items:center;justify-content:space-between;
+    width:100%;text-align:left;
+    padding:9px 12px;border:none;background:transparent;
+    font-size:13.5px;font-weight:500;color:var(--ink);
+    cursor:pointer;border-radius:0;
+  }
+  #folders .f:hover{background:var(--hover)}
+  #folders .f.active{background:var(--ink);color:var(--cream)}
+  #folders .f.active .count{background:var(--yellow);color:var(--ink)}
+  #folders .count{
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;
+    background:var(--hair);padding:1px 7px;
+  }
+  #folders .legend{
+    margin-top:28px;padding:12px;
+    font-size:12px;line-height:1.6;color:var(--muted);
+    border-top:1px solid var(--hair);
+  }
+  #folders .legend b{color:var(--ink);font-weight:600}
+
+  /* ---------- message list ---------- */
+  #list{
+    border-right:1px solid var(--hair);
+    overflow-y:auto;
+    min-height:0;
+  }
+  #list-head{
+    position:sticky;top:0;background:var(--cream);z-index:2;
+    padding:14px 16px 10px;
+    border-bottom:1px solid var(--hair);
+    display:flex;align-items:baseline;justify-content:space-between;
+  }
+  #list-head h1{font-size:14px;font-weight:700}
+  #list-head .meta{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--muted)}
+
+  .msg{
+    display:block;width:100%;text-align:left;
+    padding:13px 16px 13px 14px;
+    border:none;border-bottom:1px solid var(--hair);
+    background:transparent;cursor:pointer;
+    border-left:3px solid transparent;
+    color:var(--ink);
+  }
+  .msg:hover{background:var(--hover)}
+  .msg.selected{background:var(--selected);border-left-color:var(--yellow)}
+  .msg:focus-visible{outline:2px solid var(--yellow);outline-offset:-2px}
+  .msg .row1{display:flex;align-items:center;gap:8px}
+  .msg .dot{
+    width:7px;height:7px;border-radius:50%;flex:0 0 7px;
+    background:transparent;
+  }
+  .msg.unread .dot{background:var(--yellow);outline:1px solid var(--ink)}
+  .msg .from{font-weight:500;font-size:13.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .msg.unread .from{font-weight:700}
+  .msg .date{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);flex:none}
+  .msg .subj{font-size:13px;margin-top:3px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .msg.unread .subj{font-weight:600}
+  .msg .prev{font-size:12px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .msg .star{flex:none;width:14px;height:14px}
+  .msg .star svg{display:block;width:14px;height:14px}
+
+  /* ---------- reading pane ---------- */
+  #reader{overflow-y:auto;min-height:0;background:var(--cream)}
+  #reader-inner{max-width:680px;padding:30px 40px 80px}
+  #back{
+    display:none;
+    margin-bottom:16px;
+    background:transparent;border:1px solid var(--hair);
+    padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;color:var(--ink);
+  }
+  #toolbar{
+    display:flex;gap:6px;justify-content:flex-end;margin-bottom:18px;
+  }
+  #toolbar .tb{
+    width:34px;height:34px;border:1px solid var(--hair);
+    background:transparent;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+  }
+  #toolbar .tb:hover{background:var(--hover)}
+  #toolbar svg{width:16px;height:16px}
+
+  .m-subject{font-size:22px;font-weight:700;letter-spacing:-.015em;line-height:1.25}
+  .m-pin{
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;
+    background:var(--yellow);padding:3px 9px;margin-bottom:12px;
+  }
+  .m-meta{
+    display:flex;align-items:center;gap:12px;
+    margin:18px 0 26px;padding-bottom:18px;
+    border-bottom:1px solid var(--hair);
+  }
+  .m-avatar{
+    width:38px;height:38px;flex:0 0 38px;
+    background:var(--ink);color:var(--yellow);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:14px;
+  }
+  .m-avatar.y{background:var(--yellow);color:var(--ink)}
+  .m-from b{font-weight:600;font-size:13.5px}
+  .m-from .em{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)}
+  .m-date{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)}
+
+  .m-body{font-size:14.5px;line-height:1.75}
+  .m-body p{margin:0 0 16px}
+  .m-body p:last-child{margin-bottom:0}
+  .m-body .sig{color:var(--muted);font-size:13px;border-top:1px solid var(--hair);padding-top:14px;margin-top:24px}
+  .m-body .sig b{color:var(--ink)}
+  .m-body .hl{background:var(--yellow);padding:0 3px}
+  .m-body blockquote{
+    border-left:3px solid var(--yellow);
+    padding:2px 0 2px 16px;margin:0 0 16px;
+    color:var(--ink);
+  }
+  .m-body .qhead{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:8px}
+  .m-body .digest{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
+    background:var(--hair);border:1px solid var(--hair);
+    margin:20px 0;
+  }
+  .m-body .digest div{background:var(--cream);padding:16px 14px}
+  .m-body .digest .n{font-size:26px;font-weight:700;letter-spacing:-.02em}
+  .m-body .digest .n::after{content:"_";color:var(--yellow)}
+  .m-body .digest .l{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+  .m-body ul{margin:0 0 16px 18px}
+  .m-body li{margin-bottom:8px}
+
+  /* join form inside the invitation email */
+  .mail-form{
+    border:1px solid var(--ink);
+    padding:22px;margin:22px 0 8px;
+    display:flex;flex-direction:column;gap:14px;
+    background:#fff;
+  }
+  .mail-form label{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+  .mail-form input,.mail-form textarea{
+    width:100%;font-family:'Inter',sans-serif;font-size:14px;
+    border:1px solid var(--hair);background:var(--cream);
+    padding:10px 12px;color:var(--ink);border-radius:0;
+  }
+  .mail-form input:focus,.mail-form textarea:focus{outline:2px solid var(--yellow);outline-offset:-1px;border-color:var(--ink)}
+  .mail-form textarea{resize:none;height:70px}
+  .mail-form button{
+    align-self:flex-start;
+    background:var(--ink);color:var(--cream);
+    font-weight:600;font-size:14px;
+    border:none;padding:12px 24px;cursor:pointer;
+  }
+  .mail-form button span{color:var(--yellow)}
+  .mail-form button:hover,.mail-form button:focus-visible{background:var(--yellow);color:var(--ink);outline:none}
+  .mail-form button:hover span,.mail-form button:focus-visible span{color:var(--ink)}
+  .sent-note{
+    background:var(--yellow);padding:16px 18px;margin:22px 0 8px;
+    font-weight:500;line-height:1.6;
+  }
+  .sent-note .mono{display:block;font-size:10px;letter-spacing:.12em;margin-top:8px;opacity:.7}
+
+  /* ---------- mobile ---------- */
+  @media (max-width:767px){
+    #main{grid-template-columns:1fr}
+    #folders{display:none}
+    #reader{display:none}
+    body.viewing #list{display:none}
+    body.viewing #reader{display:block}
+    #back{display:inline-block}
+    #reader-inner{padding:18px 18px 70px}
+    #topbar .addr{display:none}
+    .m-body .digest{grid-template-columns:1fr}
+  }
+  @media (min-width:768px) and (max-width:1023px){
+    #main{grid-template-columns:300px 1fr}
+    #folders{display:none}
+  }
+  @media (prefers-reduced-motion: no-preference){
+    #reader-inner{animation:fadein .18s ease}
+    @keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div id="topbar">
+    <div id="logo" aria-hidden="true"><span></span></div>
+    <div class="title">Underscore Mail <em>— the Core, in your inbox</em></div>
+    <div class="addr">you@somewhere.earth</div>
+  </div>
+
+  <div id="main">
+    <!-- folders -->
+    <nav id="folders" aria-label="Folders">
+      <button class="f active"><span>Inbox</span><span class="count" id="inbox-count">8</span></button>
+      <button class="f"><span>Given</span><span class="count">23</span></button>
+      <button class="f"><span>Asked</span><span class="count">4</span></button>
+      <button class="f"><span>Archive</span><span class="count">312</span></button>
+      <div class="legend">
+        <b>Underscore</b> is a give-first community of 1,200+ builders. This inbox is how the Core talks. Read your way down — the invitation is starred.
+      </div>
+    </nav>
+
+    <!-- message list -->
+    <div id="list" role="listbox" aria-label="Messages">
+      <div id="list-head">
+        <h1>Inbox</h1>
+        <span class="meta" id="list-meta">8 MESSAGES · 5 UNREAD</span>
+      </div>
+      <div id="list-items"></div>
+    </div>
+
+    <!-- reading pane -->
+    <div id="reader">
+      <div id="reader-inner">
+        <button id="back" type="button">&larr; Inbox</button>
+        <div id="toolbar" aria-hidden="true">
+          <button class="tb" tabindex="-1" title="Archive">
+            <svg viewBox="0 0 16 16" fill="none" stroke="#1A1816" stroke-width="1.4"><rect x="1.5" y="3" width="13" height="3.5"/><path d="M3 6.5v7h10v-7M6 9.5h4"/></svg>
+          </button>
+          <button class="tb" tabindex="-1" title="Star">
+            <svg viewBox="0 0 16 16" fill="none" stroke="#1A1816" stroke-width="1.4"><path d="M8 1.8l1.9 3.9 4.3.6-3.1 3 .7 4.2L8 11.5l-3.8 2 .7-4.2-3.1-3 4.3-.6z"/></svg>
+          </button>
+        </div>
+        <div id="message"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var STAR = '<svg viewBox="0 0 16 16" fill="#F5C518" stroke="#1A1816" stroke-width="1"><path d="M8 1.8l1.9 3.9 4.3.6-3.1 3 .7 4.2L8 11.5l-3.8 2 .7-4.2-3.1-3 4.3-.6z"/></svg>';
+
+  var messages = [
+    {
+      id:'welcome', from:'The Core', email:'core@underscore.community', avatar:'_', avY:true,
+      subject:'Welcome. Here’s how this works.',
+      preview:'No pitch. Just the one rule we run on, and what to expect from the people here…',
+      date:'Mon 9:02 AM', fullDate:'Monday, June 8 · 9:02 AM', unread:false, starred:false,
+      body:
+        '<p>Hi —</p>' +
+        '<p>You found Underscore. Skipping the pitch; here’s the whole thing in plain words.</p>' +
+        '<p>We’re a community of people who build things — companies, products, factories, research — and who got tired of doing the hard parts alone. So in 2021 a few of us made a deal: <span class="hl">give an hour before you ask for one.</span> That deal became the Core: 1,200+ members in 40 cities who have put in over 9,000 hours for each other since.</p>' +
+        '<p>There’s no fee, no tier, no points. Nobody tracks favors. When you’re stuck, you ask. When someone else is stuck on something you know, you show up. That’s the entire mechanism, and it has held for five years.</p>' +
+        '<p>Read the rest of this inbox — it’s a fair sample of what being here is like. The starred message at the bottom is your invitation.</p>' +
+        '<div class="sig">Given first,<br><b>The Core</b> · underscore_ · est. 2021</div>'
+    },
+    {
+      id:'molding', from:'Maya Chen, Tom Aiello (3)', email:'core-thread@underscore.community', avatar:'MC', avY:false,
+      subject:'Re: anyone know injection molding?',
+      preview:'Tom: send me the CAD. If the wall is under 1mm at the hinge, that’s your crack…',
+      date:'Mon 8:15 AM', fullDate:'Monday, June 8 · 8:15 AM', unread:true, starred:false,
+      body:
+        '<div class="qhead">MAYA CHEN · TUE 9:14 AM</div>' +
+        '<blockquote><p>Hey all — our enclosure keeps cracking at the hinge after ~200 cycles. Third sample run. I’ve never run an injection-mold tool and my shop is out of ideas. Anyone been here?</p></blockquote>' +
+        '<div class="qhead">JONAS WEBER · TUE 11:02 AM</div>' +
+        '<blockquote><p>Been exactly here. I lost a whole tooling run to gate placement once — the weld line ended up right on my living hinge. Where’s your gate relative to the hinge?</p></blockquote>' +
+        '<div class="qhead">TOM AIELLO · WED 4:40 PM</div>' +
+        '<blockquote><p>Maya — send me the CAD. If the wall is under 1mm at the hinge, that’s your crack. I’ve got 30 years of these. Free Thursday 7–8am Detroit time, I’ll get on a call.</p></blockquote>' +
+        '<div class="qhead">MAYA CHEN · THU 9:21 AM</div>' +
+        '<p>Update for the thread: Tom found it in nine minutes — thin wall right where Jonas guessed the weld line was. His mold shop is re-cutting one insert instead of the whole tool. That’s roughly $18k and six weeks I just got back.</p>' +
+        '<p>I owe the line an hour. Several.</p>' +
+        '<div class="sig"><b>Maya Chen</b> · founder, Oakland · the Core since 2021</div>'
+    },
+    {
+      id:'digest', from:'Underscore Digest', email:'digest@underscore.community', avatar:'_', avY:true,
+      subject:'May, counted: 312 intros, 9,000 hours all-time',
+      preview:'The monthly numbers, plus three asks that found their person…',
+      date:'Jun 1', fullDate:'Sunday, June 1 · 7:00 AM', unread:true, starred:false,
+      body:
+        '<p>The monthly count. Numbers stay boring on purpose — they only move when someone gives time.</p>' +
+        '<div class="digest">' +
+          '<div><div class="n">1,200+</div><div class="l">members</div></div>' +
+          '<div><div class="n">312</div><div class="l">intros in May</div></div>' +
+          '<div><div class="n">9,000</div><div class="l">hours, all-time</div></div>' +
+        '</div>' +
+        '<p>Three asks that found their person last month:</p>' +
+        '<ul>' +
+          '<li>A Nairobi founder’s first US distribution contract, read line-by-line by an operator in Seoul. (David Park, 2 hours)</li>' +
+          '<li>A Berlin hardware team’s safety-cert maze, untangled by a researcher who’d published on exactly this. (Leila Haddad, 90 minutes)</li>' +
+          '<li>A first-time design hire in Mexico City, portfolio-reviewed before the offer went out. (Ana Reyes, 1 hour)</li>' +
+        '</ul>' +
+        '<p>New chapters open in Nairobi and Tokyo. That makes 40 cities.</p>' +
+        '<div class="sig"><b>Underscore</b> · give first · est. 2021</div>'
+    },
+    {
+      id:'maya', from:'Maya Chen', email:'maya@underscore.community', avatar:'MC', avY:false,
+      subject:'What I wish someone had told me in year one',
+      preview:'You don’t need more advice. You need one person who has held the exact wrench…',
+      date:'May 29', fullDate:'Thursday, May 29 · 6:48 PM', unread:true, starred:false,
+      body:
+        '<p>Short one, because I say this to every new member and I’ll say it to you:</p>' +
+        '<p>You don’t need more advice. The internet is full of advice. You need <span class="hl">one person who has held the exact wrench</span> — who shipped your kind of product, signed your kind of lease, fired your kind of vendor. The Core is just a fast way to find that person, and a standing reason for them to pick up.</p>' +
+        '<p>When I joined in 2021 I thought I was here to get help. Five years in, the hours I’ve given are the part I’d keep.</p>' +
+        '<div class="sig"><b>Maya Chen</b> · founder, Oakland</div>'
+    },
+    {
+      id:'sam', from:'Sam Osei', email:'sam@underscore.community', avatar:'SO', avY:false,
+      subject:'Office hours, Thursdays — bring me your gnarliest bug',
+      preview:'Standing offer for anyone in the Core: two hours, every Thursday night…',
+      date:'May 27', fullDate:'Tuesday, May 27 · 9:12 PM', unread:false, starred:false,
+      body:
+        '<p>Standing offer, renewing it for the year:</p>' +
+        '<p>Every Thursday, 8–10pm Boston time, I take the Core’s gnarliest engineering problems. Firmware, backends, weird race conditions, “it only fails on the customer’s machine” — all of it. No prep needed, screen-share and go.</p>' +
+        '<p>Last month this slot debugged a CAN bus issue for a member in Detroit and got a Bangalore team off a database migration cliff. Two hours a week. It compounds.</p>' +
+        '<p>I came to Underscore for the answers. I stayed because giving the answers turned out to be the better deal.</p>' +
+        '<div class="sig"><b>Sam Osei</b> · engineer, Boston · the Core since 2022</div>'
+    },
+    {
+      id:'leila', from:'Leila Haddad', email:'leila@underscore.community', avatar:'LH', avY:false,
+      subject:'On asking badly (please do)',
+      preview:'New members apologize for their questions. Stop. The half-formed ask is the real one…',
+      date:'May 24', fullDate:'Saturday, May 24 · 11:30 AM', unread:true, starred:false,
+      body:
+        '<p>A pattern I see from Beirut, where my chapter meets monthly: new members apologize for their questions. “Sorry if this is basic.” “Sorry, half-formed thought.”</p>' +
+        '<p>Stop. <span class="hl">The half-formed ask is the real one.</span> By the time a question sounds impressive, you’ve usually already paid the cost of figuring it out alone — which is the exact cost this community exists to remove.</p>' +
+        '<p>I’m a researcher; my whole field runs on asking early and in public. The Core works the same way. Ask badly. Someone here has the missing half.</p>' +
+        '<div class="sig"><b>Leila Haddad</b> · researcher, Beirut · the Core since 2022</div>'
+    },
+    {
+      id:'ana', from:'Ana Reyes', email:'ana@underscore.community', avatar:'AR', avY:false,
+      subject:'Mexico City chapter — first Thursday, as always',
+      preview:'Twelve of us last month. A founder, two engineers, a ceramicist. Bring work-in-progress…',
+      date:'May 20', fullDate:'Tuesday, May 20 · 3:05 PM', unread:false, starred:false,
+      body:
+        '<p>Mexico City Core meets the first Thursday of every month, Roma Norte, 7pm. Twelve of us last time — a founder, two engineers, a ceramicist who is rethinking her kiln supply chain.</p>' +
+        '<p>Format never changes: everyone brings one piece of work-in-progress and one thing they can give. No demos, no pitching. The best help I’ve ever gotten as a designer came from the manufacturer in the room, not the other designers.</p>' +
+        '<p>If you’re in any of the 40 cities, your chapter runs something like this. If you’re not — that’s how new cities start.</p>' +
+        '<div class="sig"><b>Ana Reyes</b> · designer, Mexico City · the Core since 2021</div>'
+    },
+    {
+      id:'invite', from:'The Core', email:'join@underscore.community', avatar:'_', avY:true,
+      subject:'Invitation: join the Core',
+      preview:'You’ve read enough to know what this is. Three fields, and lead with an hour…',
+      date:'PINNED', fullDate:'Pinned · always at the bottom of the inbox', unread:true, starred:true,
+      body:
+        '<p>You’ve read the inbox. You know what this is now: 1,200+ people in 40 cities who answer each other, founded 2021, paid for in hours — 9,000 of them so far.</p>' +
+        '<p>Joining costs nothing but the deal: <span class="hl">give an hour before you ask for one.</span> Tell us who you are and what your first hour could be. A current member — a person, not a filter — reads every application and replies within a week.</p>' +
+        '<form class="mail-form" id="join-form">' +
+          '<div><label for="jf-name">Name</label><input id="jf-name" name="name" type="text" autocomplete="name" required></div>' +
+          '<div><label for="jf-city">City</label><input id="jf-city" name="city" type="text" autocomplete="address-level2" required></div>' +
+          '<div><label for="jf-give">The first hour you’d give</label><textarea id="jf-give" name="give" placeholder="e.g. I can pressure-test anyone’s pricing page" required></textarea></div>' +
+          '<button type="submit">Join the Core <span>_</span></button>' +
+        '</form>' +
+        '<div class="sig">Given first,<br><b>The Core</b> · underscore_ · est. 2021</div>'
+    },
+    {
+      id:'david', from:'David Park', email:'david@underscore.community', avatar:'DP', avY:false,
+      subject:'Gave 2 hours to a contract review — a note on why',
+      preview:'Someone asked why an operator in Seoul would read a Nairobi distribution contract for free…',
+      date:'May 16', fullDate:'Friday, May 16 · 8:40 AM', unread:true, starred:false,
+      body:
+        '<p>After the digest mentioned my contract review, a new member asked me, fairly: why would an operator in Seoul spend two hours on a Nairobi founder’s distribution contract for free?</p>' +
+        '<p>Honest answer: in 2021, a manufacturer I’d never met — Tom, you’ve seen him in this inbox — spent an evening walking me out of a supplier deal that would have sunk my company. I never paid him back. There’s no mechanism to. <span class="hl">The favor only moves forward.</span></p>' +
+        '<p>Two hours on a contract is me, still moving it.</p>' +
+        '<div class="sig"><b>David Park</b> · operator, Seoul · the Core since 2021</div>'
+    }
+  ];
+
+  /* sort: pinned invitation rendered last but starred; order is the array order */
+  var listEl = document.getElementById('list-items');
+  var msgEl = document.getElementById('message');
+  var metaEl = document.getElementById('list-meta');
+  var inboxCount = document.getElementById('inbox-count');
+  var backBtn = document.getElementById('back');
+  var current = null;
+
+  function render(){
+    listEl.innerHTML = '';
+    messages.forEach(function(m, i){
+      var b = document.createElement('button');
+      b.className = 'msg' + (m.unread ? ' unread' : '') + (current === i ? ' selected' : '');
+      b.setAttribute('role','option');
+      b.setAttribute('aria-selected', current === i ? 'true' : 'false');
+      b.innerHTML =
+        '<div class="row1">' +
+          '<span class="dot" aria-hidden="true"></span>' +
+          '<span class="from">' + m.from + '</span>' +
+          (m.starred ? '<span class="star" aria-label="Starred">' + STAR + '</span>' : '') +
+          '<span class="date mono">' + m.date + '</span>' +
+        '</div>' +
+        '<div class="subj">' + m.subject + '</div>' +
+        '<div class="prev">' + m.preview + '</div>';
+      b.addEventListener('click', function(){ open(i); });
+      listEl.appendChild(b);
+    });
+    var unread = messages.filter(function(m){ return m.unread; }).length;
+    metaEl.textContent = messages.length + ' MESSAGES · ' + unread + ' UNREAD';
+    inboxCount.textContent = messages.length;
+  }
+
+  function open(i){
+    current = i;
+    var m = messages[i];
+    m.unread = false;
+    msgEl.innerHTML =
+      (m.starred ? '<div class="m-pin">' + STAR.replace('width="16"','width="11"') + ' PINNED · YOUR INVITATION</div>' : '') +
+      '<h2 class="m-subject">' + m.subject + '</h2>' +
+      '<div class="m-meta">' +
+        '<div class="m-avatar' + (m.avY ? ' y' : '') + '">' + m.avatar + '</div>' +
+        '<div class="m-from"><b>' + m.from + '</b><br><span class="em">' + m.email + '</span></div>' +
+        '<div class="m-date">' + m.fullDate + '</div>' +
+      '</div>' +
+      '<div class="m-body">' + m.body + '</div>';
+    render();
+    document.body.classList.add('viewing');
+    document.getElementById('reader').scrollTop = 0;
+    /* wire join form if present */
+    var f = document.getElementById('join-form');
+    if(f){
+      f.addEventListener('submit', function(e){
+        e.preventDefault();
+        var note = document.createElement('div');
+        note.className = 'sent-note';
+        note.innerHTML = 'Sent. A member of the Core reads every application personally — expect a real reply within a week. Thanks for leading with an hour.<span class="mono">UNDERSCORE · GIVE FIRST · EST. 2021</span>';
+        f.parentNode.replaceChild(note, f);
+      });
+    }
+  }
+
+  backBtn.addEventListener('click', function(){
+    document.body.classList.remove('viewing');
+  });
+
+  /* keyboard: j/k or arrows move through the list when focus is in it */
+  document.getElementById('list').addEventListener('keydown', function(e){
+    if(e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    e.preventDefault();
+    var items = listEl.children;
+    var idx = current === null ? -1 : current;
+    idx = e.key === 'ArrowDown' ? Math.min(idx + 1, items.length - 1) : Math.max(idx - 1, 0);
+    open(idx);
+    items[idx].focus();
+  });
+
+  render();
+  /* welcome selected by default on desktop; on mobile stay in list view */
+  if(window.matchMedia('(min-width: 768px)').matches){
+    open(0);
+  }
+  document.body.classList.remove('viewing');
+  if(window.matchMedia('(min-width: 768px)').matches){
+    /* keep reading pane visible on desktop regardless of viewing class */
+    document.body.classList.add('viewing');
+    document.body.classList.remove('viewing');
+  }
+})();
+</script>
+</body>
+</html>

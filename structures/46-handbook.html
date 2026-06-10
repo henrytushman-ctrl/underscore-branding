@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Underscore Handbook</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%231A1816'/%3E%3Crect x='12' y='42' width='40' height='9' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --yellow:#F5C518;
+    --ink:#1A1816;
+    --cream:#FAF6EE;
+    --paper:#FFFDF8;
+    --hair:#E6DFD0;
+    --muted:#6F6A60;
+    --mono:'IBM Plex Mono',monospace;
+    --sans:'Inter',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  ::selection{background:var(--yellow);color:var(--ink)}
+  html,body{height:100%}
+  body{
+    font-family:var(--sans);
+    background:var(--cream);
+    color:var(--ink);
+    font-size:16px;
+    line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit}
+  .layout{
+    display:grid;
+    grid-template-columns:264px minmax(0,1fr) 220px;
+    height:100vh;
+  }
+
+  /* ---------- sidebar ---------- */
+  .sidebar{
+    border-right:1px solid var(--hair);
+    background:var(--cream);
+    overflow-y:auto;
+    padding:24px 18px 40px;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+  }
+  .brand{
+    display:flex;align-items:baseline;gap:10px;
+    padding:2px 8px 14px;
+    border-bottom:1px solid var(--hair);
+  }
+  .brand .mark{
+    font-family:var(--mono);
+    font-weight:500;
+    font-size:22px;
+    color:var(--ink);
+    background:var(--yellow);
+    line-height:1;
+    padding:2px 7px 8px;
+  }
+  .brand .name{font-weight:700;font-size:15px;letter-spacing:.01em}
+  .brand .sub{font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .filter-wrap{position:relative}
+  .filter-wrap input{
+    width:100%;
+    font-family:var(--mono);font-size:13px;
+    padding:8px 36px 8px 10px;
+    border:1px solid var(--hair);
+    background:var(--paper);
+    color:var(--ink);
+    border-radius:6px;
+    outline:none;
+  }
+  .filter-wrap input:focus{border-color:var(--ink)}
+  .filter-wrap .kbd{
+    position:absolute;right:8px;top:50%;transform:translateY(-50%);
+    font-family:var(--mono);font-size:11px;color:var(--muted);
+    border:1px solid var(--hair);border-radius:4px;padding:0 6px;background:var(--cream);
+  }
+  nav.tree{font-size:14px}
+  nav.tree .group{margin-bottom:4px}
+  nav.tree .group-label{
+    font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--muted);padding:12px 8px 4px;
+  }
+  nav.tree a{
+    display:block;text-decoration:none;
+    padding:6px 8px;border-radius:6px;
+    color:#3c3832;
+  }
+  nav.tree a:hover{background:#F1EADA}
+  nav.tree a.active{
+    background:var(--ink);color:var(--cream);font-weight:600;
+  }
+  nav.tree a.active::before{content:"_ ";color:var(--yellow);font-family:var(--mono)}
+  nav.tree .child{margin-left:14px;border-left:1px solid var(--hair);padding-left:6px}
+  nav.tree .hidden-by-filter{display:none}
+  nav.tree a.join-cta{
+    margin-top:14px;background:var(--yellow);color:var(--ink);font-weight:700;text-align:center;
+  }
+  nav.tree a.join-cta:hover{background:#e9ba0e}
+  nav.tree a.join-cta.active{background:var(--ink);color:var(--cream)}
+  .no-match{font-family:var(--mono);font-size:12px;color:var(--muted);padding:8px}
+
+  /* ---------- top bar (mobile) ---------- */
+  .topbar{display:none}
+
+  /* ---------- main ---------- */
+  main{
+    overflow-y:auto;
+    background:var(--paper);
+    scroll-behavior:smooth;
+  }
+  @media (prefers-reduced-motion:reduce){
+    main{scroll-behavior:auto}
+  }
+  .page{
+    max-width:720px;
+    margin:0 auto;
+    padding:40px 48px 80px;
+    display:none;
+  }
+  .page.current{display:block}
+  .crumbs{
+    font-family:var(--mono);font-size:12px;color:var(--muted);
+    margin-bottom:28px;
+  }
+  .crumbs b{color:var(--ink);font-weight:500}
+  .page h1{
+    font-size:34px;line-height:1.15;font-weight:800;letter-spacing:-.02em;
+    margin-bottom:6px;
+  }
+  .page h1::after{
+    content:"";display:block;width:56px;height:7px;background:var(--yellow);margin-top:14px;
+  }
+  .lede{font-size:18px;color:#4a463f;margin:20px 0 8px}
+  .page h2{
+    font-size:21px;font-weight:700;letter-spacing:-.01em;
+    margin:44px 0 10px;
+    scroll-margin-top:32px;
+  }
+  .page h2 .num{font-family:var(--mono);font-size:14px;color:var(--muted);font-weight:400;margin-right:10px}
+  .page p{margin:12px 0;max-width:64ch}
+  .page ul,.page ol{margin:12px 0 12px 22px;max-width:62ch}
+  .page li{margin:6px 0}
+  .note{
+    border-left:4px solid var(--yellow);
+    background:#FBF3DA;
+    padding:14px 18px;
+    margin:20px 0;
+    border-radius:0 8px 8px 0;
+    max-width:64ch;
+  }
+  .note b{font-family:var(--mono);font-weight:500;font-size:13px;letter-spacing:.04em}
+  .codeblock{
+    font-family:var(--mono);font-size:13.5px;line-height:1.75;
+    background:var(--ink);color:#EDE7DA;
+    padding:18px 20px;border-radius:10px;
+    margin:18px 0;white-space:pre-wrap;
+    max-width:66ch;
+  }
+  .codeblock .cm{color:#9a948a}
+  .codeblock .y{color:var(--yellow)}
+  table{
+    border-collapse:collapse;width:100%;margin:20px 0;font-size:14.5px;
+  }
+  th{
+    text-align:left;font-family:var(--mono);font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;
+    color:var(--muted);font-weight:500;padding:8px 12px;border-bottom:2px solid var(--ink);
+  }
+  td{padding:10px 12px;border-bottom:1px solid var(--hair)}
+  tr td:first-child{font-weight:600}
+  .tag{
+    font-family:var(--mono);font-size:11.5px;background:#F1EADA;border-radius:4px;padding:2px 7px;white-space:nowrap;
+  }
+  .statgrid{
+    display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:24px 0;
+  }
+  .stat{
+    border:1px solid var(--hair);border-radius:10px;padding:18px 20px;background:var(--cream);
+  }
+  .stat .v{font-size:34px;font-weight:800;letter-spacing:-.02em}
+  .stat .v u{text-decoration:none;border-bottom:6px solid var(--yellow)}
+  .stat .k{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:4px}
+  .pn{
+    display:flex;justify-content:space-between;gap:14px;
+    margin-top:64px;padding-top:24px;border-top:1px solid var(--hair);
+  }
+  .pn a{
+    flex:1;text-decoration:none;border:1px solid var(--hair);border-radius:10px;
+    padding:14px 16px;background:var(--cream);
+  }
+  .pn a:hover{border-color:var(--ink)}
+  .pn .dir{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+  .pn .ttl{font-weight:700;font-size:15px;margin-top:2px}
+  .pn a.next{text-align:right}
+  .pn .spacer{flex:1;border:none;background:none;pointer-events:none}
+
+  /* ---------- join form ---------- */
+  form.join{
+    margin-top:24px;border:1px solid var(--hair);border-radius:12px;background:var(--cream);
+    padding:24px;max-width:560px;
+  }
+  form.join label{
+    display:block;font-family:var(--mono);font-size:12px;letter-spacing:.05em;text-transform:uppercase;
+    color:var(--muted);margin:16px 0 6px;
+  }
+  form.join label:first-of-type{margin-top:0}
+  form.join input,form.join textarea,form.join select{
+    width:100%;font-family:var(--sans);font-size:15px;
+    padding:10px 12px;border:1px solid var(--hair);border-radius:8px;
+    background:var(--paper);color:var(--ink);outline:none;
+  }
+  form.join input:focus,form.join textarea:focus,form.join select:focus{border-color:var(--ink)}
+  form.join textarea{resize:vertical;min-height:90px}
+  form.join button{
+    margin-top:20px;font-family:var(--sans);font-weight:700;font-size:15px;
+    background:var(--yellow);color:var(--ink);border:none;border-radius:8px;
+    padding:13px 26px;cursor:pointer;
+  }
+  form.join button:hover{background:#e9ba0e}
+  form.join button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+  .join-ok{
+    display:none;margin-top:24px;border-left:4px solid var(--yellow);
+    background:#FBF3DA;padding:18px 20px;border-radius:0 8px 8px 0;max-width:560px;
+  }
+  .join-ok.show{display:block}
+
+  /* ---------- right TOC ---------- */
+  .toc{
+    border-left:1px solid var(--hair);
+    padding:40px 20px;
+    overflow-y:auto;
+    background:var(--cream);
+  }
+  .toc .toc-label{
+    font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--muted);margin-bottom:12px;
+  }
+  .toc a{
+    display:block;text-decoration:none;font-size:13px;color:var(--muted);
+    padding:4px 0 4px 12px;border-left:2px solid transparent;margin-left:-1px;
+  }
+  .toc a:hover{color:var(--ink)}
+  .toc a.on{color:var(--ink);font-weight:600;border-left-color:var(--yellow)}
+
+  /* focus visibility */
+  a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{
+    outline:3px solid var(--yellow);outline-offset:2px;
+  }
+  nav.tree a:focus-visible{outline-color:var(--ink)}
+
+  /* ---------- responsive ---------- */
+  @media (max-width:1100px){
+    .layout{grid-template-columns:240px minmax(0,1fr)}
+    .toc{display:none}
+  }
+  @media (max-width:768px){
+    .layout{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr);height:100vh}
+    .topbar{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:12px 16px;border-bottom:1px solid var(--hair);background:var(--cream);
+    }
+    .topbar .brand{border:none;padding:0}
+    .topbar button{
+      font-family:var(--mono);font-size:13px;background:var(--ink);color:var(--cream);
+      border:none;border-radius:6px;padding:8px 14px;cursor:pointer;
+    }
+    .sidebar{
+      display:none;
+      position:fixed;inset:53px 0 0 0;z-index:30;
+      border-right:none;
+    }
+    .sidebar.open{display:flex}
+    .sidebar .brand{display:none}
+    .page{padding:28px 20px 64px}
+    .page h1{font-size:28px}
+    .statgrid{grid-template-columns:1fr 1fr}
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- mobile top bar -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="mark">_</span>
+      <span class="name">Underscore <span class="sub">/ handbook</span></span>
+    </div>
+    <button id="menuBtn" aria-expanded="false" aria-controls="sidebar">Menu</button>
+  </header>
+
+  <!-- sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <span class="mark">_</span>
+      <div>
+        <div class="name">Underscore</div>
+        <div class="sub">the handbook · v3</div>
+      </div>
+    </div>
+    <div class="filter-wrap">
+      <input id="navFilter" type="text" placeholder="Filter pages…" aria-label="Filter navigation. Press slash to focus.">
+      <span class="kbd">/</span>
+    </div>
+    <nav class="tree" aria-label="Handbook navigation">
+      <div class="group">
+        <a href="#/welcome" data-route="/welcome">Welcome</a>
+        <a href="#/idea" data-route="/idea">The idea</a>
+      </div>
+      <div class="group">
+        <div class="group-label">The Core</div>
+        <div class="child">
+          <a href="#/core/members" data-route="/core/members">Members</a>
+          <a href="#/core/stats" data-route="/core/stats">Stats</a>
+          <a href="#/core/chapters" data-route="/core/chapters">Chapters</a>
+        </div>
+      </div>
+      <div class="group">
+        <div class="group-label">Giving</div>
+        <div class="child">
+          <a href="#/giving/asks" data-route="/giving/asks">Asks</a>
+          <a href="#/giving/offers" data-route="/giving/offers">Offers</a>
+          <a href="#/giving/etiquette" data-route="/giving/etiquette">Etiquette</a>
+        </div>
+      </div>
+      <div class="group">
+        <a href="#/history" data-route="/history">History</a>
+        <a class="join-cta" href="#/join" data-route="/join">Join the Core</a>
+      </div>
+      <div class="no-match" hidden>No pages match.</div>
+    </nav>
+  </aside>
+
+  <!-- main content -->
+  <main id="main" tabindex="-1">
+
+    <!-- WELCOME -->
+    <article class="page" data-route="/welcome" data-title="Welcome" data-crumb="Handbook / Welcome">
+      <div class="crumbs">Handbook / <b>Welcome</b></div>
+      <h1>Welcome</h1>
+      <p class="lede">This is the operating manual for Underscore and its member community, the Core. Everything you need to understand us — and to decide whether to join us — is in these pages.</p>
+
+      <h2 id="w-what"><span class="num">1.1</span>What Underscore is</h2>
+      <p>Underscore is a community of builders, operators, and experts who give time to each other. Not advice-from-a-distance. Time: an hour on a call, an afternoon in a workshop, a week of looking over your supplier contracts because someone in Detroit has done it forty times and you haven't.</p>
+      <p>Our mark is the underscore — the character that sits beneath the line and holds the space. That's the posture. We're not the headline of anyone's story. We're what's underneath it.</p>
+
+      <h2 id="w-who"><span class="num">1.2</span>Who this handbook is for</h2>
+      <p>Two readers. Members, who use it to remember how we work. And people considering membership, who use it to decide whether they'd want to. We wrote it once, plainly, for both.</p>
+
+      <div class="note"><b>Note:</b> If you read nothing else, read <a href="#/giving/etiquette">Etiquette</a>. It's three rules. They're the whole culture.</div>
+
+      <h2 id="w-how"><span class="num">1.3</span>How to read it</h2>
+      <p>The sidebar is the table of contents. Start with <a href="#/idea">The idea</a> if you want the reasoning, or skip straight to <a href="#/core/members">Members</a> if you want the people. The <a href="#/join">Join</a> page is always one click away — that's deliberate.</p>
+    </article>
+
+    <!-- THE IDEA -->
+    <article class="page" data-route="/idea" data-title="The idea" data-crumb="Handbook / The idea">
+      <div class="crumbs">Handbook / <b>The idea</b></div>
+      <h1>The idea</h1>
+      <p class="lede">Most professional networks trade in introductions. We trade in hours. The difference sounds small and changes everything.</p>
+
+      <h2 id="i-problem"><span class="num">2.1</span>The problem we started with</h2>
+      <p>When you're building something, the help you need is rarely a contact. It's competence, applied to your specific mess, by someone who has no stake in flattering you. That kind of help is everywhere — locked inside busy people — and almost impossible to ask for cold.</p>
+      <p>So we built a structure where asking is normal, giving is expected, and nobody keeps score.</p>
+
+      <h2 id="i-mechanism"><span class="num">2.2</span>The mechanism</h2>
+      <ol>
+        <li>Every member commits hours — most give two to four a month.</li>
+        <li>Members post <b>asks</b>: specific, scoped problems. (See <a href="#/giving/asks">Asks</a>.)</li>
+        <li>Members post <b>offers</b>: standing capabilities others can claim. (See <a href="#/giving/offers">Offers</a>.)</li>
+        <li>Chapters in 40 cities turn the online graph into rooms with people in them.</li>
+      </ol>
+
+      <h2 id="i-noledger"><span class="num">2.3</span>Why there's no ledger</h2>
+      <p>We deliberately do not track who gave what to whom. A ledger turns generosity into bookkeeping, and bookkeeping invites settling up. The system stays generous as long as everyone gives slightly more than they think is fair and nobody checks.</p>
+      <div class="note"><b>Note:</b> Nobody tracks favors. Don't start.</div>
+
+      <h2 id="i-isnot"><span class="num">2.4</span>What this is not</h2>
+      <ul>
+        <li>Not a deal-flow network. Investors are welcome as members, not as audience.</li>
+        <li>Not a mastermind, accelerator, or paid mentorship program.</li>
+        <li>Not networking. If you leave a session with a problem solved and no new "connection," that's a success.</li>
+      </ul>
+    </article>
+
+    <!-- MEMBERS -->
+    <article class="page" data-route="/core/members" data-title="Members" data-crumb="Handbook / The Core / Members">
+      <div class="crumbs">Handbook / The Core / <b>Members</b></div>
+      <h1>Members</h1>
+      <p class="lede">The Core is 1,200+ people who build, operate, and know things. Below is a representative slice — the members who hold office hours this quarter.</p>
+
+      <h2 id="m-roster"><span class="num">3.1</span>This quarter's roster</h2>
+      <table>
+        <thead><tr><th>Member</th><th>Does</th><th>City</th><th>Since</th><th>Gives</th></tr></thead>
+        <tbody>
+          <tr><td>Maya Chen</td><td>Founder</td><td>Oakland</td><td>2021</td><td><span class="tag">_supplychain</span> <span class="tag">_zero-to-one</span></td></tr>
+          <tr><td>Sam Osei</td><td>Engineer</td><td>Boston</td><td>2021</td><td><span class="tag">_infra</span> <span class="tag">_codereview</span></td></tr>
+          <tr><td>Ana Reyes</td><td>Designer</td><td>Mexico City</td><td>2022</td><td><span class="tag">_brand</span> <span class="tag">_critique</span></td></tr>
+          <tr><td>David Park</td><td>Operator</td><td>Seoul</td><td>2022</td><td><span class="tag">_ops</span> <span class="tag">_hiring</span></td></tr>
+          <tr><td>Leila Haddad</td><td>Researcher</td><td>Beirut</td><td>2022</td><td><span class="tag">_methods</span> <span class="tag">_litreview</span></td></tr>
+          <tr><td>Jonas Weber</td><td>Builder</td><td>Berlin</td><td>2023</td><td><span class="tag">_hardware</span> <span class="tag">_prototyping</span></td></tr>
+          <tr><td>Priya Nair</td><td>Product</td><td>Bangalore</td><td>2023</td><td><span class="tag">_roadmaps</span> <span class="tag">_pricing</span></td></tr>
+          <tr><td>Tom Aiello</td><td>Manufacturer</td><td>Detroit</td><td>2023</td><td><span class="tag">_tooling</span> <span class="tag">_factoryfloor</span></td></tr>
+          <tr><td>Yusuf Demir</td><td>Supply chain</td><td>Istanbul</td><td>2024</td><td><span class="tag">_logistics</span> <span class="tag">_customs</span></td></tr>
+          <tr><td>Claire Dubois</td><td>Counsel</td><td>Paris</td><td>2024</td><td><span class="tag">_contracts</span> <span class="tag">_ip</span></td></tr>
+          <tr><td>Aiko Tanaka</td><td>Engineer</td><td>Tokyo</td><td>2025</td><td><span class="tag">_embedded</span> <span class="tag">_qa</span></td></tr>
+          <tr><td>Marcus Bell</td><td>Finance</td><td>Chicago</td><td>2025</td><td><span class="tag">_models</span> <span class="tag">_fundraising</span></td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="m-makes"><span class="num">3.2</span>What makes someone Core</h2>
+      <p>Three things, and all three matter:</p>
+      <ul>
+        <li><b>Competence.</b> You've done real work and can show it. Titles don't count; shipped things do.</li>
+        <li><b>Capacity.</b> You can actually give a few hours a month. If this year is impossible, apply next year — the door doesn't close.</li>
+        <li><b>Temperament.</b> You can give help without attaching strings, and take help without performing gratitude.</li>
+      </ul>
+
+      <div class="note"><b>Note:</b> "Since" in the roster is membership year, not seniority. A 2025 member's hour is worth exactly what a 2021 member's hour is worth.</div>
+
+      <h2 id="m-find"><span class="num">3.3</span>Finding each other</h2>
+      <p>Members search the directory by tag — the mono labels above. Tags describe what someone gives, not what they are. If your problem is "our injection molds keep failing," you search <span class="tag">_tooling</span> and find Tom, not a job title.</p>
+    </article>
+
+    <!-- STATS -->
+    <article class="page" data-route="/core/stats" data-title="Stats" data-crumb="Handbook / The Core / Stats">
+      <div class="crumbs">Handbook / The Core / <b>Stats</b></div>
+      <h1>Stats</h1>
+      <p class="lede">We keep exactly four numbers. They're the ones that describe the community without ranking anyone in it.</p>
+
+      <h2 id="s-numbers"><span class="num">4.1</span>The numbers</h2>
+      <div class="statgrid">
+        <div class="stat"><div class="v"><u>1,200+</u></div><div class="k">members in the Core</div></div>
+        <div class="stat"><div class="v"><u>40</u></div><div class="k">cities with chapters</div></div>
+        <div class="stat"><div class="v"><u>9,000</u></div><div class="k">hours given, all-time</div></div>
+        <div class="stat"><div class="v"><u>2021</u></div><div class="k">year founded</div></div>
+      </div>
+
+      <h2 id="s-hours"><span class="num">4.2</span>What an "hour given" is</h2>
+      <p>One member's time, applied to another member's problem, logged by the giver after the fact. Office hours, workshop sessions, reviews, site visits. We round down, we don't log social time, and we don't log anything the giver was paid for.</p>
+
+      <h2 id="s-not"><span class="num">4.3</span>What we don't measure</h2>
+      <p>Individual totals, leaderboards, response rates, "engagement." We tried a dashboard in 2022. It made generous people competitive and competitive people insufferable. We deleted it and kept the four numbers above.</p>
+      <div class="note"><b>Note:</b> 9,000 hours is the community total. Your personal number is between you and nobody.</div>
+    </article>
+
+    <!-- CHAPTERS -->
+    <article class="page" data-route="/core/chapters" data-title="Chapters" data-crumb="Handbook / The Core / Chapters">
+      <div class="crumbs">Handbook / The Core / <b>Chapters</b></div>
+      <h1>Chapters</h1>
+      <p class="lede">Forty cities, each with a host, a recurring room, and a calendar. Chapters are where asks become afternoons.</p>
+
+      <h2 id="c-what"><span class="num">5.1</span>What a chapter does</h2>
+      <ul>
+        <li><b>Workshop nights</b> — members bring one live problem each; the room works them in 25-minute rounds.</li>
+        <li><b>Office hours</b> — a member with deep expertise opens their calendar to the chapter for an afternoon.</li>
+        <li><b>Site visits</b> — factories, labs, studios. Tom Aiello's Detroit floor walk runs twice a year and books out in a day.</li>
+      </ul>
+
+      <h2 id="c-where"><span class="num">5.2</span>Where we are</h2>
+      <p>The largest chapters: Berlin (Jonas Weber hosts), Oakland/SF (Maya Chen), Boston (Sam Osei), Seoul (David Park), Mexico City (Ana Reyes), Bangalore (Priya Nair), Detroit (Tom Aiello), Beirut (Leila Haddad). Thirty-two more across six continents, from Istanbul to Tokyo to Chicago.</p>
+
+      <h2 id="c-start"><span class="num">5.3</span>Starting one</h2>
+      <p>Three members in a city can petition for a chapter. You need a host, a recurring space, and a first workshop night on the calendar. The community team helps with the rest. No franchise fees, no brand police — just the etiquette rules and the mark.</p>
+      <div class="note"><b>Note:</b> A chapter of five that meets monthly beats a chapter of fifty that meets never. Start small and actually meet.</div>
+    </article>
+
+    <!-- ASKS -->
+    <article class="page" data-route="/giving/asks" data-title="Asks" data-crumb="Handbook / Giving / Asks">
+      <div class="crumbs">Handbook / Giving / <b>Asks</b></div>
+      <h1>Asks</h1>
+      <p class="lede">An ask is a scoped request for another member's time. Writing one well is a skill, and it's the most useful skill the Core will teach you.</p>
+
+      <h2 id="a-anatomy"><span class="num">6.1</span>Anatomy of a good ask</h2>
+      <p>Context, the specific problem, what you've tried, what an hour of help would look like. Four parts, under 150 words. Here's a real one (shared with permission):</p>
+      <pre class="codeblock"><span class="cm"># ask · maya.chen · _supplychain</span>
+
+<span class="y">CONTEXT</span>   Hardware startup, 11 people. Our enclosure
+          supplier missed two ship dates and went quiet.
+<span class="y">PROBLEM</span>   I need to decide this week: dual-source now
+          or push the launch six weeks.
+<span class="y">TRIED</span>     Got one backup quote (+40% unit cost).
+          Read their last three emails for signal. Nothing.
+<span class="y">THE HOUR</span>  Walk my decision tree with me. You've fired
+          a supplier before; I haven't.</pre>
+
+      <h2 id="a-bad"><span class="num">6.2</span>What a weak ask looks like</h2>
+      <pre class="codeblock"><span class="cm"># ask · (don't do this)</span>
+
+"Would love to pick someone's brain about
+manufacturing sometime!"</pre>
+      <p>No context, no problem, no scope, no respect for the hour. Nobody can help with this, so nobody will.</p>
+
+      <h2 id="a-rules"><span class="num">6.3</span>Rules of thumb</h2>
+      <ul>
+        <li>Ask for an hour, not a relationship. Relationships happen on their own.</li>
+        <li>One ask, one problem. Two problems is two asks.</li>
+        <li>Say what you've already tried. It saves the giver twenty minutes and proves the ask is real.</li>
+        <li>Close the loop. When it's resolved, tell the person who helped what happened.</li>
+      </ul>
+      <div class="note"><b>Note:</b> Asking is a contribution. A good ask gives the room a real problem to work — that's worth more than another polite offer.</div>
+    </article>
+
+    <!-- OFFERS -->
+    <article class="page" data-route="/giving/offers" data-title="Offers" data-crumb="Handbook / Giving / Offers">
+      <div class="crumbs">Handbook / Giving / <b>Offers</b></div>
+      <h1>Offers</h1>
+      <p class="lede">An offer is a standing capability other members can claim. The best ones are narrow, concrete, and slightly unglamorous.</p>
+
+      <h2 id="o-anatomy"><span class="num">7.1</span>Anatomy of a good offer</h2>
+      <pre class="codeblock"><span class="cm"># offer · sam.osei · _infra _codereview</span>
+
+<span class="y">WHAT</span>      I'll review your deploy pipeline or your
+          worst 500 lines of backend code.
+<span class="y">FORMAT</span>    90 minutes, screen share, you drive.
+<span class="y">GOOD FIT</span>  Teams of 1–10 without a senior infra person.
+<span class="y">NOT</span>       Architecture-from-scratch. Bring something
+          that exists and hurts.
+<span class="y">CLAIM</span>     2 slots/month. Book via the directory.</pre>
+
+      <h2 id="o-narrow"><span class="num">7.2</span>Narrow beats broad</h2>
+      <p>"Happy to help with anything!" generates nothing. "I'll read your first customs declaration before you file it" (Yusuf, Istanbul) gets claimed every month. Specificity tells people exactly when to think of you.</p>
+
+      <h2 id="o-examples"><span class="num">7.3</span>Standing offers this quarter</h2>
+      <ul>
+        <li>Ana Reyes — a one-hour teardown of your brand's first impression, screen-recorded.</li>
+        <li>Claire Dubois — 45 minutes on any contract under ten pages, before you sign it.</li>
+        <li>Priya Nair — pressure-test your pricing page against three buyer personas.</li>
+        <li>Tom Aiello — phone call from the factory floor: bring a part that keeps failing.</li>
+        <li>Leila Haddad — research methods clinic: is your survey actually measuring anything?</li>
+      </ul>
+      <div class="note"><b>Note:</b> Renew or retire your offer each quarter. A stale offer that nobody can actually claim is worse than none.</div>
+    </article>
+
+    <!-- ETIQUETTE -->
+    <article class="page" data-route="/giving/etiquette" data-title="Etiquette" data-crumb="Handbook / Giving / Etiquette">
+      <div class="crumbs">Handbook / Giving / <b>Etiquette</b></div>
+      <h1>Etiquette</h1>
+      <p class="lede">Three rules. We've run on them since 2021 and they haven't needed amending.</p>
+
+      <h2 id="e-one"><span class="num">8.1</span>Give without strings</h2>
+      <p>Help is not a pitch, a sales call, or a favor to be redeemed. If you give an hour hoping for something back, you gave a sales meeting, not an hour. Members who treat the Core as a pipeline get one conversation about it, then they're out.</p>
+
+      <h2 id="e-two"><span class="num">8.2</span>Take without ceremony</h2>
+      <p>Accept help plainly. You don't owe a gift, a LinkedIn essay, or effusive thanks. You owe two things: show up prepared, and close the loop afterward. That's it.</p>
+      <div class="note"><b>Note:</b> Nobody tracks favors. Don't start. The moment you "owe" someone, you've imported the economy we built this to escape.</div>
+
+      <h2 id="e-three"><span class="num">8.3</span>Keep the room honest</h2>
+      <p>Frank is kind. If the plan won't work, say so in the room, not in the hallway after. We hold confidences absolutely — what's shared in a session stays there — which is exactly what makes honesty affordable.</p>
+
+      <h2 id="e-enforcement"><span class="num">8.4</span>How it's enforced</h2>
+      <p>Lightly, and almost never. Chapter hosts handle friction privately. In five years, eleven people have been asked to leave. The etiquette holds because members chose it, not because anyone polices it.</p>
+    </article>
+
+    <!-- HISTORY -->
+    <article class="page" data-route="/history" data-title="History" data-crumb="Handbook / History">
+      <div class="crumbs">Handbook / <b>History</b></div>
+      <h1>History</h1>
+      <p class="lede">Short version: a borrowed conference room, a rule against keeping score, and five years of compounding.</p>
+
+      <h2 id="h-2021"><span class="num">9.1</span>2021 — the first room</h2>
+      <p>Eleven people in Oakland, convened by Maya Chen, each with one live problem and one hour to give. The format that night — one problem, one room, 25-minute rounds — is still the workshop format today. The name came from the sign-up sheet: every attendee was listed lowercase with an underscore where an affiliation would normally go.</p>
+
+      <h2 id="h-2022"><span class="num">9.2</span>2022 — the deleted dashboard</h2>
+      <p>We grew to 150 members and four cities, and made our one big mistake: a contribution dashboard with per-member hour counts. Within a month it had a leaderboard culture. We deleted it, wrote the no-ledger rule, and grew faster afterward. The lesson is in <a href="#/idea">The idea</a>, section 2.3.</p>
+
+      <h2 id="h-2023"><span class="num">9.3</span>2023–2024 — chapters</h2>
+      <p>Berlin was the first chapter we didn't plant — Jonas Weber just started one and told us after. That became the model: members petition, we support. Detroit, Seoul, Bangalore, Beirut, Istanbul, and twenty others followed. The Detroit tooling rescue — four members spending a week getting Tom Aiello's line running after a tooling failure — became the story we tell about what "hours given" actually means.</p>
+
+      <h2 id="h-now"><span class="num">9.4</span>2025–today</h2>
+      <p>1,200+ members, 40 cities, 9,000 hours given. The number we watch isn't growth — it's whether asks still get answered inside a week. They do.</p>
+    </article>
+
+    <!-- JOIN -->
+    <article class="page" data-route="/join" data-title="Join" data-crumb="Handbook / Join">
+      <div class="crumbs">Handbook / <b>Join</b></div>
+      <h1>Join the Core</h1>
+      <p class="lede">Membership is an application, not a purchase. We read every one, and we reply within two weeks either way.</p>
+
+      <h2 id="j-criteria"><span class="num">10.1</span>What we look for</h2>
+      <p>The three things from the <a href="#/core/members">Members</a> page: competence, capacity, temperament. The form below is built around them. Plain answers beat polished ones.</p>
+
+      <h2 id="j-form"><span class="num">10.2</span>Application</h2>
+      <form class="join" id="joinForm" novalidate>
+        <label for="jf-name">Name</label>
+        <input id="jf-name" name="name" type="text" autocomplete="name" required>
+        <label for="jf-email">Email</label>
+        <input id="jf-email" name="email" type="email" autocomplete="email" required>
+        <label for="jf-city">City</label>
+        <input id="jf-city" name="city" type="text" placeholder="Where would your chapter be?" required>
+        <label for="jf-built">Something you've built or run</label>
+        <textarea id="jf-built" name="built" placeholder="One paragraph. What it was, what your part was." required></textarea>
+        <label for="jf-give">An hour you could give</label>
+        <textarea id="jf-give" name="give" placeholder="Write it like an offer: WHAT / FORMAT / GOOD FIT." required></textarea>
+        <label for="jf-ask">An hour you'd ask for</label>
+        <textarea id="jf-ask" name="ask" placeholder="A real problem you have right now." required></textarea>
+        <button type="submit">Submit application</button>
+      </form>
+      <div class="join-ok" id="joinOk" role="status">
+        <b>Received.</b>
+        <p style="margin-top:6px">Thanks — your application is in. A member from the nearest chapter reads it first; you'll hear from us within two weeks. In the meantime, the rest of this handbook is exactly how we work. No surprises later.</p>
+      </div>
+
+      <h2 id="j-after"><span class="num">10.3</span>What happens after</h2>
+      <ol>
+        <li>A chapter member reads your application within a week.</li>
+        <li>If it's a fit, you get a 30-minute call — them helping you with the ask you wrote above. The interview is a session.</li>
+        <li>You attend one workshop night as a guest. Then both sides decide.</li>
+      </ol>
+      <div class="note"><b>Note:</b> Dues are $0. The commitment is hours, and we'd rather have your two real hours than your money.</div>
+    </article>
+
+  </main>
+
+  <!-- right TOC -->
+  <aside class="toc" aria-label="On this page">
+    <div class="toc-label">On this page</div>
+    <div id="tocList"></div>
+  </aside>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var ORDER = ["/welcome","/idea","/core/members","/core/stats","/core/chapters","/giving/asks","/giving/offers","/giving/etiquette","/history","/join"];
+  var pages = {};
+  document.querySelectorAll(".page").forEach(function(p){ pages[p.dataset.route] = p; });
+  var navLinks = Array.prototype.slice.call(document.querySelectorAll("nav.tree a[data-route]"));
+  var main = document.getElementById("main");
+  var tocList = document.getElementById("tocList");
+  var sidebar = document.getElementById("sidebar");
+  var menuBtn = document.getElementById("menuBtn");
+  var observer = null;
+
+  function routeFromHash(){
+    var h = location.hash.replace(/^#/,"");
+    if(h.charAt(0) !== "/") h = "/welcome";
+    return pages[h] ? h : "/welcome";
+  }
+
+  function buildPrevNext(page, route){
+    var old = page.querySelector(".pn"); if(old) old.remove();
+    var idx = ORDER.indexOf(route);
+    var pn = document.createElement("div"); pn.className = "pn";
+    if(idx > 0){
+      var prev = pages[ORDER[idx-1]];
+      pn.innerHTML += '<a class="prev" href="#'+ORDER[idx-1]+'"><div class="dir">&larr; Previous</div><div class="ttl">'+prev.dataset.title+'</div></a>';
+    } else {
+      pn.innerHTML += '<span class="pn-spacer spacer" aria-hidden="true"></span>';
+    }
+    if(idx < ORDER.length-1){
+      var next = pages[ORDER[idx+1]];
+      pn.innerHTML += '<a class="next" href="#'+ORDER[idx+1]+'"><div class="dir">Next &rarr;</div><div class="ttl">'+next.dataset.title+'</div></a>';
+    } else {
+      pn.innerHTML += '<span class="pn-spacer spacer" aria-hidden="true"></span>';
+    }
+    page.appendChild(pn);
+  }
+
+  function buildToc(page){
+    tocList.innerHTML = "";
+    if(observer){ observer.disconnect(); observer = null; }
+    var heads = page.querySelectorAll("h2[id]");
+    var map = {};
+    heads.forEach(function(h){
+      var a = document.createElement("a");
+      a.href = "#"+page.dataset.route; // keep route; we scroll manually
+      a.textContent = h.textContent.replace(/^[\d.]+\s*/, "");
+      a.dataset.target = h.id;
+      a.addEventListener("click", function(e){
+        e.preventDefault();
+        document.getElementById(h.id).scrollIntoView({block:"start"});
+        document.getElementById(h.id).focus && h.setAttribute("tabindex","-1");
+      });
+      tocList.appendChild(a);
+      map[h.id] = a;
+    });
+    if(!heads.length) return;
+    observer = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(en.isIntersecting){
+          Object.keys(map).forEach(function(k){ map[k].classList.remove("on"); });
+          map[en.target.id].classList.add("on");
+        }
+      });
+    }, {root: main, rootMargin: "0px 0px -70% 0px", threshold: 0});
+    heads.forEach(function(h){ observer.observe(h); });
+    // mark first by default
+    map[heads[0].id].classList.add("on");
+  }
+
+  function render(){
+    var route = routeFromHash();
+    Object.keys(pages).forEach(function(r){
+      pages[r].classList.toggle("current", r === route);
+    });
+    navLinks.forEach(function(a){
+      var on = a.dataset.route === route;
+      a.classList.toggle("active", on);
+      if(on) a.setAttribute("aria-current","page"); else a.removeAttribute("aria-current");
+    });
+    var page = pages[route];
+    buildPrevNext(page, route);
+    buildToc(page);
+    main.scrollTop = 0;
+    document.title = page.dataset.title + " — The Underscore Handbook";
+    // close mobile menu
+    sidebar.classList.remove("open");
+    if(menuBtn) menuBtn.setAttribute("aria-expanded","false");
+  }
+
+  window.addEventListener("hashchange", render);
+  if(!location.hash) history.replaceState(null,"","#/welcome");
+  render();
+
+  // sidebar filter
+  var filter = document.getElementById("navFilter");
+  var noMatch = document.querySelector(".no-match");
+  filter.addEventListener("input", function(){
+    var q = filter.value.trim().toLowerCase();
+    var any = false;
+    navLinks.forEach(function(a){
+      var hit = !q || a.textContent.toLowerCase().indexOf(q) !== -1;
+      a.classList.toggle("hidden-by-filter", !hit);
+      if(hit) any = true;
+    });
+    document.querySelectorAll("nav.tree .group").forEach(function(g){
+      var visible = g.querySelector("a:not(.hidden-by-filter)");
+      g.style.display = visible ? "" : "none";
+    });
+    noMatch.hidden = any;
+  });
+  filter.addEventListener("keydown", function(e){
+    if(e.key === "Enter"){
+      var first = navLinks.find ? navLinks.find(function(a){return !a.classList.contains("hidden-by-filter");})
+        : navLinks.filter(function(a){return !a.classList.contains("hidden-by-filter");})[0];
+      if(first){ location.hash = "#"+first.dataset.route; filter.value=""; filter.dispatchEvent(new Event("input")); }
+    }
+    if(e.key === "Escape"){ filter.value=""; filter.dispatchEvent(new Event("input")); filter.blur(); }
+  });
+
+  // "/" shortcut
+  document.addEventListener("keydown", function(e){
+    if(e.key === "/" && document.activeElement !== filter &&
+       !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){
+      e.preventDefault();
+      if(window.innerWidth <= 768){ sidebar.classList.add("open"); if(menuBtn) menuBtn.setAttribute("aria-expanded","true"); }
+      filter.focus();
+    }
+  });
+
+  // mobile menu
+  if(menuBtn){
+    menuBtn.addEventListener("click", function(){
+      var open = sidebar.classList.toggle("open");
+      menuBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+  }
+
+  // join form
+  var form = document.getElementById("joinForm");
+  form.addEventListener("submit", function(e){
+    e.preventDefault();
+    var ok = true;
+    form.querySelectorAll("[required]").forEach(function(f){
+      if(!f.value.trim()){ ok = false; f.style.borderColor = "#c0392b"; }
+      else f.style.borderColor = "";
+    });
+    var email = document.getElementById("jf-email");
+    if(email.value && email.value.indexOf("@") === -1){ ok = false; email.style.borderColor = "#c0392b"; }
+    if(!ok) return;
+    form.style.display = "none";
+    var done = document.getElementById("joinOk");
+    done.classList.add("show");
+    done.setAttribute("tabindex","-1");
+    done.focus();
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — The Table</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%231A1816'/%3E%3Crect x='12' y='46' width='40' height='8' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --yellow:#F5C518;
+    --ink:#1A1816;
+    --cream:#FAF6EE;
+    --cream-2:#F4EFE3;
+    --cream-3:#EFE9DA;
+    --rule:#DED7C6;
+    --muted:#8A8475;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  ::selection{background:var(--yellow);color:var(--ink)}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--cream);
+    color:var(--ink);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:14px;
+    line-height:1.5;
+  }
+  a{color:inherit}
+
+  /* ---------- top strip ---------- */
+  .topnote{
+    display:flex;justify-content:space-between;align-items:baseline;
+    padding:14px 24px;
+    border-bottom:1px solid var(--rule);
+    font-size:12px;color:var(--muted);
+  }
+  .topnote b{color:var(--ink);font-weight:600}
+  .topnote a{text-decoration:none;border-bottom:2px solid var(--yellow)}
+
+  /* ---------- filter bar ---------- */
+  .filterbar{
+    position:sticky;top:0;z-index:30;
+    background:var(--cream);
+    border-bottom:1px solid var(--ink);
+    padding:12px 24px;
+    display:flex;gap:8px;flex-wrap:wrap;align-items:center;
+  }
+  .filterbar .label{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-right:8px}
+  .fbtn{
+    font:inherit;font-size:12px;
+    background:transparent;border:1px solid var(--rule);
+    color:var(--ink);padding:6px 14px;cursor:pointer;
+    border-radius:999px;
+  }
+  .fbtn:hover{border-color:var(--ink)}
+  .fbtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .fbtn[aria-pressed="true"]{background:var(--ink);color:var(--cream);border-color:var(--ink)}
+  .fbtn[aria-pressed="true"]::before{content:"_";color:var(--yellow);margin-right:4px}
+  .count{margin-left:auto;font-size:11px;color:var(--muted)}
+
+  /* ---------- table ---------- */
+  .tablewrap{overflow-x:auto}
+  table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:860px;
+  }
+  caption{
+    text-align:left;
+    padding:56px 24px 40px;
+  }
+  caption .mark{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:clamp(40px,7vw,84px);
+    letter-spacing:-.03em;
+    line-height:1;
+  }
+  caption .mark .u{color:var(--yellow)}
+  caption .sub{
+    margin-top:14px;
+    font-size:13px;color:var(--muted);
+    max-width:64ch;
+  }
+  caption .sub b{color:var(--ink);font-weight:600}
+
+  thead th{
+    position:sticky;top:53px;z-index:20;
+    background:var(--ink);color:var(--cream);
+    text-align:left;
+    font-size:11px;font-weight:500;
+    text-transform:uppercase;letter-spacing:.14em;
+    padding:0;
+  }
+  thead th .hcell{display:block;padding:12px 16px}
+  thead th button.sort{
+    font:inherit;letter-spacing:inherit;text-transform:inherit;
+    width:100%;text-align:left;
+    background:none;border:0;color:inherit;cursor:pointer;
+    padding:12px 16px;display:block;
+  }
+  thead th button.sort:hover{color:var(--yellow)}
+  thead th button.sort:focus-visible{outline:2px solid var(--yellow);outline-offset:-3px}
+  thead th button.sort .arrow{color:var(--yellow);margin-left:6px}
+
+  tbody td{
+    padding:14px 16px;
+    border-bottom:1px solid var(--rule);
+    vertical-align:top;
+  }
+  tbody tr:nth-child(even){background:var(--cream-2)}
+  tbody tr{border-left:4px solid transparent;transition:background .12s ease, border-color .12s ease}
+  tbody tr:hover{background:#fff;border-left-color:var(--yellow)}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto}
+    tbody tr{transition:none}
+  }
+
+  td.num{color:var(--muted);font-size:12px;width:56px}
+  td.type{width:110px;white-space:nowrap}
+  .tag{
+    font-size:11px;letter-spacing:.04em;
+    padding:3px 8px;border:1px solid var(--rule);
+    border-radius:3px;background:#fff;
+    color:var(--muted);
+  }
+  .tag::first-letter{color:var(--yellow);font-weight:600}
+  tr[data-type="member"] .tag{color:var(--ink)}
+  tr[data-type="you"] .tag{background:var(--ink);color:var(--yellow);border-color:var(--ink)}
+
+  td.entry{min-width:280px}
+  td.who,td.where{white-space:nowrap}
+  td.since{width:90px;color:var(--muted)}
+  td .dash{color:var(--rule)}
+
+  tr[data-type="idea"] td.entry{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:500;letter-spacing:-.01em}
+  tr[data-type="quote"] td.entry{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:20px;font-weight:500;line-height:1.4;letter-spacing:-.01em;
+    max-width:56ch;
+  }
+  tr[data-type="quote"] td.entry .attr{
+    display:block;margin-top:8px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;color:var(--muted);
+  }
+  tr[data-type="quote"] td.entry .attr::before{content:"_ ";color:var(--yellow)}
+  tr[data-type="number"] .big{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:34px;font-weight:700;letter-spacing:-.02em;
+    margin-right:10px;vertical-align:-3px;
+  }
+  tr[data-type="number"] .big::after{content:"_";color:var(--yellow)}
+
+  /* ---------- join row ---------- */
+  tr.you{
+    background:var(--yellow) !important;
+    border-left-color:var(--ink);
+  }
+  tr.you:hover{background:var(--yellow) !important;border-left-color:var(--ink)}
+  tr.you td{border-bottom:2px solid var(--ink);border-top:2px solid var(--ink)}
+  tr.you td.entry{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px}
+  tr.you input{
+    font:inherit;font-size:13px;
+    background:transparent;
+    border:0;border-bottom:2px solid var(--ink);
+    padding:4px 2px;width:100%;max-width:180px;
+    color:var(--ink);
+  }
+  tr.you input::placeholder{color:rgba(26,24,22,.5)}
+  tr.you input:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  tr.you button.join{
+    font:inherit;font-size:13px;font-weight:600;
+    background:var(--ink);color:var(--yellow);
+    border:0;padding:8px 18px;cursor:pointer;border-radius:3px;
+  }
+  tr.you button.join:hover{color:#fff}
+  tr.you button.join:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+  tr.you .joined-note{font-size:12px;font-weight:600}
+
+  /* ---------- footer line ---------- */
+  .footline{
+    padding:28px 24px 64px;
+    font-size:12px;color:var(--muted);
+    display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  }
+  .footline .u{color:var(--yellow);font-weight:700}
+
+  @media (max-width:768px){
+    .topnote{flex-direction:column;gap:4px}
+    caption{padding:36px 16px 28px}
+    .filterbar{padding:10px 12px}
+    .count{display:none}
+    thead th{top:96px}
+    tbody td{padding:12px 10px}
+    td.type{width:90px}
+    tr[data-type="quote"] td.entry{font-size:17px}
+  }
+</style>
+</head>
+<body>
+
+<div class="topnote">
+  <span><b>underscore_</b> · the whole community, one table · nothing hidden</span>
+  <a href="#row-you">skip to your row ↓</a>
+</div>
+
+<div class="filterbar" role="toolbar" aria-label="Filter rows by type">
+  <span class="label">show</span>
+  <button class="fbtn" data-filter="all" aria-pressed="true">all</button>
+  <button class="fbtn" data-filter="idea" aria-pressed="false">ideas</button>
+  <button class="fbtn" data-filter="member" aria-pressed="false">members</button>
+  <button class="fbtn" data-filter="number" aria-pressed="false">numbers</button>
+  <button class="fbtn" data-filter="quote" aria-pressed="false">quotes</button>
+  <button class="fbtn" data-filter="city" aria-pressed="false">cities</button>
+  <span class="count" id="rowcount"></span>
+</div>
+
+<div class="tablewrap">
+<table id="ledger">
+  <caption>
+    <div class="mark">underscore<span class="u">_</span></div>
+    <p class="sub">A community of builders, operators, and experts who give time to each other. We call it <b>the Core</b>. This page is the whole thing — every idea, every member, every number — laid out as a public ledger. Read down. The last row is yours.</p>
+  </caption>
+  <thead>
+    <tr>
+      <th scope="col"><span class="hcell">#</span></th>
+      <th scope="col"><span class="hcell">Type</span></th>
+      <th scope="col"><span class="hcell">Entry</span></th>
+      <th scope="col" aria-sort="none"><button class="sort" data-col="who">Who<span class="arrow" aria-hidden="true"></span></button></th>
+      <th scope="col" aria-sort="none"><button class="sort" data-col="where">Where<span class="arrow" aria-hidden="true"></span></button></th>
+      <th scope="col"><span class="hcell">Since</span></th>
+    </tr>
+  </thead>
+  <tbody id="rows">
+
+    <tr data-type="idea"><td class="num">01</td><td class="type"><span class="tag">_idea</span></td><td class="entry">You were never meant to build alone.</td><td class="who"><span class="dash">—</span></td><td class="where"><span class="dash">—</span></td><td class="since">2021</td></tr>
+
+    <tr data-type="number" data-who="everyone" data-where="everywhere"><td class="num">02</td><td class="type"><span class="tag">_number</span></td><td class="entry"><span class="big">1,200+</span>members in the Core</td><td class="who">everyone</td><td class="where">everywhere</td><td class="since">2021</td></tr>
+
+    <tr data-type="member" data-who="Maya Chen" data-where="Oakland"><td class="num">03</td><td class="type"><span class="tag">_member</span></td><td class="entry">founder — climate hardware</td><td class="who">Maya Chen</td><td class="where">Oakland</td><td class="since">2021</td></tr>
+
+    <tr data-type="idea"><td class="num">04</td><td class="type"><span class="tag">_idea</span></td><td class="entry">Underscore is the line under the work: we hold things up and stay out of the way.</td><td class="who"><span class="dash">—</span></td><td class="where"><span class="dash">—</span></td><td class="since">2021</td></tr>
+
+    <tr data-type="member" data-who="Sam Osei" data-where="Boston"><td class="num">05</td><td class="type"><span class="tag">_member</span></td><td class="entry">engineer — distributed systems</td><td class="who">Sam Osei</td><td class="where">Boston</td><td class="since">2021</td></tr>
+
+    <tr data-type="quote" data-who="Maya Chen" data-where="Oakland"><td class="num">06</td><td class="type"><span class="tag">_quote</span></td><td class="entry" colspan="2">“I asked about port logistics on a Tuesday. By Friday, Tom had walked me through his entire receiving dock over video.”<span class="attr">Maya Chen, founder</span></td><td class="where">Oakland</td><td class="since">2021</td></tr>
+
+    <tr data-type="city" data-who="42 members" data-where="Oakland"><td class="num">07</td><td class="type"><span class="tag">_city</span></td><td class="entry">chapter — open table, first Thursday monthly</td><td class="who">42 members</td><td class="where">Oakland</td><td class="since">2021</td></tr>
+
+    <tr data-type="member" data-who="Ana Reyes" data-where="Mexico City"><td class="num">08</td><td class="type"><span class="tag">_member</span></td><td class="entry">designer — interfaces &amp; identity</td><td class="who">Ana Reyes</td><td class="where">Mexico City</td><td class="since">2022</td></tr>
+
+    <tr data-type="idea"><td class="num">09</td><td class="type"><span class="tag">_idea</span></td><td class="entry">Every member arrived with an ask and stayed for the giving.</td><td class="who"><span class="dash">—</span></td><td class="where"><span class="dash">—</span></td><td class="since">2021</td></tr>
+
+    <tr data-type="member" data-who="David Park" data-where="Seoul"><td class="num">10</td><td class="type"><span class="tag">_member</span></td><td class="entry">operator — supply &amp; fulfillment</td><td class="who">David Park</td><td class="where">Seoul</td><td class="since">2022</td></tr>
+
+    <tr data-type="number" data-who="everyone" data-where="40 cities"><td class="num">11</td><td class="type"><span class="tag">_number</span></td><td class="entry"><span class="big">40</span>cities with at least one open door</td><td class="who">everyone</td><td class="where">everywhere</td><td class="since">2024</td></tr>
+
+    <tr data-type="city" data-who="38 members" data-where="Berlin"><td class="num">12</td><td class="type"><span class="tag">_city</span></td><td class="entry">chapter — workshop nights, second Tuesday</td><td class="who">38 members</td><td class="where">Berlin</td><td class="since">2022</td></tr>
+
+    <tr data-type="member" data-who="Leila Haddad" data-where="Beirut"><td class="num">13</td><td class="type"><span class="tag">_member</span></td><td class="entry">researcher — materials science</td><td class="who">Leila Haddad</td><td class="where">Beirut</td><td class="since">2022</td></tr>
+
+    <tr data-type="idea"><td class="num">14</td><td class="type"><span class="tag">_idea</span></td><td class="entry">We measure hours given, not followers gained.</td><td class="who"><span class="dash">—</span></td><td class="where"><span class="dash">—</span></td><td class="since">2021</td></tr>
+
+    <tr data-type="quote" data-who="Sam Osei" data-where="Boston"><td class="num">15</td><td class="type"><span class="tag">_quote</span></td><td class="entry" colspan="2">“Three introductions in my first month. Two became collaborators. One became a cofounder.”<span class="attr">Sam Osei, engineer</span></td><td class="where">Boston</td><td class="since">2021</td></tr>
+
+    <tr data-type="member" data-who="Jonas Weber" data-where="Berlin"><td class="num">16</td><td class="type"><span class="tag">_member</span></td><td class="entry">builder — prototyping &amp; tooling</td><td class="who">Jonas Weber</td><td class="where">Berlin</td><td class="since">2022</td></tr>
+
+    <tr data-type="city" data-who="31 members" data-where="Seoul"><td class="num">17</td><td class="type"><span class="tag">_city</span></td><td class="entry">chapter — operator dinners, quarterly</td><td class="who">31 members</td><td class="where">Seoul</td><td class="since">2023</td></tr>
+
+    <tr data-type="member" data-who="Priya Nair" data-where="Bangalore"><td class="num">18</td><td class="type"><span class="tag">_member</span></td><td class="entry">product — zero-to-one launches</td><td class="who">Priya Nair</td><td class="where">Bangalore</td><td class="since">2023</td></tr>
+
+    <tr data-type="idea"><td class="num">19</td><td class="type"><span class="tag">_idea</span></td><td class="entry">The fastest way to learn a thing is to find the person who already broke it.</td><td class="who"><span class="dash">—</span></td><td class="where"><span class="dash">—</span></td><td class="since">2022</td></tr>
+
+    <tr data-type="member" data-who="Tom Aiello" data-where="Detroit"><td class="num">20</td><td class="type"><span class="tag">_member</span></td><td class="entry">manufacturer — precision metal</td><td class="who">Tom Aiello</td><td class="where">Detroit</td><td class="since">2021</td></tr>
+
+    <tr data-type="number" data-who="everyone" data-where="everywhere"><td class="num">21</td><td class="type"><span class="tag">_number</span></td><td class="entry"><span class="big">9,000</span>hours given, member to member</td><td class="who">everyone</td><td class="where">everywhere</td><td class="since">2021</td></tr>
+
+    <tr data-type="city" data-who="27 members" data-where="Mexico City"><td class="num">22</td><td class="type"><span class="tag">_city</span></td><td class="entry">chapter — critique mornings, weekly</td><td class="who">27 members</td><td class="where">Mexico City</td><td class="since">2022</td></tr>
+
+    <tr data-type="quote" data-who="Leila Haddad" data-where="Beirut"><td class="num">23</td><td class="type"><span class="tag">_quote</span></td><td class="entry" colspan="2">“I give office hours because someone gave them to me when my research had no audience.”<span class="attr">Leila Haddad, researcher</span></td><td class="where">Beirut</td><td class="since">2022</td></tr>
+
+    <tr data-type="member" data-who="Nadia Petrova" data-where="Sofia"><td class="num">24</td><td class="type"><span class="tag">_member</span></td><td class="entry">analyst — market research</td><td class="who">Nadia Petrova</td><td class="where">Sofia</td><td class="since">2023</td></tr>
+
+    <tr data-type="idea"><td class="num">25</td><td class="type"><span class="tag">_idea</span></td><td class="entry">An introduction made well is worth a quarter of fundraising.</td><td class="who"><span class="dash">—</span></td><td class="where"><span class="dash">—</span></td><td class="since">2022</td></tr>
+
+    <tr data-type="member" data-who="Kofi Mensah" data-where="Accra"><td class="num">26</td><td class="type"><span class="tag">_member</span></td><td class="entry">logistics — last-mile networks</td><td class="who">Kofi Mensah</td><td class="where">Accra</td><td class="since">2024</td></tr>
+
+    <tr data-type="city" data-who="24 members" data-where="Boston"><td class="num">27</td><td class="type"><span class="tag">_city</span></td><td class="entry">chapter — build reviews, monthly</td><td class="who">24 members</td><td class="where">Boston</td><td class="since">2021</td></tr>
+
+    <tr data-type="member" data-who="Ingrid Solberg" data-where="Oslo"><td class="num">28</td><td class="type"><span class="tag">_member</span></td><td class="entry">hardware — embedded systems</td><td class="who">Ingrid Solberg</td><td class="where">Oslo</td><td class="since">2023</td></tr>
+
+    <tr data-type="idea"><td class="num">29</td><td class="type"><span class="tag">_idea</span></td><td class="entry">Nobody here is impressive on purpose.</td><td class="who"><span class="dash">—</span></td><td class="where"><span class="dash">—</span></td><td class="since">2023</td></tr>
+
+    <tr data-type="city" data-who="22 members" data-where="Bangalore"><td class="num">30</td><td class="type"><span class="tag">_city</span></td><td class="entry">chapter — product clinics, biweekly</td><td class="who">22 members</td><td class="where">Bangalore</td><td class="since">2023</td></tr>
+
+    <tr data-type="member" data-who="Rosa Camargo" data-where="São Paulo"><td class="num">31</td><td class="type"><span class="tag">_member</span></td><td class="entry">operations — scaling teams</td><td class="who">Rosa Camargo</td><td class="where">São Paulo</td><td class="since">2024</td></tr>
+
+    <tr data-type="quote" data-who="Priya Nair" data-where="Bangalore"><td class="num">32</td><td class="type"><span class="tag">_quote</span></td><td class="entry" colspan="2">“I posted a rough launch plan at midnight. By morning four operators on three continents had marked it up.”<span class="attr">Priya Nair, product</span></td><td class="where">Bangalore</td><td class="since">2023</td></tr>
+
+    <tr data-type="city" data-who="19 members" data-where="Detroit"><td class="num">33</td><td class="type"><span class="tag">_city</span></td><td class="entry">chapter — factory-floor walkthroughs, monthly</td><td class="who">19 members</td><td class="where">Detroit</td><td class="since">2022</td></tr>
+
+    <tr data-type="member" data-who="Emeka Obi" data-where="Lagos"><td class="num">34</td><td class="type"><span class="tag">_member</span></td><td class="entry">founder — fintech infrastructure</td><td class="who">Emeka Obi</td><td class="where">Lagos</td><td class="since">2024</td></tr>
+
+    <tr data-type="idea"><td class="num">35</td><td class="type"><span class="tag">_idea</span></td><td class="entry">Generosity compounds faster than capital.</td><td class="who"><span class="dash">—</span></td><td class="where"><span class="dash">—</span></td><td class="since">2023</td></tr>
+
+    <tr data-type="city" data-who="17 members" data-where="Beirut"><td class="num">36</td><td class="type"><span class="tag">_city</span></td><td class="entry">chapter — research salons, monthly</td><td class="who">17 members</td><td class="where">Beirut</td><td class="since">2023</td></tr>
+
+    <tr data-type="member" data-who="Hana Sato" data-where="Tokyo"><td class="num">37</td><td class="type"><span class="tag">_member</span></td><td class="entry">engineer — robotics</td><td class="who">Hana Sato</td><td class="where">Tokyo</td><td class="since">2024</td></tr>
+
+    <tr data-type="number" data-who="everyone" data-where="everywhere"><td class="num">38</td><td class="type"><span class="tag">_number</span></td><td class="entry"><span class="big">2021</span>founded — five people, one long table</td><td class="who">everyone</td><td class="where">everywhere</td><td class="since">2021</td></tr>
+
+    <tr data-type="idea"><td class="num">39</td><td class="type"><span class="tag">_idea</span></td><td class="entry">A ledger like this only works if every row is true. Every row is true.</td><td class="who"><span class="dash">—</span></td><td class="where"><span class="dash">—</span></td><td class="since">2024</td></tr>
+
+    <tr data-type="you" class="you" id="row-you">
+      <td class="num">40</td>
+      <td class="type"><span class="tag">_you</span></td>
+      <td class="entry">Your row goes here. Join the Core.</td>
+      <td class="who"><label class="sr" for="join-name" style="position:absolute;left:-9999px">Your name</label><input id="join-name" type="text" name="name" placeholder="your name" autocomplete="name"></td>
+      <td class="where"><label for="join-city" style="position:absolute;left:-9999px">Your city</label><input id="join-city" type="text" name="city" placeholder="your city" autocomplete="address-level2"></td>
+      <td class="since"><button type="button" class="join" id="join-btn">Join</button></td>
+    </tr>
+
+  </tbody>
+</table>
+</div>
+
+<div class="footline">
+  <span>underscore<span class="u">_</span> · est. 2021 · 1,200+ members · 40 cities · 9,000 hours given</span>
+  <span>this table is the whole site. nothing hidden.</span>
+</div>
+
+<script>
+(function(){
+  var tbody = document.getElementById('rows');
+  var allRows = Array.prototype.slice.call(tbody.querySelectorAll('tr'));
+  var youRow = document.getElementById('row-you');
+  var countEl = document.getElementById('rowcount');
+  var activeFilter = 'all';
+
+  function updateCount(){
+    var visible = allRows.filter(function(r){ return r.style.display !== 'none'; }).length;
+    countEl.textContent = visible + ' / ' + allRows.length + ' rows';
+  }
+
+  /* ---- filtering ---- */
+  var fbtns = document.querySelectorAll('.fbtn');
+  fbtns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      activeFilter = btn.getAttribute('data-filter');
+      fbtns.forEach(function(b){ b.setAttribute('aria-pressed', String(b === btn)); });
+      allRows.forEach(function(row){
+        var t = row.getAttribute('data-type');
+        var show = activeFilter === 'all' || t === activeFilter || t === 'you'; /* join row always visible */
+        row.style.display = show ? '' : 'none';
+      });
+      updateCount();
+    });
+  });
+
+  /* ---- sorting (WHO / WHERE) ---- */
+  var sortState = {col:null, dir:1};
+  document.querySelectorAll('button.sort').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var col = btn.getAttribute('data-col');
+      if (sortState.col === col){ sortState.dir = -sortState.dir; }
+      else { sortState.col = col; sortState.dir = 1; }
+
+      var dataRows = allRows.filter(function(r){ return r !== youRow; });
+      dataRows.sort(function(a,b){
+        var av = a.getAttribute('data-' + col) || '';
+        var bv = b.getAttribute('data-' + col) || '';
+        if (!av && !bv) return 0;
+        if (!av) return 1;            /* empty values sink */
+        if (!bv) return -1;
+        return av.localeCompare(bv) * sortState.dir;
+      });
+      dataRows.forEach(function(r){ tbody.appendChild(r); });
+      tbody.appendChild(youRow);      /* join row stays pinned last */
+
+      /* aria + arrows */
+      document.querySelectorAll('button.sort').forEach(function(b){
+        var th = b.closest('th');
+        var arrow = b.querySelector('.arrow');
+        if (b === btn){
+          th.setAttribute('aria-sort', sortState.dir === 1 ? 'ascending' : 'descending');
+          arrow.textContent = sortState.dir === 1 ? '↑' : '↓';
+        } else {
+          th.setAttribute('aria-sort','none');
+          arrow.textContent = '';
+        }
+      });
+    });
+  });
+
+  /* ---- join row ---- */
+  function submitJoin(){
+    var name = document.getElementById('join-name').value.trim();
+    var city = document.getElementById('join-city').value.trim();
+    if (!name || !city){
+      var missing = !name ? 'join-name' : 'join-city';
+      document.getElementById(missing).focus();
+      return;
+    }
+    var year = new Date().getFullYear();
+    youRow.innerHTML =
+      '<td class="num">40</td>' +
+      '<td class="type"><span class="tag">_member</span></td>' +
+      '<td class="entry">Application received. We read every row — expect a note within a week.</td>' +
+      '<td class="who">' + escapeHtml(name) + '</td>' +
+      '<td class="where">' + escapeHtml(city) + '</td>' +
+      '<td class="since"><span class="joined-note">' + year + '</span></td>';
+    youRow.setAttribute('data-who', name);
+    youRow.setAttribute('data-where', city);
+    youRow.focus && youRow.setAttribute('tabindex','-1');
+  }
+  function escapeHtml(s){
+    return s.replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  document.getElementById('join-btn').addEventListener('click', submitJoin);
+  ['join-name','join-city'].forEach(function(id){
+    document.getElementById(id).addEventListener('keydown', function(e){
+      if (e.key === 'Enter') submitJoin();
+    });
+  });
+
+  updateCount();
+})();
+</script>
+</body>
+</html>

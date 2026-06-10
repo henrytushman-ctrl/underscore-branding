@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>underscore:~$</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23161410'/%3E%3Crect x='13' y='42' width='38' height='9' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#161410;
+    --bg-raise:#1d1a14;
+    --yellow:#F5C518;
+    --amber:#e6c25c;
+    --body:#d8cdae;
+    --dim:#8a8068;
+    --ink:#1A1816;
+    --rule:#2b2719;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  ::selection{ background:var(--yellow); color:var(--ink); }
+  html,body{ height:100%; }
+  body{
+    background:var(--bg);
+    color:var(--body);
+    font-family:'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size:15px;
+    line-height:1.65;
+    display:flex;
+    flex-direction:column;
+    /* extremely subtle warm glow from top — readable, not retro */
+    background-image:radial-gradient(120% 70% at 50% -10%, #1e1a12 0%, #161410 60%);
+  }
+  #screen{
+    flex:1;
+    overflow-y:auto;
+    padding:28px clamp(16px, 5vw, 56px) 120px;
+    cursor:text;
+    scrollbar-width:thin;
+    scrollbar-color:var(--rule) transparent;
+  }
+  #screen::-webkit-scrollbar{ width:8px; }
+  #screen::-webkit-scrollbar-thumb{ background:var(--rule); border-radius:4px; }
+  .line{ white-space:pre-wrap; word-break:break-word; min-height:1.65em; max-width:88ch; }
+  .line.sys{ color:var(--dim); }
+  .line.hi{ color:var(--amber); }
+  .line.yellow{ color:var(--yellow); }
+  .line.err{ color:#d98a6a; }
+  .line .u{ color:var(--yellow); font-weight:600; }
+  .prompt-label{ color:var(--yellow); font-weight:500; }
+  .echo-cmd{ color:#f0e6c8; font-weight:500; }
+
+  /* the input row */
+  #inputRow{ display:flex; align-items:baseline; max-width:88ch; }
+  #cmdInput{
+    background:transparent; border:none; outline:none;
+    color:#f0e6c8; font:inherit; flex:1; min-width:2ch;
+    caret-color:transparent; /* we draw our own _ cursor */
+    padding:0;
+  }
+  /* the blinking underscore cursor — this IS the logo */
+  #cursor{
+    display:inline-block;
+    width:0.72em; height:0.16em;
+    background:var(--yellow);
+    transform:translateY(-0.08em);
+    animation:blink 1.05s steps(1) infinite;
+  }
+  @keyframes blink{ 50%{ opacity:0; } }
+
+  /* clickable suggested commands */
+  button.cmd{
+    font:inherit;
+    background:transparent;
+    border:1px solid var(--rule);
+    color:var(--yellow);
+    padding:0 .55em;
+    border-radius:4px;
+    cursor:pointer;
+    line-height:1.45;
+    transition:background .15s, color .15s;
+  }
+  button.cmd:hover, button.cmd:focus-visible{
+    background:var(--yellow); color:var(--ink); outline:none;
+  }
+
+  /* roster table */
+  table.roster{ border-collapse:collapse; margin:.4em 0; }
+  table.roster td, table.roster th{
+    padding:.1em 2.2ch .1em 0;
+    text-align:left; font-weight:400; white-space:nowrap;
+  }
+  table.roster th{ color:var(--dim); font-weight:500; border-bottom:1px solid var(--rule); }
+  table.roster td:first-child{ color:var(--amber); }
+  table.roster td:last-child{ color:var(--dim); }
+  @media (max-width:560px){
+    table.roster td:last-child, table.roster th:last-child{ display:none; }
+  }
+
+  /* persistent footer hint bar */
+  #footbar{
+    position:fixed; left:0; right:0; bottom:0;
+    background:var(--bg-raise);
+    border-top:1px solid var(--rule);
+    color:var(--dim);
+    font-size:12.5px;
+    padding:9px clamp(16px, 5vw, 56px);
+    display:flex; justify-content:space-between; gap:16px;
+    z-index:5;
+  }
+  #footbar .mark{ color:var(--yellow); font-weight:600; letter-spacing:.02em; }
+  #footbar button.cmd{ font-size:12.5px; }
+  @media (max-width:560px){ #footbar span.stats{ display:none; } }
+
+  @media (prefers-reduced-motion: reduce){
+    #cursor{ animation:none; }
+  }
+</style>
+</head>
+<body>
+
+<main id="screen" role="log" aria-live="polite" aria-label="underscore terminal"></main>
+
+<div id="footbar">
+  <span><span class="mark">underscore</span> — a community that gives first. &nbsp;try: <button class="cmd" data-run="core">core</button></span>
+  <span class="stats">1,200+ members · 40 cities · 9,000 hours given</span>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  const screen = document.getElementById('screen');
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---------- state ----------
+  let mode = 'cmd';                 // 'cmd' | 'join'
+  let joinStep = 0;
+  const joinData = { name:'', city:'', give:'' };
+  const history = [];
+  let histIdx = -1;
+  let inputRow = null, cmdInput = null, promptEl = null;
+
+  const JOIN_PROMPTS = ['name: ', 'city: ', 'what can you give: '];
+
+  // ---------- output helpers ----------
+  function el(tag, cls, text){
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+  function append(line){
+    // output always lands above the live prompt row
+    if (inputRow && inputRow.parentNode === screen) screen.insertBefore(line, inputRow);
+    else screen.appendChild(line);
+    scrollBottom();
+    return line;
+  }
+  function print(text, cls){
+    return append(el('div', 'line' + (cls ? ' ' + cls : ''), text));
+  }
+  function printHTML(html, cls){
+    const line = el('div', 'line' + (cls ? ' ' + cls : ''));
+    line.innerHTML = html;
+    return append(line);
+  }
+  function blank(){ print(' '); }
+  function scrollBottom(){ screen.scrollTop = screen.scrollHeight; }
+
+  // sequential line printer with small delay (instant if reduced motion)
+  function printLines(lines, done){
+    if (reduced){
+      lines.forEach(l => typeof l === 'function' ? l() : print(l.text, l.cls));
+      if (done) done();
+      return;
+    }
+    let i = 0;
+    (function next(){
+      if (i >= lines.length){ if (done) done(); return; }
+      const l = lines[i++];
+      if (typeof l === 'function'){ l(); }
+      else { print(l.text, l.cls); }
+      setTimeout(next, l && l.pause ? l.pause : 55);
+    })();
+  }
+
+  // character-by-character typing (boot only)
+  function typeLine(text, cls, done){
+    if (reduced){ print(text, cls); if (done) done(); return; }
+    const line = print('', cls);
+    let i = 0;
+    (function tick(){
+      if (i <= text.length){
+        line.textContent = text.slice(0, i++);
+        scrollBottom();
+        setTimeout(tick, 16);
+      } else if (done) done();
+    })();
+  }
+
+  // ---------- input row ----------
+  function promptText(){
+    return mode === 'join' ? JOIN_PROMPTS[joinStep] : 'underscore:~$ ';
+  }
+  function mountInput(){
+    inputRow = el('div'); inputRow.id = 'inputRow';
+    promptEl = el('span', 'prompt-label', promptText());
+    cmdInput = document.createElement('input');
+    cmdInput.id = 'cmdInput';
+    cmdInput.type = 'text';
+    cmdInput.autocomplete = 'off';
+    cmdInput.spellcheck = false;
+    cmdInput.setAttribute('aria-label', mode === 'join' ? JOIN_PROMPTS[joinStep] : 'command input — type help for commands');
+    const cursor = el('span'); cursor.id = 'cursor'; cursor.setAttribute('aria-hidden','true');
+    // mirror span sizes the input to its content so the _ cursor hugs the text
+    const mirror = el('span'); mirror.style.cssText = 'position:absolute;visibility:hidden;white-space:pre;font:inherit;';
+    inputRow.appendChild(promptEl);
+    const wrap = el('span'); wrap.style.cssText = 'position:relative;display:inline-flex;align-items:baseline;flex:1;';
+    cmdInput.style.flex = 'none';
+    cmdInput.style.width = '2px';
+    wrap.appendChild(cmdInput); wrap.appendChild(cursor); wrap.appendChild(mirror);
+    inputRow.appendChild(wrap);
+    screen.appendChild(inputRow);
+    function size(){
+      mirror.textContent = cmdInput.value;
+      cmdInput.style.width = Math.max(2, mirror.offsetWidth + 2) + 'px';
+    }
+    cmdInput.addEventListener('input', size);
+    cmdInput.addEventListener('keydown', onKey);
+    size();
+    cmdInput.focus();
+    scrollBottom();
+  }
+  function removeInput(){ if (inputRow){ inputRow.remove(); inputRow = null; } }
+  function refreshPrompt(){
+    if (promptEl){
+      promptEl.textContent = promptText();
+      cmdInput.setAttribute('aria-label', promptText().trim() || 'command input');
+    }
+  }
+  function echo(value){
+    // freeze the submitted line into history output
+    const line = el('div', 'line');
+    const p = el('span', 'prompt-label', promptText());
+    const v = el('span', 'echo-cmd', value);
+    line.appendChild(p); line.appendChild(v);
+    screen.insertBefore(line, inputRow);
+    scrollBottom();
+  }
+
+  function onKey(e){
+    if (e.key === 'Enter'){
+      const value = cmdInput.value;
+      echo(value);
+      cmdInput.value = '';
+      cmdInput.dispatchEvent(new Event('input'));
+      if (mode === 'join') handleJoinAnswer(value.trim());
+      else handleCommand(value.trim());
+    } else if (e.key === 'ArrowUp' && mode === 'cmd'){
+      e.preventDefault();
+      if (!history.length) return;
+      if (histIdx === -1) histIdx = history.length;
+      histIdx = Math.max(0, histIdx - 1);
+      cmdInput.value = history[histIdx];
+      cmdInput.dispatchEvent(new Event('input'));
+    } else if (e.key === 'ArrowDown' && mode === 'cmd'){
+      e.preventDefault();
+      if (histIdx === -1) return;
+      histIdx = Math.min(history.length, histIdx + 1);
+      cmdInput.value = histIdx === history.length ? '' : history[histIdx];
+      if (histIdx === history.length) histIdx = -1;
+      cmdInput.dispatchEvent(new Event('input'));
+    } else if (e.key === 'c' && e.ctrlKey && mode === 'join'){
+      print('^C — application cancelled. your time is yours; come back anytime.', 'sys');
+      mode = 'cmd'; joinStep = 0;
+      refreshPrompt();
+    }
+  }
+
+  // clicking anywhere focuses the input (but let buttons/selection work)
+  screen.addEventListener('click', (e) => {
+    if (e.target.closest('button')) return;
+    if (window.getSelection && String(window.getSelection())) return;
+    if (cmdInput) cmdInput.focus();
+  });
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('button.cmd');
+    if (!b) return;
+    runSuggested(b.dataset.run);
+  });
+  function runSuggested(cmd){
+    if (!cmdInput) return;
+    if (mode === 'join'){ cmdInput.focus(); return; }
+    echo(cmd);
+    history.push(cmd); histIdx = -1;
+    handleCommand(cmd);
+    cmdInput.focus();
+  }
+
+  // ---------- content ----------
+  const ROSTER = [
+    ['maya.chen',   'founder',      'Oakland'],
+    ['sam.osei',    'engineer',     'Boston'],
+    ['ana.reyes',   'designer',     'Mexico City'],
+    ['david.park',  'operator',     'Seoul'],
+    ['leila.haddad','researcher',   'Beirut'],
+    ['jonas.weber', 'builder',      'Berlin'],
+    ['priya.nair',  'product',      'Bangalore'],
+    ['tom.aiello',  'manufacturer', 'Detroit'],
+    ['ines.duarte', 'engineer',     'Lisbon'],
+    ['kofi.mensah', 'operator',     'Accra'],
+  ];
+
+  const COMMANDS = {
+    help(){
+      printLines([
+        {text:'commands:', cls:'hi'},
+        {text:'  help      this list'},
+        {text:'  about     what underscore is, and why'},
+        {text:'  core      the member roster + the numbers'},
+        {text:'  give      what members actually give each other'},
+        {text:'  join      apply to the Core (three questions)'},
+        {text:'  clear     wipe the screen'},
+        () => blank(),
+        () => printHTML('tip: click any of these — <button class="cmd" data-run="about">about</button> <button class="cmd" data-run="core">core</button> <button class="cmd" data-run="give">give</button> <button class="cmd" data-run="join">join</button>', 'sys'),
+        () => blank(),
+      ]);
+    },
+    about(){
+      printLines([
+        {text:'underscore', cls:'yellow'},
+        {text:'─────────', cls:'sys'},
+        {text:'The underscore is the character you type before the thing that matters.'},
+        {text:'It holds a place. It carries weight. It never asks for credit.'},
+        () => blank(),
+        {text:'We are a community of builders, operators, and experts who give'},
+        {text:'time to each other — first, and without keeping score.'},
+        () => blank(),
+        {text:'Three things we hold to:', cls:'hi'},
+        {text:'  1. Give first. Help arrives before the ask is finished.'},
+        {text:'  2. Stay plain. No titles at the door, no performance inside.'},
+        {text:'  3. Connect sideways. A factory floor in Detroit can fix a'},
+        {text:'     supply problem in Bangalore. We make that call happen.'},
+        () => blank(),
+        {text:'Founded 2021. Still answering.', cls:'sys'},
+        () => printHTML('next: <button class="cmd" data-run="core">core</button> or <button class="cmd" data-run="join">join</button>', 'sys'),
+        () => blank(),
+      ]);
+    },
+    core(){
+      const rows = ROSTER.map(r =>
+        `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('');
+      printLines([
+        {text:'the Core — members online in the last hour (sample of 1,200+)', cls:'hi'},
+        () => printHTML(
+          `<table class="roster"><thead><tr><th>handle</th><th>does</th><th>city</th></tr></thead><tbody>${rows}</tbody></table>`),
+        {text:'…and 1,190 more.', cls:'sys'},
+        () => blank(),
+        {text:'numbers that matter:', cls:'hi'},
+        {text:'  1,200+  members'},
+        {text:'     40   cities'},
+        {text:'  9,000   hours given, member to member'},
+        {text:'   2021   founded'},
+        () => blank(),
+        () => printHTML('want your name on this list? <button class="cmd" data-run="join">join</button>', 'sys'),
+        () => blank(),
+      ]);
+    },
+    give(){
+      printLines([
+        {text:'what members give:', cls:'hi'},
+        {text:'  · an hour on a call when your hiring plan is wrong'},
+        {text:'  · a code review at 11pm before your launch'},
+        {text:'  · an intro to the one person who has solved your exact problem'},
+        {text:'  · a walk through their factory, their P&L, their mistakes'},
+        {text:'  · the honest "no" nobody else will say to your face'},
+        () => blank(),
+        {text:'9,000 hours of this so far. Nobody invoiced anybody.', cls:'yellow'},
+        () => printHTML('add yours: <button class="cmd" data-run="join">join</button>', 'sys'),
+        () => blank(),
+      ]);
+    },
+    join(){
+      mode = 'join'; joinStep = 0;
+      printLines([
+        {text:'join the Core', cls:'yellow'},
+        {text:'Three questions. The last one is the one we read first.', 'cls':'sys'},
+        {text:'(ctrl+c to cancel)', cls:'sys'},
+        () => blank(),
+      ], () => { refreshPrompt(); cmdInput.focus(); });
+    },
+    clear(){
+      while (screen.firstChild && screen.firstChild !== inputRow) screen.removeChild(screen.firstChild);
+      print('screen cleared. type \'help\' to find your way back.', 'sys');
+    },
+  };
+  // friendly aliases
+  COMMANDS['the core'] = COMMANDS.core;
+  COMMANDS.manifesto = COMMANDS.about;
+  COMMANDS.apply = COMMANDS.join;
+
+  function handleCommand(raw){
+    const cmd = raw.toLowerCase();
+    if (raw && history[history.length-1] !== raw){ history.push(raw); }
+    histIdx = -1;
+    if (!cmd){ return; }
+    if (COMMANDS[cmd]){ COMMANDS[cmd](); }
+    else {
+      printHTML(`command not found: <span class="u">${raw.replace(/[<>&]/g,'')}</span> — try <button class="cmd" data-run="help">help</button>`, 'err');
+      blank();
+    }
+  }
+
+  function handleJoinAnswer(answer){
+    if (!answer){
+      print('(a blank line won’t get you in — try again)', 'sys');
+      cmdInput.focus();
+      return;
+    }
+    if (joinStep === 0){ joinData.name = answer; joinStep = 1; }
+    else if (joinStep === 1){ joinData.city = answer; joinStep = 2; }
+    else {
+      joinData.give = answer;
+      mode = 'cmd'; joinStep = 0;
+      refreshPrompt();
+      printLines([
+        () => blank(),
+        {text:'─────────', cls:'sys'},
+        {text:`application received_`, cls:'yellow'},
+        {text:`${joinData.name} · ${joinData.city}`},
+        {text:`offers: ${joinData.give}`},
+        () => blank(),
+        {text:'A Core member from your nearest city will reach out within a week.', cls:'hi'},
+        {text:'They’ll give you an hour before you’ve given anything. That’s the point.'},
+        () => blank(),
+      ]);
+      return;
+    }
+    refreshPrompt();
+    cmdInput.focus();
+  }
+
+  // ---------- boot sequence ----------
+  function boot(){
+    mountInput();
+    inputRow.style.display = 'none';
+    const seq = [
+      ['underscore [version 2021.∞]', 'sys'],
+      ['connecting to the Core … 1,200+ members · 40 cities … ok', 'sys'],
+      ['', null],
+      ['underscore_ is a community of builders, operators, and experts who give time to each other — 9,000 hours and counting.', 'hi'],
+      ['', null],
+    ];
+    let i = 0;
+    (function next(){
+      if (i >= seq.length){
+        printHTML(`type '<span class="u">help</span>' to see what this place can do — or click: <button class="cmd" data-run="about">about</button> <button class="cmd" data-run="core">core</button> <button class="cmd" data-run="join">join</button>`);
+        blank();
+        inputRow.style.display = 'flex';
+        screen.appendChild(inputRow); // move below printed lines
+        cmdInput.focus();
+        scrollBottom();
+        return;
+      }
+      const [t, c] = seq[i++];
+      if (t === ''){ blank(); next(); }
+      else typeLine(t, c, () => setTimeout(next, reduced ? 0 : 120));
+    })();
+  }
+  boot();
+})();
+</script>
+</body>
+</html>

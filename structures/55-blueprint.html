@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — Assembly Drawing US-0001</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%231A1816'/%3E%3Crect x='10' y='42' width='44' height='9' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Archivo:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1A1816;
+    --cream:#FAF6EE;
+    --cream-dim:rgba(250,246,238,.45);
+    --cream-faint:rgba(250,246,238,.18);
+    --yellow:#F5C518;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  ::selection{background:var(--yellow);color:var(--ink)}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+  body{
+    background:var(--ink);
+    color:var(--cream);
+    font-family:'IBM Plex Mono',monospace;
+    line-height:1.45;
+  }
+  .topstrip{
+    position:fixed;top:0;left:0;right:0;z-index:40;
+    display:flex;justify-content:space-between;gap:1rem;
+    padding:.55rem 1rem;
+    font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--cream-dim);
+    background:rgba(26,24,22,.88);
+    border-bottom:1px solid var(--cream-faint);
+    backdrop-filter:blur(4px);
+  }
+  .topstrip b{color:var(--yellow);font-weight:500}
+  .topstrip .right{white-space:nowrap}
+  .scrollwrap{width:100%;overflow-x:auto}
+  .wrap{
+    position:relative;
+    max-width:1400px;
+    min-width:880px;
+    margin:0 auto;
+    padding:2.6rem .75rem 1.5rem;
+  }
+  svg.drawing{display:block;width:100%;height:auto}
+
+  /* ---- SVG drafting styles ---- */
+  text{font-family:'IBM Plex Mono',monospace;fill:var(--cream)}
+  .t-dim{fill:var(--cream-dim)}
+  .t-yellow{fill:var(--yellow)}
+  .t-prose{font-family:'Archivo',sans-serif}
+  .ln{stroke:var(--cream);stroke-width:1.2;fill:none}
+  .ln-dim{stroke:var(--cream-dim);stroke-width:1;fill:none}
+  .ln-faint{stroke:var(--cream-faint);stroke-width:1;fill:none}
+  .ln-yellow{stroke:var(--yellow);stroke-width:1.6;fill:none}
+  .leader{stroke:var(--cream-dim);stroke-width:1;fill:none}
+  .balloon{fill:var(--ink);stroke:var(--cream);stroke-width:1.2}
+  .part{cursor:pointer;outline:none}
+  .part .hit{fill:transparent}
+  .part:hover .balloon,
+  .part:focus-visible .balloon,
+  .part.active .balloon{stroke:var(--yellow);fill:rgba(245,197,24,.12)}
+  .part:hover .balloon-no,
+  .part:focus-visible .balloon-no,
+  .part.active .balloon-no{fill:var(--yellow)}
+  .part:focus-visible .plate-body{stroke:var(--yellow)}
+  .part:hover .plate-body,
+  .part.active .plate-body{stroke:var(--yellow)}
+  .marchdash{stroke-dasharray:8 6;animation:march 1.6s linear infinite}
+  @keyframes march{to{stroke-dashoffset:-14}}
+  @media (prefers-reduced-motion:reduce){.marchdash{animation:none}}
+
+  /* ---- Spec box (HTML overlay) ---- */
+  .specbox{
+    position:absolute;z-index:30;
+    width:300px;max-width:84vw;
+    background:var(--ink);
+    border:1px solid var(--cream);
+    border-left:4px solid var(--yellow);
+    padding:.8rem .9rem .9rem;
+    box-shadow:0 8px 30px rgba(0,0,0,.55);
+    visibility:hidden;opacity:0;
+    transition:opacity .12s linear;
+  }
+  .specbox.show{visibility:visible;opacity:1}
+  .specbox .sb-no{font-size:.65rem;letter-spacing:.12em;color:var(--yellow);text-transform:uppercase}
+  .specbox .sb-title{font-size:.85rem;font-weight:600;letter-spacing:.04em;margin:.15rem 0 .5rem;text-transform:uppercase}
+  .specbox p{font-family:'Archivo',sans-serif;font-size:.84rem;color:var(--cream);margin:.3rem 0;line-height:1.45}
+  .specbox p span{color:var(--cream-dim);font-family:'IBM Plex Mono',monospace;font-size:.7rem;letter-spacing:.06em;margin-right:.35rem}
+  .specbox .sb-cta{
+    display:inline-block;margin-top:.55rem;
+    font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.08em;
+    color:var(--ink);background:var(--yellow);
+    padding:.35rem .6rem;text-transform:uppercase;border:0;cursor:pointer;
+  }
+  .specbox .sb-cta:focus-visible{outline:2px solid var(--cream);outline-offset:2px}
+
+  /* ---- ECO modal ---- */
+  .eco-backdrop{
+    position:fixed;inset:0;z-index:60;
+    background:rgba(26,24,22,.82);
+    display:none;align-items:center;justify-content:center;padding:1rem;
+  }
+  .eco-backdrop.open{display:flex}
+  .eco{
+    width:560px;max-width:100%;max-height:92vh;overflow-y:auto;
+    background:var(--ink);
+    border:1.5px solid var(--cream);
+    box-shadow:0 0 0 6px rgba(245,197,24,.12),0 20px 60px rgba(0,0,0,.7);
+  }
+  .eco-head{
+    display:flex;justify-content:space-between;align-items:baseline;gap:1rem;
+    border-bottom:1.5px solid var(--cream);
+    padding:.8rem 1rem;
+  }
+  .eco-head h2{font-size:.95rem;letter-spacing:.1em;font-weight:600;text-transform:uppercase}
+  .eco-head .eco-no{font-size:.7rem;color:var(--yellow);letter-spacing:.1em}
+  .eco-meta{
+    display:grid;grid-template-columns:1fr 1fr 1fr;
+    border-bottom:1px solid var(--cream-faint);
+    font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--cream-dim);
+  }
+  .eco-meta div{padding:.5rem .75rem;border-right:1px solid var(--cream-faint)}
+  .eco-meta div:last-child{border-right:0}
+  .eco-meta b{display:block;color:var(--cream);font-weight:500;margin-top:.15rem;font-size:.72rem}
+  .eco-body{padding:1rem}
+  .eco-body .change{
+    font-family:'Archivo',sans-serif;font-size:.92rem;
+    border:1px dashed var(--cream-dim);padding:.7rem .8rem;margin-bottom:1rem;
+  }
+  .eco-body .change span{font-family:'IBM Plex Mono',monospace;font-size:.65rem;letter-spacing:.1em;color:var(--yellow);display:block;margin-bottom:.3rem;text-transform:uppercase}
+  .eco label{display:block;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--cream-dim);margin:.8rem 0 .25rem}
+  .eco input,.eco textarea{
+    width:100%;background:transparent;border:1px solid var(--cream-dim);
+    color:var(--cream);font-family:'IBM Plex Mono',monospace;font-size:.85rem;
+    padding:.5rem .6rem;
+  }
+  .eco input:focus,.eco textarea:focus{outline:2px solid var(--yellow);outline-offset:-1px;border-color:var(--yellow)}
+  .eco textarea{min-height:84px;resize:vertical}
+  .eco-actions{display:flex;gap:.6rem;margin-top:1.1rem;flex-wrap:wrap}
+  .eco-submit{
+    background:var(--yellow);color:var(--ink);border:0;cursor:pointer;
+    font-family:'IBM Plex Mono',monospace;font-size:.78rem;letter-spacing:.1em;
+    text-transform:uppercase;padding:.65rem 1.1rem;font-weight:600;
+  }
+  .eco-cancel{
+    background:transparent;color:var(--cream-dim);border:1px solid var(--cream-dim);cursor:pointer;
+    font-family:'IBM Plex Mono',monospace;font-size:.78rem;letter-spacing:.1em;
+    text-transform:uppercase;padding:.65rem 1.1rem;
+  }
+  .eco-submit:focus-visible,.eco-cancel:focus-visible{outline:2px solid var(--cream);outline-offset:2px}
+  .eco-done{display:none;padding:1.4rem 1rem 1.6rem;text-align:left}
+  .eco-done .stamp{
+    display:inline-block;border:2px solid var(--yellow);color:var(--yellow);
+    font-size:.85rem;letter-spacing:.18em;text-transform:uppercase;font-weight:600;
+    padding:.45rem .8rem;transform:rotate(-2deg);margin-bottom:.9rem;
+  }
+  .eco-done p{font-family:'Archivo',sans-serif;font-size:.92rem;margin:.4rem 0;color:var(--cream)}
+  .eco-done p span{color:var(--cream-dim)}
+
+  @media (max-width:768px){
+    .topstrip{font-size:.58rem;flex-wrap:wrap;gap:.25rem}
+    .wrap{padding-top:3.4rem}
+    .specbox{position:fixed;left:.6rem!important;right:.6rem;bottom:.6rem;top:auto!important;width:auto;max-width:none}
+  }
+</style>
+</head>
+<body>
+
+<div class="topstrip" role="banner">
+  <span>UNDERSCORE_ &nbsp;<b>ASSEMBLY DRAWING</b> — A COMMUNITY, DISASSEMBLED</span>
+  <span class="right">HOVER / TAB THROUGH PARTS · <b>PART 012</b> = JOIN</span>
+</div>
+
+<div class="scrollwrap">
+<div class="wrap" id="wrap">
+
+<svg class="drawing" viewBox="0 0 1200 2600" role="group" aria-label="Exploded assembly drawing of the Underscore community. Tab through parts for specifications.">
+  <defs>
+    <pattern id="hatch" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="9" stroke="rgba(250,246,238,.30)" stroke-width="1"/>
+    </pattern>
+    <pattern id="hatch-y" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="8" stroke="rgba(245,197,24,.4)" stroke-width="1"/>
+    </pattern>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M0,1.5 L10,5 L0,8.5 z" fill="rgba(250,246,238,.45)"/>
+    </marker>
+  </defs>
+
+  <!-- ===== Sheet frame + zone ticks ===== -->
+  <rect x="20" y="20" width="1160" height="2560" class="ln"/>
+  <rect x="32" y="32" width="1136" height="2536" class="ln-faint"/>
+  <g class="t-dim" font-size="11">
+    <text x="600" y="29" text-anchor="middle">N</text>
+    <text x="600" y="2575" text-anchor="middle">S</text>
+    <text x="26" y="1304">W</text>
+    <text x="1170" y="1304">E</text>
+  </g>
+
+  <!-- ===== Header block ===== -->
+  <g>
+    <text x="60" y="110" font-size="58" font-weight="600" letter-spacing="2">UNDERSCORE<tspan class="t-yellow">_</tspan></text>
+    <text x="62" y="142" font-size="15" class="t-dim" letter-spacing="3">ASSY US-0001 — A COMMUNITY, DISASSEMBLED — EXPLODED VIEW</text>
+    <text x="62" y="166" font-size="12" class="t-dim" letter-spacing="2">REV 2026.06 · SHEET 1 OF 1 · ALL DIMENSIONS IN PEOPLE</text>
+    <line x1="60" y1="184" x2="700" y2="184" class="ln-faint"/>
+  </g>
+
+  <!-- ===== General notes (the manifesto, distributed) ===== -->
+  <g>
+    <rect x="770" y="62" width="380" height="180" class="ln-dim"/>
+    <text x="784" y="88" font-size="13" letter-spacing="2" class="t-yellow">GENERAL NOTES</text>
+    <g class="t-prose" font-size="13.5" fill="#FAF6EE">
+      <text x="784" y="114">1. ALL PARTS ARE PEOPLE. HANDLE ACCORDINGLY.</text>
+      <text x="784" y="138">2. LOAD INCREASES CAPACITY. ASKS STRENGTHEN</text>
+      <text x="800" y="156">THE MEMBER. DO NOT SHIELD FROM USE.</text>
+      <text x="784" y="180">3. NO PART IS DECORATIVE. EVERYONE GIVES.</text>
+      <text x="784" y="204">4. ASSEMBLY IS NEVER COMPLETE BY DESIGN.</text>
+      <text x="800" y="222">SEE PART 012.</text>
+    </g>
+  </g>
+
+  <!-- ===== Vertical centerline ===== -->
+  <line x1="600" y1="260" x2="600" y2="2120" class="ln-faint" stroke-dasharray="14 6 2 6"/>
+  <text x="608" y="276" font-size="10" class="t-dim">CL</text>
+
+  <!-- ===== What this drawing is (intro spec prose) ===== -->
+  <g>
+    <text x="60" y="232" font-size="13" letter-spacing="2" class="t-yellow">SCOPE</text>
+    <g class="t-prose" font-size="14.5" fill="#FAF6EE">
+      <text x="60" y="258">UNDERSCORE IS A MEMBER COMMUNITY OF BUILDERS, OPERATORS, AND EXPERTS</text>
+      <text x="60" y="280">WHO GIVE TIME TO EACH OTHER. THIS DRAWING SHOWS HOW IT HOLDS.</text>
+    </g>
+  </g>
+
+  <!-- ===== PART 010 — Hours reservoir ===== -->
+  <g class="part" id="part-010" tabindex="0" role="button" aria-expanded="false"
+     aria-label="Part 010, hours reservoir, capacity 9,000"
+     data-no="PART 010" data-title="HOURS RESERVOIR — CAP. 9,000"
+     data-n1="FILLED BY MEMBERS. DRAWN BY MEMBERS. NO OTHER INLET EXISTS."
+     data-n2="NOTE: 9,000 HOURS GIVEN SINCE FIRST ARTICLE (2021). LEVEL HAS NEVER DROPPED BETWEEN REVISIONS."
+     data-n3="NOTE: TIME IS THE ONLY CURRENCY ACCEPTED AT THIS FITTING.">
+    <rect class="hit" x="58" y="660" width="240" height="330"/>
+    <path d="M84 720 L84 940 Q84 962 106 962 L234 962 Q256 962 256 940 L256 720" class="ln"/>
+    <line x1="74" y1="720" x2="266" y2="720" class="ln"/>
+    <!-- fill level + hatch -->
+    <rect x="86" y="780" width="168" height="180" fill="url(#hatch)"/>
+    <line x1="86" y1="780" x2="254" y2="780" class="ln-yellow"/>
+    <text x="170" y="772" font-size="11" text-anchor="middle" class="t-yellow">LEVEL: 9,000 H</text>
+    <!-- gauge ticks -->
+    <g class="ln-dim">
+      <line x1="256" y1="800" x2="266" y2="800"/>
+      <line x1="256" y1="850" x2="266" y2="850"/>
+      <line x1="256" y1="900" x2="266" y2="900"/>
+    </g>
+    <text x="170" y="1000" font-size="12" text-anchor="middle" class="t-dim">RESERVOIR, HOURS</text>
+    <!-- balloon -->
+    <circle class="balloon" cx="84" cy="648" r="20"/>
+    <text class="balloon-no" x="84" y="653" font-size="12" text-anchor="middle">010</text>
+    <line x1="98" y1="662" x2="120" y2="716" class="leader"/>
+    <!-- leader to beam -->
+    <path d="M256 940 L420 1180 L470 1284" class="leader"/>
+    <circle cx="470" cy="1284" r="3" fill="rgba(250,246,238,.45)"/>
+  </g>
+
+  <!-- ===== Member plates — upper row (PART 002–005) ===== -->
+  <!-- plate template: 200x96 -->
+  <g class="part" id="part-002" tabindex="0" role="button" aria-expanded="false"
+     aria-label="Part 002, member plate, Maya Chen, founder, Oakland"
+     data-no="PART 002 — MEMBER PLATE" data-title="MAYA CHEN · FOUNDER · OAKLAND"
+     data-n1="IN SERVICE SINCE 2021. GAVE 212 HOURS. ASKED FOR 9."
+     data-n2="NOTE: ASKED FOR ONE INTRO IN 2022; IT BECAME A CO-FOUNDER. RETURNED 60 HOURS THE SAME YEAR."
+     data-n3="FIT: BEARS DIRECTLY ON PART 001.">
+    <rect class="hit" x="262" y="448" width="220" height="150"/>
+    <rect class="plate-body ln" x="270" y="480" width="200" height="96" fill="rgba(250,246,238,.03)"/>
+    <text x="284" y="510" font-size="14" font-weight="600">MAYA CHEN</text>
+    <text x="284" y="532" font-size="11.5" class="t-dim">FOUNDER</text>
+    <text x="284" y="552" font-size="11.5" class="t-dim">OAKLAND</text>
+    <line x1="284" y1="562" x2="330" y2="562" class="ln-yellow"/>
+    <circle class="balloon" cx="290" cy="462" r="18"/>
+    <text class="balloon-no" x="290" y="467" font-size="11.5" text-anchor="middle">002</text>
+    <path d="M370 576 L370 700 L520 1288" class="leader"/>
+    <circle cx="520" cy="1288" r="3" fill="rgba(250,246,238,.45)"/>
+  </g>
+
+  <g class="part" id="part-003" tabindex="0" role="button" aria-expanded="false"
+     aria-label="Part 003, member plate, Sam Osei, engineer, Boston"
+     data-no="PART 003 — MEMBER PLATE" data-title="SAM OSEI · ENGINEER · BOSTON"
+     data-n1="IN SERVICE SINCE 2022. GAVE 147 HOURS, MOSTLY CODE REVIEW AND HIRING CALLS."
+     data-n2="NOTE: RUNS THE BOSTON TABLE, FIRST THURSDAY OF THE MONTH. NO AGENDA, NO PITCHES."
+     data-n3="FIT: BEARS DIRECTLY ON PART 001.">
+    <rect class="hit" x="492" y="448" width="220" height="150"/>
+    <rect class="plate-body ln" x="500" y="480" width="200" height="96" fill="rgba(250,246,238,.03)"/>
+    <text x="514" y="510" font-size="14" font-weight="600">SAM OSEI</text>
+    <text x="514" y="532" font-size="11.5" class="t-dim">ENGINEER</text>
+    <text x="514" y="552" font-size="11.5" class="t-dim">BOSTON</text>
+    <line x1="514" y1="562" x2="560" y2="562" class="ln-yellow"/>
+    <circle class="balloon" cx="520" cy="462" r="18"/>
+    <text class="balloon-no" x="520" y="467" font-size="11.5" text-anchor="middle">003</text>
+    <path d="M600 576 L600 1288" class="leader"/>
+    <circle cx="600" cy="1288" r="3" fill="rgba(250,246,238,.45)"/>
+  </g>
+
+  <g class="part" id="part-004" tabindex="0" role="button" aria-expanded="false"
+     aria-label="Part 004, member plate, Ana Reyes, designer, Mexico City"
+     data-no="PART 004 — MEMBER PLATE" data-title="ANA REYES · DESIGNER · MEXICO CITY"
+     data-n1="IN SERVICE SINCE 2022. GAVE 121 HOURS. PORTFOLIO TEARDOWNS, MOSTLY FOR STRANGERS."
+     data-n2="NOTE: 'I OWED THIS PLACE NOTHING WHEN I JOINED. THAT LASTED A MONTH.'"
+     data-n3="FIT: BEARS DIRECTLY ON PART 001.">
+    <rect class="hit" x="722" y="448" width="220" height="150"/>
+    <rect class="plate-body ln" x="730" y="480" width="200" height="96" fill="rgba(250,246,238,.03)"/>
+    <text x="744" y="510" font-size="14" font-weight="600">ANA REYES</text>
+    <text x="744" y="532" font-size="11.5" class="t-dim">DESIGNER</text>
+    <text x="744" y="552" font-size="11.5" class="t-dim">MEXICO CITY</text>
+    <line x1="744" y1="562" x2="790" y2="562" class="ln-yellow"/>
+    <circle class="balloon" cx="750" cy="462" r="18"/>
+    <text class="balloon-no" x="750" y="467" font-size="11.5" text-anchor="middle">004</text>
+    <path d="M830 576 L830 700 L680 1288" class="leader"/>
+    <circle cx="680" cy="1288" r="3" fill="rgba(250,246,238,.45)"/>
+  </g>
+
+  <g class="part" id="part-005" tabindex="0" role="button" aria-expanded="false"
+     aria-label="Part 005, member plate, David Park, operator, Seoul"
+     data-no="PART 005 — MEMBER PLATE" data-title="DAVID PARK · OPERATOR · SEOUL"
+     data-n1="IN SERVICE SINCE 2023. GAVE 98 HOURS. SUPPLY-CHAIN TRIAGE AT ODD TIMEZONES."
+     data-n2="NOTE: ANSWERS WITHIN A DAY. SAYS IT'S BECAUSE SOMEONE ONCE DID THE SAME FOR HIM."
+     data-n3="FIT: BEARS DIRECTLY ON PART 001.">
+    <rect class="hit" x="952" y="448" width="220" height="150"/>
+    <rect class="plate-body ln" x="960" y="480" width="200" height="96" fill="rgba(250,246,238,.03)"/>
+    <text x="974" y="510" font-size="14" font-weight="600">DAVID PARK</text>
+    <text x="974" y="532" font-size="11.5" class="t-dim">OPERATOR</text>
+    <text x="974" y="552" font-size="11.5" class="t-dim">SEOUL</text>
+    <line x1="974" y1="562" x2="1020" y2="562" class="ln-yellow"/>
+    <circle class="balloon" cx="980" cy="462" r="18"/>
+    <text class="balloon-no" x="980" y="467" font-size="11.5" text-anchor="middle">005</text>
+    <path d="M1060 576 L1060 700 L760 1288" class="leader"/>
+    <circle cx="760" cy="1288" r="3" fill="rgba(250,246,238,.45)"/>
+  </g>
+
+  <!-- exploded-view alignment marks above beam -->
+  <g class="ln-faint">
+    <line x1="370" y1="600" x2="370" y2="620" />
+    <line x1="600" y1="600" x2="600" y2="620" />
+    <line x1="830" y1="600" x2="830" y2="620" />
+    <line x1="1060" y1="600" x2="1060" y2="620" />
+  </g>
+
+  <!-- ===== PART 001 — the beam ===== -->
+  <g class="part" id="part-001" tabindex="0" role="button" aria-expanded="false"
+     aria-label="Part 001, the line, load-bearing"
+     data-no="PART 001" data-title="THE LINE (LOAD-BEARING)"
+     data-n1="ONE CONTINUOUS MEMBER. NO JOINTS, NO SPLICES. EVERYTHING ELSE IN THIS ASSEMBLY RESTS ON IT."
+     data-n2="NOTE: RATED FOR 1,200+ MEMBERS AND HOLDING. LOAD INCREASES CAPACITY — ASKS STRENGTHEN THE MEMBER."
+     data-n3="NOTE: UNDERSCORE IS NAMED FOR THIS PART. THE LINE UNDER PEOPLE WHO BUILD.">
+    <rect class="hit" x="130" y="1252" width="950" height="120"/>
+    <rect class="plate-body" x="140" y="1290" width="920" height="46" fill="url(#hatch)" stroke="#FAF6EE" stroke-width="1.5"/>
+    <!-- center mark -->
+    <g class="ln-dim">
+      <line x1="600" y1="1268" x2="600" y2="1358"/>
+      <line x1="556" y1="1313" x2="644" y2="1313"/>
+    </g>
+    <circle cx="600" cy="1313" r="5" class="ln-dim"/>
+    <circle class="balloon" cx="166" cy="1240" r="20"/>
+    <text class="balloon-no" x="166" y="1245" font-size="12" text-anchor="middle">001</text>
+    <line x1="178" y1="1255" x2="200" y2="1290" class="leader"/>
+    <text x="220" y="1262" font-size="12" class="t-dim">THE LINE (LOAD-BEARING)</text>
+  </g>
+
+  <!-- dimension line under beam -->
+  <g>
+    <line x1="140" y1="1380" x2="1060" y2="1380" class="ln-dim" marker-start="url(#arr)" marker-end="url(#arr)"/>
+    <line x1="140" y1="1346" x2="140" y2="1390" class="ln-faint"/>
+    <line x1="1060" y1="1346" x2="1060" y2="1390" class="ln-faint"/>
+    <rect x="430" y="1366" width="340" height="28" fill="#1A1816"/>
+    <text x="600" y="1385" font-size="13" text-anchor="middle" class="t-dim">1,200+ MEMBERS · ONE CONTINUOUS LINE</text>
+  </g>
+  <!-- vertical dimension right of beam -->
+  <g>
+    <line x1="1100" y1="1290" x2="1100" y2="1336" class="ln-dim" marker-start="url(#arr)" marker-end="url(#arr)"/>
+    <line x1="1064" y1="1290" x2="1110" y2="1290" class="ln-faint"/>
+    <line x1="1064" y1="1336" x2="1110" y2="1336" class="ln-faint"/>
+    <text x="1112" y="1308" font-size="11" class="t-dim">EST.</text>
+    <text x="1112" y="1324" font-size="11" class="t-dim">2021</text>
+  </g>
+
+  <!-- ===== Member plates — lower row (PART 006–009) ===== -->
+  <g class="part" id="part-006" tabindex="0" role="button" aria-expanded="false"
+     aria-label="Part 006, member plate, Leila Haddad, researcher, Beirut"
+     data-no="PART 006 — MEMBER PLATE" data-title="LEILA HADDAD · RESEARCHER · BEIRUT"
+     data-n1="IN SERVICE SINCE 2023. GAVE 88 HOURS. READS METHODS SECTIONS SO YOU DON'T SHIP NONSENSE."
+     data-n2="NOTE: JOINED FOR THE PEOPLE, STAYED FOR THE STANDARD. 'NOBODY HERE IS COLLECTING CONTACTS.'"
+     data-n3="FIT: BEARS DIRECTLY ON PART 001.">
+    <rect class="hit" x="262" y="1540" width="220" height="150"/>
+    <rect class="plate-body ln" x="270" y="1560" width="200" height="96" fill="rgba(250,246,238,.03)"/>
+    <text x="284" y="1590" font-size="14" font-weight="600">LEILA HADDAD</text>
+    <text x="284" y="1612" font-size="11.5" class="t-dim">RESEARCHER</text>
+    <text x="284" y="1632" font-size="11.5" class="t-dim">BEIRUT</text>
+    <line x1="284" y1="1642" x2="330" y2="1642" class="ln-yellow"/>
+    <circle class="balloon" cx="290" cy="1684" r="18"/>
+    <text class="balloon-no" x="290" y="1689" font-size="11.5" text-anchor="middle">006</text>
+    <path d="M370 1560 L370 1460 L520 1340" class="leader"/>
+    <circle cx="520" cy="1340" r="3" fill="rgba(250,246,238,.45)"/>
+  </g>
+
+  <g class="part" id="part-007" tabindex="0" role="button" aria-expanded="false"
+     aria-label="Part 007, member plate, Jonas Weber, builder, Berlin"
+     data-no="PART 007 — MEMBER PLATE" data-title="JONAS WEBER · BUILDER · BERLIN"
+     data-n1="IN SERVICE SINCE 2021. GAVE 203 HOURS. HARDWARE PROTOTYPING, WORKSHOP OPEN SUNDAYS."
+     data-n2="NOTE: ORIGINAL ASSEMBLY. ONE OF THE FIRST TWELVE PLATES FITTED."
+     data-n3="FIT: BEARS DIRECTLY ON PART 001.">
+    <rect class="hit" x="492" y="1540" width="220" height="150"/>
+    <rect class="plate-body ln" x="500" y="1560" width="200" height="96" fill="rgba(250,246,238,.03)"/>
+    <text x="514" y="1590" font-size="14" font-weight="600">JONAS WEBER</text>
+    <text x="514" y="1612" font-size="11.5" class="t-dim">BUILDER</text>
+    <text x="514" y="1632" font-size="11.5" class="t-dim">BERLIN</text>
+    <line x1="514" y1="1642" x2="560" y2="1642" class="ln-yellow"/>
+    <circle class="balloon" cx="520" cy="1684" r="18"/>
+    <text class="balloon-no" x="520" y="1689" font-size="11.5" text-anchor="middle">007</text>
+    <path d="M600 1560 L600 1340" class="leader"/>
+    <circle cx="600" cy="1340" r="3" fill="rgba(250,246,238,.45)"/>
+  </g>
+
+  <g class="part" id="part-008" tabindex="0" role="button" aria-expanded="false"
+     aria-label="Part 008, member plate, Priya Nair, product, Bangalore"
+     data-no="PART 008 — MEMBER PLATE" data-title="PRIYA NAIR · PRODUCT · BANGALORE"
+     data-n1="IN SERVICE SINCE 2024. GAVE 64 HOURS. ROADMAP AUTOPSIES — BRING THE ONE THAT FAILED."
+     data-n2="NOTE: NEWEST PLATE IN THIS VIEW. ALREADY GIVES MORE THAN SHE TAKES; THAT IS TYPICAL, NOT EXCEPTIONAL."
+     data-n3="FIT: BEARS DIRECTLY ON PART 001.">
+    <rect class="hit" x="722" y="1540" width="220" height="150"/>
+    <rect class="plate-body ln" x="730" y="1560" width="200" height="96" fill="rgba(250,246,238,.03)"/>
+    <text x="744" y="1590" font-size="14" font-weight="600">PRIYA NAIR</text>
+    <text x="744" y="1612" font-size="11.5" class="t-dim">PRODUCT</text>
+    <text x="744" y="1632" font-size="11.5" class="t-dim">BANGALORE</text>
+    <line x1="744" y1="1642" x2="790" y2="1642" class="ln-yellow"/>
+    <circle class="balloon" cx="750" cy="1684" r="18"/>
+    <text class="balloon-no" x="750" y="1689" font-size="11.5" text-anchor="middle">008</text>
+    <path d="M830 1560 L830 1460 L680 1340" class="leader"/>
+    <circle cx="680" cy="1340" r="3" fill="rgba(250,246,238,.45)"/>
+  </g>
+
+  <g class="part" id="part-009" tabindex="0" role="button" aria-expanded="false"
+     aria-label="Part 009, member plate, Tom Aiello, manufacturer, Detroit"
+     data-no="PART 009 — MEMBER PLATE" data-title="TOM AIELLO · MANUFACTURER · DETROIT"
+     data-n1="IN SERVICE SINCE 2022. GAVE 156 HOURS. FACTORY WALKTHROUGHS, TOOLING SANITY CHECKS."
+     data-n2="NOTE: 'PEOPLE SHIP THINGS HERE. THAT'S THE WHOLE FILTER.'"
+     data-n3="FIT: BEARS DIRECTLY ON PART 001.">
+    <rect class="hit" x="952" y="1540" width="220" height="150"/>
+    <rect class="plate-body ln" x="960" y="1560" width="200" height="96" fill="rgba(250,246,238,.03)"/>
+    <text x="974" y="1590" font-size="14" font-weight="600">TOM AIELLO</text>
+    <text x="974" y="1612" font-size="11.5" class="t-dim">MANUFACTURER</text>
+    <text x="974" y="1632" font-size="11.5" class="t-dim">DETROIT</text>
+    <line x1="974" y1="1642" x2="1020" y2="1642" class="ln-yellow"/>
+    <circle class="balloon" cx="980" cy="1684" r="18"/>
+    <text class="balloon-no" x="980" y="1689" font-size="11.5" text-anchor="middle">009</text>
+    <path d="M1060 1560 L1060 1460 L760 1340" class="leader"/>
+    <circle cx="760" cy="1340" r="3" fill="rgba(250,246,238,.45)"/>
+  </g>
+
+  <!-- note: plates shown are 8 of 1,200 -->
+  <text x="600" y="1740" font-size="11.5" text-anchor="middle" class="t-dim">PLATES 002–009 SHOWN. 1,192 FURTHER PLATES OMITTED FOR CLARITY. 40 CITIES.</text>
+
+  <!-- ===== PART 011 — intro conduits ===== -->
+  <g class="part" id="part-011" tabindex="0" role="button" aria-expanded="false"
+     aria-label="Part 011, intro conduits"
+     data-no="PART 011" data-title="INTRO CONDUITS (×40 CITIES)"
+     data-n1="ROUTES ONE INTRODUCTION AT A TIME, BOTH DIRECTIONS. NO PRESSURE LOSS OBSERVED ACROSS TIMEZONES."
+     data-n2="NOTE: A CONDUIT IS OPENED BY ASKING. THERE IS NO OTHER VALVE."
+     data-n3="SERVICE: WARM ONLY. COLD ROUTING NOT SUPPORTED.">
+    <rect class="hit" x="940" y="1790" width="230" height="190"/>
+    <rect class="plate-body ln" x="960" y="1840" width="180" height="80" fill="rgba(250,246,238,.03)"/>
+    <text x="1050" y="1874" font-size="12" text-anchor="middle">MANIFOLD</text>
+    <text x="1050" y="1894" font-size="10.5" text-anchor="middle" class="t-dim">INTRO ROUTING</text>
+    <!-- tubes -->
+    <path d="M960 1860 C 900 1860, 880 1820, 880 1780" class="ln-dim"/>
+    <path d="M960 1880 C 880 1880, 850 1920, 820 1940" class="ln-dim"/>
+    <path d="M1140 1870 C 1170 1870, 1170 1830, 1150 1800" class="ln-dim"/>
+    <circle class="balloon" cx="1118" cy="1814" r="18"/>
+    <text class="balloon-no" x="1118" y="1819" font-size="11.5" text-anchor="middle">011</text>
+    <!-- leader up to beam -->
+    <path d="M1050 1840 L1050 1760 L1000 1344" class="leader"/>
+    <circle cx="1000" cy="1344" r="3" fill="rgba(250,246,238,.45)"/>
+  </g>
+
+  <!-- ===== PART 012 — open slot ===== -->
+  <g class="part part-join" id="part-012" tabindex="0" role="button"
+     aria-haspopup="dialog"
+     aria-label="Part 012, open slot, ships empty. Activate to open the join form."
+     data-no="PART 012" data-title="OPEN SLOT (SHIPS EMPTY)"
+     data-n1="EVERY REVISION OF THIS ASSEMBLY SHIPS WITH ONE EMPTY SLOT. IT IS NOT A DEFECT."
+     data-n2="FIT: YOURS, IF YOU BUILD THINGS AND GIVE TIME."
+     data-n3="ACTION: FILE ECO-2026 TO JOIN THE CORE." data-join="1">
+    <rect class="hit" x="430" y="1790" width="340" height="190"/>
+    <rect x="480" y="1830" width="240" height="96" fill="rgba(245,197,24,.05)"
+          stroke="#F5C518" stroke-width="1.8" class="marchdash"/>
+    <text x="600" y="1872" font-size="14" text-anchor="middle" class="t-yellow" font-weight="600">OPEN SLOT</text>
+    <text x="600" y="1896" font-size="11" text-anchor="middle" class="t-yellow">SHIPS EMPTY · RESERVED FOR YOU</text>
+    <circle class="balloon" cx="478" cy="1812" r="20" stroke="#F5C518"/>
+    <text class="balloon-no" x="478" y="1817" font-size="12" text-anchor="middle" fill="#F5C518">012</text>
+    <path d="M600 1830 L600 1344" class="leader" stroke="#F5C518" stroke-opacity=".5"/>
+    <circle cx="600" cy="1344" r="3" fill="#F5C518"/>
+    <text x="600" y="1960" font-size="11.5" text-anchor="middle" class="t-yellow">CLICK TO FILE ECO — JOIN THE CORE</text>
+  </g>
+
+  <!-- ===== Bill of materials ===== -->
+  <g>
+    <rect x="60" y="2120" width="500" height="320" class="ln"/>
+    <text x="76" y="2150" font-size="13" letter-spacing="2" class="t-yellow">BILL OF MATERIALS</text>
+    <line x1="60" y1="2166" x2="560" y2="2166" class="ln-dim"/>
+    <g font-size="11.5">
+      <text x="76" y="2190" class="t-dim">ITEM</text>
+      <text x="150" y="2190" class="t-dim">QTY</text>
+      <text x="226" y="2190" class="t-dim">DESCRIPTION</text>
+      <line x1="60" y1="2200" x2="560" y2="2200" class="ln-faint"/>
+      <text x="76" y="2226">001</text><text x="150" y="2226">1</text><text x="226" y="2226">LINE, LOAD-BEARING, CONTINUOUS</text>
+      <text x="76" y="2256">002–009</text><text x="150" y="2256">1,200+</text><text x="226" y="2256">PLATE, MEMBER (BUILDERS, OPERATORS,</text>
+      <text x="226" y="2274" class="t-dim">EXPERTS — 40 CITIES)</text>
+      <text x="76" y="2304">010</text><text x="150" y="2304">1</text><text x="226" y="2304">RESERVOIR, HOURS — CAP. 9,000</text>
+      <text x="76" y="2334">011</text><text x="150" y="2334">40</text><text x="226" y="2334">CONDUIT, INTRO — ONE PER CITY</text>
+      <text x="76" y="2364" class="t-yellow">012</text><text x="150" y="2364" class="t-yellow">1</text><text x="226" y="2364" class="t-yellow">SLOT, OPEN — SHIPS EMPTY</text>
+      <line x1="60" y1="2382" x2="560" y2="2382" class="ln-faint"/>
+      <text x="76" y="2408" class="t-dim">NO FASTENERS REQUIRED. MEMBERS HOLD</text>
+      <text x="76" y="2426" class="t-dim">EACH OTHER IN PLACE.</text>
+    </g>
+  </g>
+
+  <!-- ===== Title block ===== -->
+  <g>
+    <rect x="620" y="2120" width="540" height="440" class="ln" stroke-width="1.5"/>
+    <!-- REV table -->
+    <text x="636" y="2148" font-size="12" letter-spacing="2" class="t-yellow">REVISIONS</text>
+    <line x1="620" y1="2160" x2="1160" y2="2160" class="ln-dim"/>
+    <g font-size="11">
+      <text x="636" y="2182" class="t-dim">REV</text><text x="690" y="2182" class="t-dim">DATE</text><text x="790" y="2182" class="t-dim">DESCRIPTION</text>
+      <line x1="620" y1="2192" x2="1160" y2="2192" class="ln-faint"/>
+      <text x="636" y="2214">A</text><text x="690" y="2214">2021.04</text><text x="790" y="2214">FIRST ARTICLE — FOUNDED, ONE CITY</text>
+      <text x="636" y="2240">B</text><text x="690" y="2240">2022.11</text><text x="790" y="2240">100TH MEMBER PLATE FITTED</text>
+      <text x="636" y="2266">C</text><text x="690" y="2266">2024.05</text><text x="790" y="2266">40TH CITY CONNECTED</text>
+      <text x="636" y="2292">D</text><text x="690" y="2292">2025.10</text><text x="790" y="2292">HOURS RESERVOIR PASSES 9,000</text>
+      <text x="636" y="2318" class="t-yellow">E</text><text x="690" y="2318" class="t-yellow">2026.06</text><text x="790" y="2318" class="t-yellow">OPEN SLOT REMAINS OPEN (THIS REV)</text>
+    </g>
+    <line x1="620" y1="2336" x2="1160" y2="2336" class="ln-dim"/>
+    <!-- main title cells -->
+    <text x="636" y="2366" font-size="11" class="t-dim">TITLE</text>
+    <text x="636" y="2394" font-size="19" font-weight="600">UNDERSCORE ASSY —</text>
+    <text x="636" y="2420" font-size="19" font-weight="600">A COMMUNITY, DISASSEMBLED</text>
+    <line x1="620" y1="2440" x2="1160" y2="2440" class="ln-dim"/>
+    <g font-size="11">
+      <text x="636" y="2462" class="t-dim">DRAWN BY</text>
+      <text x="636" y="2482">THE CORE</text>
+      <text x="820" y="2462" class="t-dim">CHECKED BY</text>
+      <text x="820" y="2482">1,200+ MEMBERS</text>
+      <text x="1020" y="2462" class="t-dim">DWG NO.</text>
+      <text x="1020" y="2482">US-0001</text>
+    </g>
+    <line x1="620" y1="2500" x2="1160" y2="2500" class="ln-dim"/>
+    <g font-size="11">
+      <text x="636" y="2522" class="t-dim">SCALE</text>
+      <text x="636" y="2542">1:1 — NO EXAGGERATION</text>
+      <text x="820" y="2522" class="t-dim">REV</text>
+      <text x="820" y="2542" class="t-yellow">2026.06</text>
+      <text x="1020" y="2522" class="t-dim">SHEET</text>
+      <text x="1020" y="2542">1 OF 1</text>
+    </g>
+    <!-- vertical separators -->
+    <line x1="800" y1="2440" x2="800" y2="2560" class="ln-faint"/>
+    <line x1="1000" y1="2440" x2="1000" y2="2560" class="ln-faint"/>
+  </g>
+</svg>
+
+  <!-- spec box overlay -->
+  <div class="specbox" id="specbox" role="status" aria-live="polite">
+    <div class="sb-no" id="sb-no"></div>
+    <div class="sb-title" id="sb-title"></div>
+    <p><span>SPEC</span><span class="sb-line" id="sb-n1"></span></p>
+    <p><span class="sb-pre" id="sb-pre2">NOTE</span><span class="sb-line" id="sb-n2"></span></p>
+    <p><span class="sb-pre" id="sb-pre3">NOTE</span><span class="sb-line" id="sb-n3"></span></p>
+    <button class="sb-cta" id="sb-join" type="button" hidden>File ECO — Join the Core</button>
+  </div>
+
+</div>
+</div>
+
+<!-- ===== ECO modal ===== -->
+<div class="eco-backdrop" id="eco-backdrop">
+  <div class="eco" role="dialog" aria-modal="true" aria-labelledby="eco-title">
+    <div class="eco-head">
+      <h2 id="eco-title">Engineering Change Order</h2>
+      <span class="eco-no" id="eco-no">ECO-2026-____</span>
+    </div>
+    <div class="eco-meta">
+      <div>ASSY<b>UNDERSCORE US-0001</b></div>
+      <div>AFFECTED PART<b>012 — OPEN SLOT</b></div>
+      <div>PRIORITY<b>WHEN YOU'RE READY</b></div>
+    </div>
+    <div class="eco-body" id="eco-body">
+      <div class="change">
+        <span>Change requested</span>
+        ADD ONE (1) MEMBER TO ASSY UNDERSCORE. REMOVE NOTHING. The Core is 1,200+ builders, operators,
+        and experts in 40 cities who give time to each other — 9,000 hours so far. Membership costs
+        exactly what it returns: your hours.
+      </div>
+      <form id="eco-form">
+        <label for="f-name">Requested by (name)</label>
+        <input id="f-name" name="name" type="text" autocomplete="name" required>
+        <label for="f-role">Role / trade</label>
+        <input id="f-role" name="role" type="text" placeholder="engineer, founder, machinist…" required>
+        <label for="f-city">City</label>
+        <input id="f-city" name="city" type="text" autocomplete="address-level2" required>
+        <label for="f-give">Justification — what can you give? (hours, skills, doors you can open)</label>
+        <textarea id="f-give" name="give" required></textarea>
+        <div class="eco-actions">
+          <button class="eco-submit" type="submit">File ECO — Join the Core</button>
+          <button class="eco-cancel" type="button" id="eco-cancel">Withdraw</button>
+        </div>
+      </form>
+    </div>
+    <div class="eco-done" id="eco-done">
+      <div class="stamp">ECO FILED</div>
+      <p>Your change order is in review with the Core, <span id="done-name"></span>.</p>
+      <p><span>DISPOSITION:</span> a member near <span id="done-city"></span> will reach out within the week. A person, not a sequence.</p>
+      <p><span>EFFECT:</span> REV 2026.07 pending. The open slot stays open — the next one ships empty too.</p>
+      <div class="eco-actions" style="padding:0;margin-top:1.1rem">
+        <button class="eco-cancel" type="button" id="eco-close2">Back to the drawing</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var wrap = document.getElementById('wrap');
+  var box = document.getElementById('specbox');
+  var sbNo = document.getElementById('sb-no');
+  var sbTitle = document.getElementById('sb-title');
+  var sbN1 = document.getElementById('sb-n1');
+  var sbN2 = document.getElementById('sb-n2');
+  var sbN3 = document.getElementById('sb-n3');
+  var sbJoin = document.getElementById('sb-join');
+  var parts = Array.prototype.slice.call(document.querySelectorAll('.part'));
+  var pinned = null;       // part pinned by click/keyboard
+  var hovering = null;
+
+  function fill(part){
+    sbNo.textContent = part.dataset.no;
+    sbTitle.textContent = part.dataset.title;
+    sbN1.textContent = part.dataset.n1;
+    sbN2.textContent = part.dataset.n2.replace(/^NOTE:\s*/,'');
+    sbN3.textContent = part.dataset.n3.replace(/^NOTE:\s*/,'');
+    sbJoin.hidden = !part.dataset.join;
+  }
+  function place(part){
+    var pr = part.getBoundingClientRect();
+    var wr = wrap.getBoundingClientRect();
+    var x = pr.left - wr.left + pr.width + 12;
+    var y = pr.top - wr.top;
+    // clamp horizontally
+    if (x + 310 > wr.width) x = Math.max(8, pr.left - wr.left - 312);
+    if (x < 8) x = 8;
+    if (y + 200 > wr.height) y = wr.height - 210;
+    box.style.left = x + 'px';
+    box.style.top = Math.max(8, y) + 'px';
+  }
+  function show(part){
+    fill(part); place(part);
+    box.classList.add('show');
+    parts.forEach(function(p){ p.classList.toggle('active', p === part); p.setAttribute('aria-expanded', p === part ? 'true' : 'false'); });
+  }
+  function hide(){
+    box.classList.remove('show');
+    parts.forEach(function(p){ p.classList.remove('active'); p.setAttribute('aria-expanded','false'); });
+  }
+
+  parts.forEach(function(part){
+    part.addEventListener('pointerenter', function(){ hovering = part; if (!pinned) show(part); });
+    part.addEventListener('pointerleave', function(){ hovering = null; if (!pinned) hide(); });
+    part.addEventListener('focus', function(){ if (!pinned) show(part); });
+    part.addEventListener('blur', function(){ if (!pinned && !hovering) hide(); });
+    part.addEventListener('click', function(e){
+      e.preventDefault();
+      if (part.dataset.join){ openEco(); return; }
+      if (pinned === part){ pinned = null; hide(); }
+      else { pinned = part; show(part); }
+    });
+    part.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' '){
+        e.preventDefault();
+        part.click();
+      }
+    });
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape'){
+      if (backdrop.classList.contains('open')) closeEco();
+      else { pinned = null; hide(); }
+    }
+  });
+  window.addEventListener('resize', function(){ if (pinned) place(pinned); });
+
+  /* ---- ECO modal ---- */
+  var backdrop = document.getElementById('eco-backdrop');
+  var form = document.getElementById('eco-form');
+  var ecoBody = document.getElementById('eco-body');
+  var ecoDone = document.getElementById('eco-done');
+  var lastFocus = null;
+
+  function ecoNumber(){
+    var d = new Date();
+    var n = String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
+    return 'ECO-' + d.getFullYear() + '-' + n;
+  }
+  function openEco(){
+    lastFocus = document.activeElement;
+    document.getElementById('eco-no').textContent = ecoNumber();
+    pinned = null; hide();
+    backdrop.classList.add('open');
+    document.getElementById('f-name').focus();
+  }
+  function closeEco(){
+    backdrop.classList.remove('open');
+    if (lastFocus) lastFocus.focus();
+  }
+  sbJoin.addEventListener('click', openEco);
+  document.getElementById('eco-cancel').addEventListener('click', closeEco);
+  document.getElementById('eco-close2').addEventListener('click', closeEco);
+  backdrop.addEventListener('click', function(e){ if (e.target === backdrop) closeEco(); });
+
+  // rudimentary focus trap
+  backdrop.addEventListener('keydown', function(e){
+    if (e.key !== 'Tab') return;
+    var els = backdrop.querySelectorAll('input,textarea,button');
+    var vis = Array.prototype.filter.call(els, function(el){ return el.offsetParent !== null; });
+    if (!vis.length) return;
+    var first = vis[0], last = vis[vis.length-1];
+    if (e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+  });
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    document.getElementById('done-name').textContent = document.getElementById('f-name').value.trim() || 'friend';
+    document.getElementById('done-city').textContent = document.getElementById('f-city').value.trim() || 'you';
+    ecoBody.style.display = 'none';
+    ecoDone.style.display = 'block';
+    document.getElementById('eco-close2').focus();
+  });
+})();
+</script>
+</body>
+</html>

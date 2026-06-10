@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — _radio</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='24' width='24' height='5' rx='2' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root { --yellow:#F5C518; --amber:#E8B711; --ink:#17150F; --panel:#201D15; --cream:#FAF6EE; --dim:#7a7261; --line:#322D20; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  ::selection { background:var(--yellow); color:var(--ink); }
+  body { font-family:'Inter',sans-serif; background:var(--ink); color:var(--cream); min-height:100vh; display:flex; align-items:flex-start; justify-content:center; padding:48px 18px 80px; -webkit-font-smoothing:antialiased; }
+  .player { width:min(760px,100%); }
+
+  .deck { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:30px 30px 26px; }
+  .station { display:flex; justify-content:space-between; align-items:baseline; font-family:'IBM Plex Mono',monospace; }
+  .station .name { font-size:13px; letter-spacing:.16em; color:var(--yellow); }
+  .station .live { font-size:11px; color:var(--dim); letter-spacing:.14em; }
+  .nowplaying { margin-top:18px; }
+  .nowplaying .tnum { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--dim); letter-spacing:.16em; }
+  .nowplaying h1 { font-size:clamp(22px,3.4vw,32px); font-weight:600; letter-spacing:-.01em; margin-top:4px; }
+
+  .wave { margin:26px 0 10px; }
+  .wave svg { width:100%; height:64px; display:block; }
+  .wave .base { stroke:var(--amber); stroke-width:3; }
+  .wave .voice { stroke:var(--yellow); stroke-width:2; fill:none; opacity:0; transition:opacity .3s; }
+  .playing .wave .voice { opacity:1; }
+
+  .scrub { position:relative; height:6px; background:#2C2818; border-radius:3px; cursor:pointer; }
+  .scrub .fill { position:absolute; left:0; top:0; bottom:0; background:var(--yellow); border-radius:3px; width:0%; }
+  .timing { display:flex; justify-content:space-between; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--dim); margin-top:8px; }
+
+  .controls { display:flex; align-items:center; justify-content:center; gap:26px; margin-top:20px; }
+  .controls button { background:none; border:1px solid var(--line); color:var(--cream); border-radius:999px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .controls .skip { width:44px; height:44px; font-size:15px; }
+  .controls .play { width:62px; height:62px; background:var(--yellow); color:var(--ink); border:0; font-size:20px; }
+  .controls button:hover { border-color:var(--yellow); }
+  .controls .play:hover { filter:brightness(1.06); }
+
+  .transcript { margin-top:30px; background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:26px 30px; }
+  .transcript h2 { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.18em; color:var(--dim); margin-bottom:16px; }
+  .tline { font-size:16.5px; line-height:1.65; color:#8c8470; padding:5px 0; transition:color .25s; }
+  .tline.on { color:var(--cream); }
+  .tline.on::before { content:"— "; color:var(--yellow); }
+  .tline .spk { font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--yellow); letter-spacing:.1em; margin-right:8px; }
+
+  .tracks { margin-top:30px; }
+  .tracks h2 { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.18em; color:var(--dim); margin-bottom:12px; }
+  .track { display:flex; align-items:center; gap:16px; width:100%; text-align:left; background:none; border:0; border-bottom:1px solid var(--line); padding:14px 6px; cursor:pointer; color:var(--cream); font-family:'Inter',sans-serif; }
+  .track:hover { background:rgba(245,197,24,.05); }
+  .track.active { color:var(--yellow); }
+  .track .no { font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--dim); width:26px; }
+  .track.active .no { color:var(--yellow); }
+  .track .tt { flex:1; font-size:15px; }
+  .track .dur { font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--dim); }
+  .eq { display:none; gap:2px; align-items:flex-end; height:14px; }
+  .track.active.playing-row .eq { display:flex; }
+  .eq i { width:3px; background:var(--yellow); animation:eq .9s ease-in-out infinite; }
+  .eq i:nth-child(2){ animation-delay:.2s; } .eq i:nth-child(3){ animation-delay:.4s; }
+  @keyframes eq { 0%,100%{height:4px} 50%{height:14px} }
+  @media (prefers-reduced-motion:reduce){ .eq i{ animation:none; height:8px; } }
+
+  .request { margin-top:8px; padding:18px 6px 4px; }
+  .request p { font-size:14px; color:#8c8470; margin-bottom:14px; }
+  .request form { display:flex; gap:10px; flex-wrap:wrap; }
+  .request input { flex:1 1 150px; background:#262217; border:1px solid var(--line); color:var(--cream); border-radius:8px; padding:12px 14px; font-family:inherit; font-size:14px; outline:none; }
+  .request input:focus { border-color:var(--yellow); }
+  .request button { background:var(--yellow); color:var(--ink); border:0; border-radius:8px; padding:12px 22px; font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.08em; font-weight:600; cursor:pointer; }
+  .footerline { margin-top:34px; text-align:center; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--dim); letter-spacing:.12em; }
+</style>
+</head>
+<body>
+<div class="player" id="playerRoot">
+  <div class="deck">
+    <div class="station">
+      <span class="name">_RADIO — STORIES FROM THE CORE</span>
+      <span class="live">1,247 LISTENERS · 40 CITIES</span>
+    </div>
+    <div class="nowplaying">
+      <div class="tnum" id="tnum">TRACK 01 / 07</div>
+      <h1 id="ttitle">What this is</h1>
+    </div>
+    <div class="wave">
+      <svg viewBox="0 0 700 64" preserveAspectRatio="none" aria-hidden="true">
+        <line class="base" x1="0" y1="48" x2="700" y2="48"/>
+        <path class="voice" id="voicePath" d="M0 48 L700 48"/>
+      </svg>
+    </div>
+    <div class="scrub" id="scrub"><div class="fill" id="fill"></div></div>
+    <div class="timing"><span id="cur">0:00</span><span id="dur">2:10</span></div>
+    <div class="controls">
+      <button class="skip" id="prev" aria-label="previous track">⏮</button>
+      <button class="play" id="play" aria-label="play/pause">▶</button>
+      <button class="skip" id="next" aria-label="next track">⏭</button>
+    </div>
+  </div>
+
+  <div class="transcript">
+    <h2>TRANSCRIPT</h2>
+    <div id="tlines"></div>
+  </div>
+
+  <div class="tracks">
+    <h2>EPISODES</h2>
+    <div id="tracklist"></div>
+    <div class="request" id="request" style="display:none">
+      <p>This is the request line. It only takes one kind of request.</p>
+      <form onsubmit="event.preventDefault(); this.innerHTML='<p style=\'color:#FAF6EE\'>Received. A human replies within a week. Welcome to the frequency.</p>';">
+        <input type="text" placeholder="name" required>
+        <input type="text" placeholder="city" required>
+        <input type="text" placeholder="an hour you could give">
+        <button type="submit">JOIN THE CORE_</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="footerline">NO ALGORITHM. JUST PEOPLE ON THE SAME LINE. — UNDERSCORE_, EST. 2021</div>
+</div>
+
+<script>
+  const TRACKS = [
+    { title:"What this is", dur:130, lines:[
+      ["HOST","Underscore is a community with one working part: people give time before anyone asks them to."],
+      ["HOST","Twelve hundred members. Forty cities. Builders, operators, researchers — people mid-something."],
+      ["HOST","There's no feed, no points, no leaderboard. There's a line, and people on it."],
+      ["HOST","Last year the Core gave nine thousand hours. The stat we actually brag about: zero asks went unanswered."],
+      ["HOST","The rest of this station is just receipts."],
+    ]},
+    { title:"Maya's supplier problem", dur:222, lines:[
+      ["MAYA","I had a product, a deadline, and a co-packer who stopped answering email. Classic."],
+      ["MAYA","I posted one line to the Core: 'Does anyone have a co-packer who actually picks up?'"],
+      ["MAYA","Forty minutes. Two names, one warning, and an intro with my deadline already in it."],
+      ["MAYA","The warning was the valuable part, honestly. Saved me from a contract I was about to sign."],
+      ["MAYA","I've since done the same for six other people. That's how the thing runs. It's a relay."],
+    ]},
+    { title:"The numbers", dur:71, lines:[
+      ["HOST","Quick station identification. One thousand two hundred forty-seven members."],
+      ["HOST","Forty cities, eight time zones covered well, the rest covered stubbornly."],
+      ["HOST","Nine thousand hours given. Three hundred twelve introductions. Five hundred forty office hours."],
+      ["HOST","Asks unanswered: zero. Five years running."],
+    ]},
+    { title:"Etiquette of asking", dur:178, lines:[
+      ["LEILA","People apologize before asking. We're trying to breed that out."],
+      ["LEILA","A good ask is specific, honest about what you've tried, and easy to say no to."],
+      ["LEILA","Here's the secret though — your ask is a gift. It's how the next person finds the answer."],
+      ["LEILA","I hold office hours every week. The half-formed questions are always the best ones."],
+      ["LEILA","Ask earlier. Whatever it is, ask earlier."],
+    ]},
+    { title:"The Detroit rescue", dur:204, lines:[
+      ["TOM","Ana had drawings, no shop, and quotes at triple her budget. I've seen that movie."],
+      ["TOM","Redesigned the tool count from four to two on a Tuesday call. That's experience, not genius."],
+      ["TOM","Jonas knew a shop in Stuttgart. Eleven days from her ask to a purchase order."],
+      ["ANA","Nobody invoiced anybody. I keep telling people that part and they keep not believing me."],
+      ["TOM","Believe it. It's cheaper than it sounds and it pays better than it costs."],
+    ]},
+    { title:"Why give first works", dur:155, lines:[
+      ["DAVID","Game theory says give-first loses. Game theory assumes one round."],
+      ["DAVID","Communities are repeated games. Generosity compounds; extraction doesn't."],
+      ["DAVID","I gave away my whole supply-chain playbook. It came back as three people who'd improved it."],
+      ["PRIYA","Also — and this is under-rated — it's just a nicer way to live."],
+    ]},
+    { title:"Your turn", dur:30, lines:[
+      ["HOST","That's the station. If you've got an hour somewhere in your year, the request line is open below."],
+      ["HOST","A human reads everything and replies within a week. Bring a problem if you have one."],
+    ]},
+  ];
+
+  let cur = 0, playing = false, t = 0, timer = null, lineTimer = null;
+  const root = document.getElementById('playerRoot');
+  const tnum = document.getElementById('tnum'), ttitle = document.getElementById('ttitle');
+  const fill = document.getElementById('fill'), curEl = document.getElementById('cur'), durEl = document.getElementById('dur');
+  const playBtn = document.getElementById('play');
+  const tlinesEl = document.getElementById('tlines');
+  const voice = document.getElementById('voicePath');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function fmt(s){ return Math.floor(s/60) + ":" + String(Math.floor(s%60)).padStart(2,'0'); }
+
+  function loadTrack(i, autoplay){
+    cur = (i + TRACKS.length) % TRACKS.length; t = 0;
+    const tr = TRACKS[cur];
+    tnum.textContent = "TRACK 0" + (cur+1) + " / 07";
+    ttitle.textContent = tr.title;
+    durEl.textContent = fmt(tr.dur);
+    tlinesEl.innerHTML = tr.lines.map((l,k)=>`<div class="tline${(!autoplay||reduced)?' on':''}" data-k="${k}"><span class="spk">${l[0]}</span>${l[1]}</div>`).join('');
+    document.getElementById('request').style.display = cur===6 ? 'block' : 'none';
+    renderList(); update();
+    if(autoplay) play(); else pause();
+  }
+  function renderList(){
+    document.getElementById('tracklist').innerHTML = TRACKS.map((tr,k)=>`
+      <button class="track${k===cur?' active':''}${k===cur&&playing?' playing-row':''}" data-k="${k}">
+        <span class="no">0${k+1}</span><span class="tt">${tr.title}</span>
+        <span class="eq"><i></i><i></i><i></i></span>
+        <span class="dur">${fmt(tr.dur)}</span>
+      </button>`).join('');
+    document.querySelectorAll('.track').forEach(b=>b.onclick=()=>loadTrack(+b.dataset.k, true));
+  }
+  function update(){
+    const tr = TRACKS[cur];
+    fill.style.width = (t/tr.dur*100) + "%";
+    curEl.textContent = fmt(t);
+    // highlight transcript lines proportionally
+    const idx = Math.min(tr.lines.length-1, Math.floor(t / tr.dur * tr.lines.length));
+    document.querySelectorAll('.tline').forEach(el=>{
+      if(playing && !reduced) el.classList.toggle('on', +el.dataset.k <= idx && t>0);
+    });
+    // waveform: voice rises during "speech"
+    if(playing && !reduced){
+      let d = "M0 48 ";
+      for(let x=0; x<=700; x+=14){
+        const amp = (Math.sin(x*0.07 + t*2.1) * Math.sin(x*0.013 + t*0.7)) * 16;
+        d += `L${x} ${48 - Math.abs(amp)} `;
+      }
+      voice.setAttribute('d', d);
+    }
+  }
+  function play(){
+    playing = true; root.classList.add('playing'); playBtn.textContent = "⏸";
+    clearInterval(timer);
+    timer = setInterval(()=>{
+      t += 0.25;
+      if(t >= TRACKS[cur].dur){ loadTrack(cur+1, cur+1 < TRACKS.length); return; }
+      update();
+    }, 250);
+    renderList();
+  }
+  function pause(){
+    playing = false; root.classList.remove('playing'); playBtn.textContent = "▶";
+    clearInterval(timer);
+    document.querySelectorAll('.tline').forEach(el=>el.classList.add('on'));
+    renderList();
+  }
+  playBtn.onclick = ()=> playing ? pause() : play();
+  document.getElementById('next').onclick = ()=>loadTrack(cur+1, playing);
+  document.getElementById('prev').onclick = ()=>loadTrack(cur-1, playing);
+  document.getElementById('scrub').onclick = e=>{
+    const r = e.currentTarget.getBoundingClientRect();
+    t = (e.clientX - r.left) / r.width * TRACKS[cur].dur;
+    update();
+  };
+  document.addEventListener('keydown', e=>{ if(e.key===' '&&e.target.tagName!=='INPUT'){ e.preventDefault(); playBtn.click(); } });
+  loadTrack(0, false);
+</script>
+</body>
+</html>

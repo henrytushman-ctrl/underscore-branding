@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — The Codex</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='24' width='24' height='5' rx='2' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,700;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --yellow:#F5C518; --ink:#1A1816; --cream:#FAF6EE; --paper:#FFFEFA; --muted:#7d7668; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  ::selection { background:var(--yellow); color:var(--ink); }
+  html, body { height:100%; }
+  body {
+    font-family:'Newsreader', serif; background:var(--cream); color:var(--ink);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    min-height:100vh; padding:32px 16px; -webkit-font-smoothing:antialiased;
+  }
+  .book-wrap { width:min(1080px, 96vw); }
+  .book {
+    position:relative; display:flex; background:var(--paper);
+    box-shadow: 0 30px 80px rgba(26,24,22,.25), 0 4px 12px rgba(26,24,22,.15);
+    border-radius:4px 10px 10px 4px; min-height:620px; overflow:hidden;
+  }
+  .page { width:50%; padding:56px 52px 64px; position:relative; }
+  .page.left { border-right:1px solid #eee8da; }
+  /* spine */
+  .book::before {
+    content:""; position:absolute; left:50%; top:0; bottom:0; width:2px;
+    background:var(--yellow); transform:translateX(-50%); z-index:2;
+  }
+  .book::after {
+    content:""; position:absolute; left:50%; top:0; bottom:0; width:70px;
+    transform:translateX(-50%); pointer-events:none; z-index:1;
+    background:linear-gradient(90deg, transparent, rgba(26,24,22,.07) 48%, rgba(26,24,22,.10) 50%, rgba(26,24,22,.07) 52%, transparent);
+  }
+  .running-head {
+    font-variant:small-caps; letter-spacing:.18em; font-size:13px; color:var(--muted);
+    display:flex; justify-content:space-between; margin-bottom:36px;
+  }
+  .folio { position:absolute; bottom:26px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--muted); }
+  .left .folio { left:52px; } .right .folio { right:52px; }
+  h1,h2 { font-weight:500; letter-spacing:-0.01em; }
+  .spread { display:none; }
+  .spread.active { display:flex; width:100%; animation:turn .45s ease; }
+  @keyframes turn { from { opacity:0; transform:perspective(1200px) rotateY(4deg); } to { opacity:1; transform:none; } }
+  @media (prefers-reduced-motion: reduce){ .spread.active { animation:none; } }
+
+  /* cover */
+  .cover { background:var(--ink); color:var(--cream); width:100%; display:flex; align-items:center; justify-content:center; min-height:620px; flex-direction:column; gap:28px;
+    background-image:radial-gradient(rgba(255,255,255,.03) 1px, transparent 1px); background-size:5px 5px; }
+  .cover .mark { width:160px; height:30px; background:var(--yellow); border-radius:3px; box-shadow:inset 0 -3px 0 rgba(0,0,0,.25); }
+  .cover h1 { font-size:44px; letter-spacing:.04em; font-variant:small-caps; font-weight:400; }
+  .cover .sub { font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.2em; color:#b9b2a2; }
+
+  .drop::first-letter { initial-letter:3; -webkit-initial-letter:3; color:var(--ink); font-weight:500; padding-right:10px; }
+  p { font-size:17.5px; line-height:1.72; margin-bottom:18px; }
+  .colophon { font-family:'IBM Plex Mono',monospace; font-size:12.5px; line-height:2; color:var(--muted); }
+  .title-page { text-align:center; padding-top:120px; }
+  .title-page h1 { font-size:40px; font-variant:small-caps; font-weight:400; }
+  .title-page .rule { width:90px; height:5px; background:var(--yellow); margin:26px auto; border-radius:2px; }
+  .title-page .epigraph { font-style:italic; color:var(--muted); font-size:16px; max-width:30ch; margin:0 auto; }
+
+  .register { list-style:none; }
+  .register li { display:flex; justify-content:space-between; align-items:baseline; padding:9px 0; border-bottom:1px dotted #d8d0bf; font-size:15.5px; }
+  .register .who { font-weight:500; }
+  .register .where { font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--muted); }
+  .plate { text-align:center; padding-top:30px; }
+  .plate .big { font-size:64px; font-weight:500; line-height:1.05; }
+  .plate .lbl { font-variant:small-caps; letter-spacing:.18em; font-size:13px; color:var(--muted); margin-bottom:34px; margin-top:6px; }
+  .plate .frame { border:1px solid var(--ink); padding:36px 24px; position:relative; }
+  .plate .frame::after { content:""; position:absolute; inset:5px; border:1px solid #d8d0bf; pointer-events:none; }
+
+  .marginalia { font-size:13.5px; font-style:italic; color:var(--muted); line-height:1.6; border-left:2px solid var(--yellow); padding-left:12px; margin:14px 0; }
+  .engraving { display:block; margin:18px auto; }
+
+  .bookplate { border:2px solid var(--ink); padding:34px 30px; position:relative; }
+  .bookplate::after { content:""; position:absolute; inset:6px; border:1px solid var(--yellow); pointer-events:none; }
+  .bookplate h2 { font-variant:small-caps; text-align:center; font-size:22px; margin-bottom:8px; }
+  .bookplate .ex { text-align:center; font-style:italic; color:var(--muted); font-size:14px; margin-bottom:24px; }
+  .field { margin-bottom:18px; position:relative; z-index:3; }
+  .field label { font-variant:small-caps; letter-spacing:.14em; font-size:12.5px; color:var(--muted); display:block; margin-bottom:4px; }
+  .field input { width:100%; border:0; border-bottom:2px solid var(--ink); background:transparent; font-family:'Newsreader',serif; font-size:17px; padding:6px 2px; outline:none; }
+  .field input:focus { border-color:var(--yellow); }
+  .signbtn { display:block; width:100%; margin-top:26px; background:var(--ink); color:var(--cream); border:0; font-family:'IBM Plex Mono',monospace; font-size:13px; letter-spacing:.14em; padding:15px; cursor:pointer; position:relative; z-index:3; }
+  .signbtn:hover { background:#000; box-shadow:0 3px 0 var(--yellow); }
+
+  .controls { display:flex; align-items:center; justify-content:space-between; width:min(1080px,96vw); margin-top:22px; font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--muted); }
+  .controls button { background:none; border:1px solid var(--ink); color:var(--ink); border-radius:999px; padding:9px 22px; font-family:inherit; font-size:13px; cursor:pointer; }
+  .controls button:hover:not(:disabled) { background:var(--yellow); border-color:var(--yellow); }
+  .controls button:disabled { opacity:.3; cursor:default; }
+  .corner { position:absolute; bottom:0; width:90px; height:90px; cursor:pointer; z-index:4; }
+  .corner.next { right:0; } .corner.prev { left:0; }
+  .corner:hover::after { content:""; position:absolute; inset:auto 0 0 auto; width:0; height:0; }
+  .corner.next:hover { background:linear-gradient(315deg, var(--cream) 50%, transparent 50%); }
+  .corner.prev:hover { background:linear-gradient(45deg, var(--cream) 50%, transparent 50%); }
+
+  @media (max-width:768px){
+    .book { min-height:auto; }
+    .spread.active { flex-direction:column; }
+    .page { width:100%; }
+    .page.left { border-right:0; border-bottom:1px solid #eee8da; }
+    .book::before, .book::after { display:none; }
+    .cover { min-height:480px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="book-wrap">
+  <div class="book" id="book">
+
+    <!-- SPREAD 1 — cover -->
+    <section class="spread active">
+      <div class="cover">
+        <div class="mark" aria-hidden="true"></div>
+        <h1>underscore</h1>
+        <div class="sub">A SMALL BOOK ABOUT GIVING FIRST</div>
+      </div>
+    </section>
+
+    <!-- SPREAD 2 — title + colophon -->
+    <section class="spread">
+      <div class="page left">
+        <div class="running-head"><span>underscore</span><span>the codex</span></div>
+        <div class="title-page">
+          <h1>Underscore</h1>
+          <div class="rule"></div>
+          <p class="epigraph">"Nothing at the center but a line. Everything around it, people."</p>
+        </div>
+        <div class="folio">i</div>
+      </div>
+      <div class="page right">
+        <div class="running-head"><span>colophon</span><span></span></div>
+        <div class="colophon">
+          first edition — 2021<br>
+          this edition — june 2026<br><br>
+          set in newsreader &amp; plex mono<br>
+          composed by the core<br>
+          1,200 contributing authors<br>
+          40 cities of publication<br><br>
+          no rights reserved.<br>
+          take what helps. pass it on.
+        </div>
+        <div class="folio">ii</div>
+      </div>
+    </section>
+
+    <!-- SPREAD 3 — manifesto -->
+    <section class="spread">
+      <div class="page left">
+        <div class="running-head"><span>underscore</span><span>chapter one</span></div>
+        <h2 style="font-size:26px; margin-bottom:24px;">What this is</h2>
+        <p class="drop">Most communities are built like stages — a few people perform, the rest watch. Underscore is built like a line: flat, long, and load-bearing. Nobody stands above anyone. Everybody holds something up.</p>
+        <p>We are 1,200 builders, operators, and researchers in 40 cities who made a plain agreement: give first, ask later. It is not a slogan. It is a working method, and it has held for five years.</p>
+        <div class="folio">1</div>
+      </div>
+      <div class="page right">
+        <div class="running-head"><span>chapter one</span><span>what this is</span></div>
+        <p>The economics are simple. An hour of your experience costs you almost nothing — you already paid for it the hard way. To the person stuck where you once were, that hour is worth a month.</p>
+        <p>So we trade hours the way other people trade favors, except no one keeps score. Last year the Core gave nine thousand of them. The number we watch more closely: asks that went unanswered. It was zero.</p>
+        <p>This book is short because the idea is short. The rest of it is people.</p>
+        <div class="folio">2</div>
+      </div>
+    </section>
+
+    <!-- SPREAD 4 — register + plate -->
+    <section class="spread">
+      <div class="page left">
+        <div class="running-head"><span>underscore</span><span>the register</span></div>
+        <h2 style="font-size:26px; margin-bottom:20px;">The Core — a partial register</h2>
+        <ul class="register">
+          <li><span class="who">Maya Chen, founder</span><span class="where">OAKLAND · 2021</span></li>
+          <li><span class="who">Sam Osei, engineer</span><span class="where">BOSTON · 2021</span></li>
+          <li><span class="who">Ana Reyes, designer</span><span class="where">MEXICO CITY · 2022</span></li>
+          <li><span class="who">David Park, operator</span><span class="where">SEOUL · 2022</span></li>
+          <li><span class="who">Leila Haddad, researcher</span><span class="where">BEIRUT · 2023</span></li>
+          <li><span class="who">Jonas Weber, builder</span><span class="where">BERLIN · 2022</span></li>
+          <li><span class="who">Priya Nair, product</span><span class="where">BANGALORE · 2024</span></li>
+          <li><span class="who">Tom Aiello, manufacturer</span><span class="where">DETROIT · 2023</span></li>
+          <li><span class="who">… and 1,192 others</span><span class="where">EVERYWHERE</span></li>
+        </ul>
+        <div class="folio">3</div>
+      </div>
+      <div class="page right">
+        <div class="running-head"><span>the register</span><span>plate i</span></div>
+        <div class="plate">
+          <div class="frame">
+            <div class="big">1,200<span style="color:var(--yellow)">+</span></div>
+            <div class="lbl">members</div>
+            <div class="big">40</div>
+            <div class="lbl">cities</div>
+            <div class="big">9,000</div>
+            <div class="lbl" style="margin-bottom:0">hours given</div>
+          </div>
+        </div>
+        <div class="folio">4</div>
+      </div>
+    </section>
+
+    <!-- SPREAD 5 — a giving story -->
+    <section class="spread">
+      <div class="page left">
+        <div class="running-head"><span>underscore</span><span>chapter two</span></div>
+        <h2 style="font-size:26px; margin-bottom:24px;">The Detroit tooling rescue</h2>
+        <p class="drop">In the spring of 2024, Ana Reyes had a product and no way to make it. Her injection-molding quotes were triple her budget, and the one affordable shop had gone quiet.</p>
+        <p>She posted nine words to the Core: "Does anyone actually understand tooling? I'm out of depth."</p>
+        <div class="folio">5</div>
+      </div>
+      <div class="page right">
+        <div class="running-head"><span>chapter two</span><span>the rescue</span></div>
+        <svg class="engraving" width="200" height="80" viewBox="0 0 200 80" aria-hidden="true">
+          <line x1="10" y1="60" x2="190" y2="60" stroke="#1A1816" stroke-width="3"/>
+          <circle cx="40" cy="60" r="5" fill="#F5C518"/><circle cx="100" cy="60" r="5" fill="#F5C518"/><circle cx="160" cy="60" r="5" fill="#F5C518"/>
+          <path d="M40 60 Q70 20 100 60" fill="none" stroke="#F5C518" stroke-width="1.5"/>
+          <path d="M100 60 Q130 20 160 60" fill="none" stroke="#F5C518" stroke-width="1.5"/>
+          <text x="34" y="76" font-family="IBM Plex Mono" font-size="8">MEX</text>
+          <text x="94" y="76" font-family="IBM Plex Mono" font-size="8">DET</text>
+          <text x="152" y="76" font-family="IBM Plex Mono" font-size="8">BER</text>
+        </svg>
+        <p>Tom Aiello answered in forty minutes with a redesign that cut the tool count from four to two. Jonas Weber knew a shop in Stuttgart that owed him nothing but said yes anyway. Total elapsed time from ask to purchase order: eleven days.</p>
+        <p>Nobody invoiced anybody. That is the entire trick.</p>
+        <div class="folio">6</div>
+      </div>
+    </section>
+
+    <!-- SPREAD 6 — quotes as marginalia -->
+    <section class="spread">
+      <div class="page left">
+        <div class="running-head"><span>underscore</span><span>voices</span></div>
+        <h2 style="font-size:26px; margin-bottom:24px;">In their words</h2>
+        <p>We asked members what the Core is. The answers in the margins of this page arrived within the hour, which tells you more than the answers do.</p>
+        <div class="marginalia">"It's the first room I've been in where being stuck isn't embarrassing." — Priya Nair, Bangalore</div>
+        <div class="marginalia">"I came for one intro. I've stayed three years." — David Park, Seoul</div>
+        <div class="folio">7</div>
+      </div>
+      <div class="page right">
+        <div class="running-head"><span>voices</span><span></span></div>
+        <div class="marginalia">"Underscore is what the internet promised and then forgot to build." — Leila Haddad, Beirut</div>
+        <div class="marginalia">"Give first works because almost nobody tries it." — Maya Chen, Oakland</div>
+        <p style="margin-top:26px;">Every quote in this book is from a real conversation. None of them was asked twice.</p>
+        <div class="folio">8</div>
+      </div>
+    </section>
+
+    <!-- SPREAD 7 — bookplate / join -->
+    <section class="spread">
+      <div class="page left">
+        <div class="running-head"><span>underscore</span><span>the last page</span></div>
+        <h2 style="font-size:26px; margin-bottom:24px;">Add your name to the register</h2>
+        <p class="drop">Books end. Registers don't. Membership costs nothing but the occasional hour, given to a stranger who won't stay one.</p>
+        <p>A human reads every application and replies within a week. Bring a problem if you have one. Bring patience if you don't.</p>
+        <div class="folio">9</div>
+      </div>
+      <div class="page right">
+        <div class="running-head"><span>the last page</span><span></span></div>
+        <div class="bookplate">
+          <h2>Ex Libris</h2>
+          <div class="ex">— the Core —</div>
+          <form onsubmit="event.preventDefault(); this.innerHTML='<p style=\'text-align:center; font-style:italic; padding:30px 0;\'>Received. A human replies within a week.</p>';">
+            <div class="field"><label>name</label><input type="text" required></div>
+            <div class="field"><label>city</label><input type="text" required></div>
+            <div class="field"><label>an hour you could give</label><input type="text" placeholder="e.g., reading hardware pitch decks"></div>
+            <button class="signbtn" type="submit">SIGN THE REGISTER_</button>
+          </form>
+        </div>
+        <div class="folio">10</div>
+      </div>
+    </section>
+
+    <div class="corner prev" id="cornerPrev" title="previous spread"></div>
+    <div class="corner next" id="cornerNext" title="next spread"></div>
+  </div>
+
+  <div class="controls">
+    <button id="prevBtn">← previous</button>
+    <span id="counter">cover — 1 of 7</span>
+    <button id="nextBtn">next →</button>
+  </div>
+</div>
+
+<script>
+  const spreads = Array.from(document.querySelectorAll('.spread'));
+  const labels = ['cover','title & colophon','chapter one','the register','chapter two','voices','the last page'];
+  let i = 0;
+  const prevBtn = document.getElementById('prevBtn'), nextBtn = document.getElementById('nextBtn'), counter = document.getElementById('counter');
+  function show(n){
+    i = Math.max(0, Math.min(spreads.length-1, n));
+    spreads.forEach((s,k)=>s.classList.toggle('active', k===i));
+    counter.textContent = labels[i] + ' — ' + (i+1) + ' of ' + spreads.length;
+    prevBtn.disabled = i===0; nextBtn.disabled = i===spreads.length-1;
+  }
+  prevBtn.onclick = ()=>show(i-1);
+  nextBtn.onclick = ()=>show(i+1);
+  document.getElementById('cornerNext').onclick = ()=>show(i+1);
+  document.getElementById('cornerPrev').onclick = ()=>show(i-1);
+  document.addEventListener('keydown', e=>{
+    if(e.key==='ArrowRight') show(i+1);
+    if(e.key==='ArrowLeft') show(i-1);
+  });
+  show(0);
+</script>
+</body>
+</html>

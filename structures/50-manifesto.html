@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — a manifesto</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='23' width='24' height='6' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --yellow:#F5C518;
+    --ink:#1A1816;
+    --cream:#FAF6EE;
+    --soft:rgba(26,24,22,.6);
+    --faint:rgba(26,24,22,.35);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  ::selection{background:var(--yellow);color:var(--ink)}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto} }
+  body{
+    background:var(--cream);color:var(--ink);
+    font-family:'Newsreader',Georgia,serif;
+    font-size:clamp(22px,2.4vw,28px);
+    line-height:1.52;
+    hanging-punctuation:first;
+    text-rendering:optimizeLegibility;
+    font-feature-settings:"liga","kern";
+  }
+
+  /* reading-progress underscore */
+  #progress{
+    position:fixed;top:0;left:0;height:7px;width:0;
+    background:var(--yellow);z-index:50;
+  }
+
+  article{
+    position:relative;
+    max-width:660px;
+    margin:0 auto;
+    padding:clamp(80px,14vh,150px) 24px 60px;
+  }
+  p{margin:0 0 1.35em}
+  em{font-style:italic}
+  .opener{
+    font-size:.62em;letter-spacing:.18em;text-transform:uppercase;
+    font-family:'Spline Sans Mono',monospace;color:var(--faint);
+    margin-bottom:3.2em;
+  }
+  .opener b{color:var(--ink);font-weight:500}
+  .opener .u{color:var(--yellow)}
+
+  /* key sentences */
+  .key{
+    text-decoration:underline;
+    text-decoration-color:var(--yellow);
+    text-decoration-thickness:.28em;
+    text-underline-offset:.14em;
+    text-decoration-skip-ink:none;
+  }
+
+  /* oversized inline numerals */
+  .bignum{
+    display:inline-block;
+    font-weight:500;
+    font-size:clamp(58px,9vw,112px);
+    line-height:.8;
+    letter-spacing:-.03em;
+    vertical-align:-.1em;
+    padding:0 .04em;
+    font-variant-numeric:lining-nums;
+  }
+  .bignum::after{content:"";display:block;height:.09em;background:var(--yellow);margin-top:.08em}
+
+  /* member names */
+  .member{
+    font:inherit;background:none;border:none;padding:0;cursor:pointer;
+    color:var(--ink);font-weight:500;
+    border-bottom:2px solid var(--ink);
+    transition:border-color .15s,background .15s;
+  }
+  .member:hover,.member[aria-expanded="true"]{border-bottom-color:var(--yellow);background:rgba(245,197,24,.18)}
+  .member:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+
+  /* margin notes (desktop) */
+  .margin-note{
+    position:absolute;
+    left:calc(100% + 34px);
+    width:220px;
+    font-size:15px;line-height:1.45;
+    font-family:'Spline Sans Mono',monospace;
+    color:var(--soft);
+    border-left:3px solid var(--yellow);
+    padding-left:14px;
+    opacity:0;transform:translateX(-6px);
+    transition:opacity .25s,transform .25s;
+    pointer-events:none;
+  }
+  .margin-note.open{opacity:1;transform:none}
+  .margin-note b{color:var(--ink);font-weight:500;display:block;margin-bottom:3px}
+
+  /* inline notes (mobile / narrow) */
+  .inline-note{
+    display:block;
+    font-size:15px;line-height:1.5;
+    font-family:'Spline Sans Mono',monospace;
+    color:var(--soft);
+    border-left:3px solid var(--yellow);
+    padding:8px 0 8px 14px;
+    margin:10px 0 14px;
+  }
+  .inline-note b{color:var(--ink);font-weight:500}
+
+  /* footnotes */
+  sup{font-size:.55em;line-height:0}
+  sup a{color:var(--ink);text-decoration:none;border-bottom:2px solid var(--yellow);font-weight:500;padding:0 1px}
+  sup a:hover{background:var(--yellow)}
+  sup a:focus-visible{outline:3px solid var(--yellow);outline-offset:1px}
+
+  .footnotes{
+    margin-top:4.2em;
+    padding-top:2em;
+    border-top:3px solid var(--ink);
+    font-size:16px;line-height:1.55;
+    font-family:'Spline Sans Mono',monospace;
+    color:var(--soft);
+  }
+  .footnotes ol{list-style:none;counter-reset:fn}
+  .footnotes li{counter-increment:fn;margin-bottom:1.2em;padding-left:2.1em;position:relative}
+  .footnotes li::before{
+    content:counter(fn);
+    position:absolute;left:0;top:.05em;
+    font-weight:500;color:var(--ink);
+    border-bottom:2px solid var(--yellow);
+  }
+  .footnotes li:target{background:rgba(245,197,24,.22);outline:6px solid rgba(245,197,24,.22)}
+  .footnotes a.backref{color:var(--faint);text-decoration:none}
+  .footnotes a.backref:hover{color:var(--ink)}
+
+  /* footnote 7: the join form */
+  #fn7 b{color:var(--ink)}
+  .join{
+    margin-top:14px;display:flex;flex-direction:column;gap:10px;max-width:420px;
+  }
+  .join input{
+    font-family:'Spline Sans Mono',monospace;font-size:15px;
+    background:transparent;border:none;border-bottom:2px solid var(--faint);
+    color:var(--ink);padding:8px 2px;outline:none;caret-color:var(--yellow);
+    border-radius:0;
+  }
+  .join input:focus{border-bottom-color:var(--yellow)}
+  .join input::placeholder{color:var(--faint)}
+  .join button{
+    align-self:flex-start;margin-top:6px;
+    font-family:'Spline Sans Mono',monospace;font-size:15px;font-weight:500;
+    background:var(--ink);color:var(--cream);border:none;cursor:pointer;
+    padding:11px 20px;border-radius:4px;
+  }
+  .join button:hover{background:#000}
+  .join button:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+  .join .ok{color:var(--ink);font-size:15px}
+  .join .ok::before{content:"";display:inline-block;width:26px;height:5px;background:var(--yellow);margin-right:10px;vertical-align:.2em}
+
+  .colophon{
+    margin-top:3.4em;font-family:'Spline Sans Mono',monospace;
+    font-size:13px;color:var(--faint);letter-spacing:.08em;
+  }
+
+  @media (max-width:1099px){
+    .margin-note{display:none}
+  }
+  @media (max-width:768px){
+    article{padding-top:72px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .margin-note{transition:none}
+    .member{transition:none}
+  }
+</style>
+</head>
+<body>
+
+<div id="progress" aria-hidden="true"></div>
+
+<article id="essay">
+  <p class="opener"><b>underscore<span class="u">_</span></b> · a manifesto · read time 4 min · est. 2021</p>
+
+  <p>Underscore is a community of people who give time to each other. That is the whole model. There is no membership fee, no speaker series sold by the seat, no app with a feed to refresh. There is a list of names, a ledger of hours, and a rule old enough to be unfashionable: <span class="key">give first, and don&rsquo;t keep score too carefully.</span></p>
+
+  <p>The name is the gesture. An underscore is the lowest mark on the line &mdash; the character that joins words without asking to be read. That is the job description. Most of what makes anything work never makes the announcement: the introduction made in the right week, the architecture review that prevented a year of rewriting, the phone call at two in the morning about a container stuck in a port. <span class="key">We named ourselves after the part that holds things up.</span></p>
+
+  <p>We started in 2021<sup><a href="#fn1" id="ref1" aria-label="Footnote 1">1</a></sup> with eleven people in a borrowed room in Oakland, comparing notes on problems none of us could solve alone. Nobody pitched anybody. Somebody fixed somebody else&rsquo;s supply contract on a napkin, and we understood we had found a shape worth keeping. Today the Core is <span class="bignum">1,200</span><span style="font-weight:500">+</span> members<sup><a href="#fn2" id="ref2" aria-label="Footnote 2">2</a></sup> across <span class="bignum">40</span> cities,<sup><a href="#fn3" id="ref3" aria-label="Footnote 3">3</a></sup> and the napkin has become a practice.</p>
+
+  <p>Who are these people? Builders, mostly &mdash; the word stretched honestly. <button class="member" data-note="Founder · Oakland. Has held weekly office hours since 2022 — forty-one hours last year to first-time founders she had never met." aria-expanded="false">Maya Chen</button> founded a company and now spends her Friday mornings on other people&rsquo;s. <button class="member" data-note="Engineer · Boston. Reviewed sixty-plus system designs; talked three teams out of rewrites they would have regretted." aria-expanded="false">Sam Osei</button> reads strangers&rsquo; system designs the way other people read novels. <button class="member" data-note="Designer · Mexico City. Once redrew a member&rsquo;s entire pitch deck over a weekend, unasked, because the idea deserved better." aria-expanded="false">Ana Reyes</button> redraws decks for ideas she believes in. <button class="member" data-note="Operator · Seoul. Takes the late calls — logistics, customs, vendors — for members across three time zones." aria-expanded="false">David Park</button> answers the logistics questions no search engine can. <button class="member" data-note="Researcher · Beirut. Turned a member&rsquo;s hunch into a proper literature review in nine days, with citations." aria-expanded="false">Leila Haddad</button> turns hunches into evidence. <button class="member" data-note="Manufacturer · Detroit. Walked four founders through their first production runs — tooling, tolerances, the works." aria-expanded="false">Tom Aiello</button> has walked four founders through their first production run, tolerances and all. <button class="member" data-note="Product · Bangalore. Kills bad roadmaps gently. Seventy introductions made and counting." aria-expanded="false">Priya Nair</button> and <button class="member" data-note="Builder · Berlin. Hosts the berlin_ table; has lent his workshop, his tools, and his Saturday more than thirty times." aria-expanded="false">Jonas Weber</button> host the tables in Bangalore and Berlin. None of them is paid to do this. All of them will tell you they get back more than they give, and the strange thing is the arithmetic supports them.</p>
+
+  <p>Here is the arithmetic. Since the beginning, members have given <span class="bignum">9,000</span> hours<sup><a href="#fn4" id="ref4" aria-label="Footnote 4">4</a></sup> to each other &mdash; office hours, introductions, code reviews, hard calls taken at bad times. Not billed. Given. And here is the number we are proudest of, the one that explains everything else: <span class="key">asks that went unanswered last year &mdash; zero.</span><sup><a href="#fn5" id="ref5" aria-label="Footnote 5">5</a></sup> Every member who raised a hand was answered by another member. We did not engineer that with incentives. It is simply what happens when you only admit people who lead with their hands open.</p>
+
+  <p>Why does giving first work? Because expertise is abundant and trust is scarce, and the only reliable way to make trust is to spend time without an invoice attached. A favor done without a price creates a kind of debt no one resents. Multiply it by 1,200 people and you get something the org charts can&rsquo;t see: a quiet infrastructure of obligation pointed in everyone&rsquo;s favor at once. <span class="key">Generosity, practiced in public, compounds faster than capital.</span> We have four years of ledger to show for it.</p>
+
+  <p>We should say plainly what this is not. It is not networking; nobody here is collecting you. It is not a masterclass; nobody here is above you. It is not exclusive in the way that word usually means &mdash; the bar is not your title or your round size. The bar is whether you will pick up the phone for a stranger who shares your problems.<sup><a href="#fn6" id="ref6" aria-label="Footnote 6">6</a></sup> Plenty of impressive people fail that bar. Plenty of quiet ones clear it on the first try.</p>
+
+  <p>So: if you build things, if you have an hour a month you would honestly give, and if you can name something you need &mdash; we want to read your application. It is short. A human reads every one, and a human replies within a week.<sup><a href="#fn7" id="ref7" aria-label="Footnote 7, where the join form lives">7</a></sup> The form is at the bottom of this page, in the footnotes, where the supporting material belongs. That is the joke, and it is also the philosophy. <span class="key">The important things live under the line.</span></p>
+
+  <footer class="footnotes" aria-label="Footnotes">
+    <ol>
+      <li id="fn1">Founded autumn 2021. The borrowed room belonged to a bookbindery on 23rd Avenue, Oakland. It no longer exists; the habit does. <a class="backref" href="#ref1" aria-label="Back to text">&#8617;</a></li>
+      <li id="fn2">1,247 at last count. We count people, not sign-ups: a member who goes quiet for a year is called, not churned. <a class="backref" href="#ref2" aria-label="Back to text">&#8617;</a></li>
+      <li id="fn3">Among them: Oakland, Boston, Mexico City, Seoul, Beirut, Berlin, Bangalore, Detroit, Lagos, Lisbon, S&atilde;o Paulo, Tokyo. Chapters are dinner tables, not conferences. <a class="backref" href="#ref3" aria-label="Back to text">&#8617;</a></li>
+      <li id="fn4">9,000 hours logged voluntarily in the giving ledger since 2021. The real number is higher; generous people under-report. <a class="backref" href="#ref4" aria-label="Back to text">&#8617;</a></li>
+      <li id="fn5">An &ldquo;ask&rdquo; is a specific request posted to the Core. 312 asks in the last twelve months; 312 answered. Median time to first answer: 19 hours. <a class="backref" href="#ref5" aria-label="Back to text">&#8617;</a></li>
+      <li id="fn6">We ask every applicant the same two questions: what could you give an hour to, and what do you need right now. The second question filters as hard as the first. <a class="backref" href="#ref6" aria-label="Back to text">&#8617;</a></li>
+      <li id="fn7"><b>The part where you come in.</b> Tell us three things and we&rsquo;ll take it from there.
+        <form class="join" id="joinForm">
+          <input type="text" name="name" placeholder="your name" required aria-label="Your name" autocomplete="name">
+          <input type="text" name="city" placeholder="your city" required aria-label="Your city" autocomplete="address-level2">
+          <input type="text" name="give" placeholder="what you&rsquo;d give an hour to" required aria-label="What you would give an hour to">
+          <button type="submit">Join the Core_</button>
+        </form>
+        <a class="backref" href="#ref7" aria-label="Back to text">&#8617;</a>
+      </li>
+    </ol>
+    <p class="colophon">underscore_ · 1,200+ members · 40 cities · 9,000 hours given · est. 2021</p>
+  </footer>
+</article>
+
+<script>
+(function(){
+  /* reading-progress underscore */
+  var bar = document.getElementById('progress');
+  function paint(){
+    var doc = document.documentElement;
+    var max = doc.scrollHeight - window.innerHeight;
+    var f = max > 0 ? Math.min(1, window.scrollY / max) : 1;
+    bar.style.width = (f * 100) + '%';
+  }
+  window.addEventListener('scroll', paint, {passive:true});
+  window.addEventListener('resize', paint);
+  paint();
+
+  /* member notes: margin popover (wide) / inline expansion (narrow) */
+  var essay = document.getElementById('essay');
+  var wide = window.matchMedia('(min-width:1100px)');
+  var marginNote = document.createElement('aside');
+  marginNote.className = 'margin-note';
+  marginNote.setAttribute('role','note');
+  essay.appendChild(marginNote);
+  var openBtn = null;
+
+  function noteHTML(btn){
+    return '<b>' + btn.textContent + '</b>' + btn.getAttribute('data-note');
+  }
+  function showMargin(btn){
+    marginNote.innerHTML = noteHTML(btn);
+    var essayTop = essay.getBoundingClientRect().top + window.scrollY;
+    var btnTop = btn.getBoundingClientRect().top + window.scrollY;
+    marginNote.style.top = (btnTop - essayTop - 4) + 'px';
+    marginNote.classList.add('open');
+  }
+  function hideMargin(){ marginNote.classList.remove('open'); }
+
+  function closeInline(btn){
+    var n = btn._inline;
+    if (n && n.parentNode) n.parentNode.removeChild(n);
+    btn._inline = null;
+    btn.setAttribute('aria-expanded','false');
+  }
+  function openInline(btn){
+    var n = document.createElement('span');
+    n.className = 'inline-note';
+    n.setAttribute('role','note');
+    n.innerHTML = noteHTML(btn);
+    btn.insertAdjacentElement('afterend', n);
+    btn._inline = n;
+    btn.setAttribute('aria-expanded','true');
+  }
+
+  document.querySelectorAll('.member').forEach(function(btn){
+    btn.addEventListener('mouseenter', function(){ if (wide.matches){ showMargin(btn); btn.setAttribute('aria-expanded','true'); } });
+    btn.addEventListener('mouseleave', function(){ if (wide.matches && openBtn !== btn){ hideMargin(); btn.setAttribute('aria-expanded','false'); } });
+    btn.addEventListener('focus', function(){ if (wide.matches){ showMargin(btn); btn.setAttribute('aria-expanded','true'); } });
+    btn.addEventListener('blur', function(){ if (wide.matches && openBtn !== btn){ hideMargin(); btn.setAttribute('aria-expanded','false'); } });
+    btn.addEventListener('click', function(){
+      if (wide.matches){
+        if (openBtn === btn){ openBtn = null; hideMargin(); btn.setAttribute('aria-expanded','false'); }
+        else { openBtn = btn; showMargin(btn); btn.setAttribute('aria-expanded','true'); }
+      } else {
+        if (btn._inline) closeInline(btn);
+        else {
+          document.querySelectorAll('.member').forEach(closeInline);
+          openInline(btn);
+        }
+      }
+    });
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape'){
+      openBtn = null; hideMargin();
+      document.querySelectorAll('.member').forEach(closeInline);
+    }
+  });
+
+  /* join form */
+  document.getElementById('joinForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var name = this.querySelector('[name=name]').value.trim() || 'friend';
+    var p = document.createElement('p');
+    p.className = 'ok';
+    p.setAttribute('role','status');
+    p.textContent = 'Received, ' + name + '. A human reads every one, and a human replies within a week. — the Core';
+    this.replaceWith(p);
+  });
+})();
+</script>
+</body>
+</html>

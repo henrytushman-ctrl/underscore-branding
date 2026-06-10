@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>underscore_ — set 03: 30 structural concepts</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='24' width='24' height='5' rx='2' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root { --yellow:#F5C518; --ink:#1A1816; --cream:#FAF6EE; --muted:#8a8378; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  ::selection { background:var(--yellow); color:var(--ink); }
+  body { font-family:'Archivo',sans-serif; background:var(--cream); color:var(--ink); -webkit-font-smoothing:antialiased; }
+  header { padding:72px 48px 40px; max-width:1440px; margin:0 auto; }
+  .wordmark { font-size:clamp(40px,6vw,84px); font-weight:900; letter-spacing:-0.03em; line-height:1; }
+  .wordmark span { color:var(--yellow); }
+  .sub { margin-top:16px; font-family:'Space Mono',monospace; font-size:14px; color:var(--muted); max-width:70ch; line-height:1.7; }
+  .back { display:inline-block; margin-top:18px; font-family:'Space Mono',monospace; font-size:13px; color:var(--ink); text-decoration:none; border:1px solid var(--ink); border-radius:999px; padding:6px 16px; }
+  .back:hover { background:var(--yellow); border-color:var(--yellow); }
+  .grid { max-width:1440px; margin:0 auto; padding:24px 48px 96px; display:grid; grid-template-columns:repeat(auto-fill,minmax(380px,1fr)); gap:32px; }
+  .card { display:block; text-decoration:none; color:inherit; background:#fff; border:1px solid #e6dfd2; border-radius:14px; overflow:hidden; transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+  .card:hover { transform:translateY(-4px); box-shadow:0 18px 44px rgba(26,24,22,.12); border-color:var(--yellow); }
+  .preview { position:relative; height:280px; overflow:hidden; background:#f1ece1; border-bottom:1px solid #e6dfd2; }
+  .preview iframe { width:1280px; height:1000px; border:0; transform:scale(0.32); transform-origin:top left; pointer-events:none; }
+  .preview::after { content:""; position:absolute; inset:0; }
+  .meta { padding:20px 22px 22px; }
+  .num { font-family:'Space Mono',monospace; font-size:12px; color:var(--muted); }
+  .structure { display:inline-block; margin-left:8px; font-family:'Space Mono',monospace; font-size:11px; background:var(--yellow); border-radius:999px; padding:3px 10px; }
+  .name { margin-top:4px; font-size:21px; font-weight:700; letter-spacing:-0.01em; }
+  .desc { margin-top:8px; font-size:14px; line-height:1.55; color:#4d4840; }
+  @media (max-width:768px){ header,.grid{padding-left:20px;padding-right:20px;} }
+</style>
+</head>
+<body>
+<header>
+  <div class="wordmark">underscore<span>_</span></div>
+  <p class="sub">Set 03 — 30 structural concepts. Same brand, same Core community — but every page is a different KIND of page: a terminal, a chat thread, an inbox, a book, a receipt, a phone. Most are interactive — click through and use them.</p>
+  <a class="back" href="../index.html">← sets 01–02</a>
+</header>
+
+<div class="grid" id="grid"></div>
+
+<script>
+const concepts = [
+  { f:"31-terminal.html",    n:"The Terminal",     s:"CLI",            d:"The whole site is an interactive shell. Type help, core, join — the cursor is the logo." },
+  { f:"32-thread.html",      n:"The Thread",       s:"group chat",     d:"The brand story told as a group-chat conversation among Core members, with a join composer." },
+  { f:"33-switchboard.html", n:"The Switchboard",  s:"no scroll",      d:"One 100vh screen of nine panels that expand on hover — attention routed, never scrolled." },
+  { f:"34-sideways.html",    n:"Sideways",         s:"horizontal",     d:"The page scrolls sideways along one continuous yellow line that ends at the join form." },
+  { f:"35-deck.html",        n:"The Deck",         s:"slides",         d:"A 10-slide fullscreen keynote; progress shown as a row of underscores filling in." },
+  { f:"36-inbox.html",       n:"The Inbox",        s:"email client",   d:"Two-pane mail app — the manifesto is a welcome email, the CTA is a starred invitation." },
+  { f:"37-finder.html",      n:"The Finder",       s:"file browser",   d:"Miller columns: browse core_/ like a directory, members as dossier files, join as a form-file." },
+  { f:"38-palette.html",     n:"The Palette",      s:"command bar",    d:"A nearly blank page navigated only by ⌘K palette — you ask, it answers. That's the brand." },
+  { f:"39-codex.html",       n:"The Codex",        s:"book",           d:"A bound book in two-page spreads — manifesto, member register, and a bookplate join form." },
+  { f:"40-canvas.html",      n:"The Canvas",       s:"infinite canvas",d:"A draggable pinboard world with a minimap; follow yellow threads between scattered cards." },
+  { f:"41-stage.html",       n:"The Stage",        s:"scrollytelling", d:"A pinned stage transforms scene by scene — one line becomes a crowd, a network, a map, a signature." },
+  { f:"42-split.html",       n:"Both Sides of the Line", s:"split sync", d:"Above the line: building alone. Below: the Core's answer. The halves converge where you join." },
+  { f:"43-exchange.html",    n:"The Exchange",     s:"trading floor",  d:"A live board where help is the asset — ticker tape of gives, asks matched in hours, unanswered: 0." },
+  { f:"44-board.html",       n:"The Board",        s:"kanban",         d:"The community as a public kanban: Asked / Someone's on it / Given. Cards actually drag." },
+  { f:"45-observatory.html", n:"The Observatory",  s:"map UI",         d:"Full-bleed dark city-node map with dossier panels and one dim unlabeled node: yours, maybe." },
+  { f:"46-handbook.html",    n:"The Handbook",     s:"docs site",      d:"Sidebar, scrollspy TOC, hash routing — the community written up like excellent documentation." },
+  { f:"47-almanac.html",     n:"The Almanac",      s:"calendar",       d:"A real month grid of gatherings and office hours; past months are the community's memory." },
+  { f:"48-frequency.html",   n:"The Player",       s:"audio player",   d:"A radio for the Core — pressing play runs synced transcripts that carry the whole story." },
+  { f:"49-application.html", n:"The Application",  s:"one-question form", d:"The site IS the application — each question teaches you the brand before you answer it." },
+  { f:"50-manifesto.html",   n:"The Wall",         s:"pure essay",     d:"One unbroken 800-word manifesto. Member names open margin notes; the join form is footnote 7." },
+  { f:"51-strata.html",      n:"The Strata",       s:"stacking layers",d:"Full-screen layers stack like sediment on bedrock — every layer was someone's first day." },
+  { f:"52-table.html",       n:"The Table",        s:"one big table",  d:"The entire site as one filterable, sortable table of rows — ideas, members, numbers, and you." },
+  { f:"53-dispatch.html",    n:"The Feed",         s:"social feed",    d:"A calm timeline where the metric is hours given, not likes. The composer is members-only." },
+  { f:"54-receipt.html",     n:"The Receipt",      s:"receipt",        d:"The year itemized on one thermal receipt — tax: none, total: one community, tear-off application stub." },
+  { f:"55-blueprint.html",   n:"The Blueprint",    s:"schematic",      d:"An exploded engineering drawing of a community — part 012 ships empty, dashed in yellow." },
+  { f:"56-marquee.html",     n:"The Concourse",    s:"marquee bands",  d:"Ten moving departure-board bands; the only still one holds the join form. Stillness is the CTA." },
+  { f:"57-depths.html",      n:"The Depths",       s:"descent",        d:"A dive from surface to 1,200m bedrock — one meter per member — with a fixed depth ruler." },
+  { f:"58-crossing.html",    n:"The Crossing",     s:"branching paths",d:"A choose-your-path fork sequence; every road converges into the same single yellow line." },
+  { f:"59-lockscreen.html",  n:"The Lock Screen",  s:"phone",          d:"A phone that only rings with help — notifications from the Core arrive on a lock screen." },
+  { f:"60-plaintext.html",   n:"Plain Text",       s:".txt",           d:"The site as a beautifully formatted text file. No cookies, no tracking, no gloss — just the line." },
+];
+const grid = document.getElementById('grid');
+concepts.forEach((c, i) => {
+  const num = String(31 + i).padStart(2, '0');
+  const a = document.createElement('a');
+  a.className = 'card';
+  a.href = c.f;
+  a.innerHTML = `
+    <div class="preview"><iframe src="${c.f}" loading="lazy" scrolling="no" tabindex="-1"></iframe></div>
+    <div class="meta">
+      <div class="num">${num} / 60</div>
+      <div class="name">${c.n}<span class="structure">${c.s}</span></div>
+      <div class="desc">${c.d}</div>
+    </div>`;
+  grid.appendChild(a);
+});
+</script>
+</body>
+</html>

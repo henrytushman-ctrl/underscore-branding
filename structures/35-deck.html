@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — The Deck</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231A1816'/%3E%3Crect x='6' y='22' width='20' height='4' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --yellow:#F5C518;
+    --ink:#1A1816;
+    --cream:#FAF6EE;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  ::selection{background:var(--yellow);color:var(--ink)}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Archivo',sans-serif;
+    background:var(--ink);
+    color:var(--cream);
+  }
+  .mono{font-family:'IBM Plex Mono',monospace}
+
+  /* ---------- deck stage ---------- */
+  #deck{position:fixed;inset:0}
+
+  .slide{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;justify-content:center;
+    padding:clamp(28px,7vw,110px);
+    padding-bottom:clamp(96px,14vh,150px);
+    opacity:0;
+    transform:translateX(60px);
+    pointer-events:none;
+    transition:opacity .38s ease, transform .38s ease;
+  }
+  .slide.active{opacity:1;transform:translateX(0);pointer-events:auto}
+  .slide.before{transform:translateX(-60px)}
+  @media (prefers-reduced-motion: reduce){
+    .slide{transition:none;transform:none}
+    .slide.before{transform:none}
+  }
+
+  /* themes */
+  .t-cream{background:var(--cream);color:var(--ink)}
+  .t-ink{background:var(--ink);color:var(--cream)}
+  .t-yellow{background:var(--yellow);color:var(--ink)}
+
+  /* slide furniture: kicker line top-left */
+  .kicker{
+    position:absolute;top:clamp(24px,5vh,48px);left:clamp(28px,7vw,110px);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:clamp(10px,1.1vw,12px);
+    letter-spacing:.16em;text-transform:uppercase;
+    opacity:.6;
+  }
+  .kicker b{font-weight:500;opacity:1}
+  .kicker::before{content:"_ ";color:var(--yellow)}
+  .t-yellow .kicker::before{color:var(--ink)}
+
+  /* type scale */
+  .huge{
+    font-weight:900;
+    font-size:clamp(44px,9.5vw,150px);
+    line-height:.95;letter-spacing:-.035em;
+  }
+  .big{
+    font-weight:700;
+    font-size:clamp(30px,5.4vw,84px);
+    line-height:1.02;letter-spacing:-.025em;
+  }
+  .body{
+    font-size:clamp(16px,1.6vw,22px);
+    line-height:1.6;font-weight:400;
+    max-width:54ch;
+  }
+  .yellow{color:var(--yellow)}
+  .t-yellow .yellow{color:var(--cream)}
+
+  /* ---------- chrome ---------- */
+  #chrome{
+    position:fixed;left:0;right:0;bottom:0;
+    display:flex;align-items:center;justify-content:space-between;
+    gap:18px;
+    padding:18px clamp(20px,4vw,44px);
+    z-index:20;
+  }
+  #counter{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;letter-spacing:.14em;
+    min-width:74px;
+  }
+  #marks{display:flex;gap:7px;flex:1;justify-content:center}
+  #marks button{
+    appearance:none;border:none;cursor:pointer;
+    width:clamp(16px,2.6vw,30px);height:14px;
+    background:transparent;position:relative;
+    padding:0;
+  }
+  #marks button::after{
+    content:"";position:absolute;left:0;right:0;bottom:3px;height:4px;
+    background:currentColor;opacity:.22;
+  }
+  #marks button.filled::after{background:var(--yellow);opacity:1}
+  #marks button:focus-visible{outline:2px solid var(--yellow);outline-offset:2px}
+  .navbtns{display:flex;gap:8px}
+  .navbtns button{
+    appearance:none;cursor:pointer;
+    font-family:'IBM Plex Mono',monospace;font-size:14px;
+    width:42px;height:42px;
+    border:1.5px solid currentColor;border-radius:0;
+    background:transparent;color:inherit;
+  }
+  .navbtns button:hover,.navbtns button:focus-visible{background:var(--yellow);color:var(--ink);border-color:var(--yellow);outline:none}
+  .navbtns button:disabled{opacity:.25;cursor:default;background:transparent;color:inherit;border-color:currentColor}
+
+  /* chrome inherits slide theme color */
+  body[data-theme="cream"] #chrome{color:var(--ink)}
+  body[data-theme="ink"] #chrome{color:var(--cream)}
+  body[data-theme="yellow"] #chrome{color:var(--ink)}
+  body[data-theme="yellow"] #marks button.filled::after{background:var(--ink)}
+
+  /* ---------- slide-specific ---------- */
+  /* 1 title */
+  #s1 .wordmark{display:flex;align-items:baseline;gap:.08em}
+  #s1 .wordmark .us{color:var(--yellow)}
+  #s1 .tag{margin-top:24px;font-size:clamp(18px,2.4vw,32px);font-weight:500;letter-spacing:-.01em}
+  #s1 .hint{
+    margin-top:48px;display:inline-block;
+    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;
+    border:1.5px solid var(--cream);padding:10px 16px;opacity:.75;
+  }
+
+  /* 4 roster grid */
+  .roster{
+    display:grid;grid-template-columns:repeat(4,1fr);
+    gap:0;border-top:2px solid currentColor;
+    margin-top:28px;
+  }
+  .roster .cell{
+    border-bottom:2px solid currentColor;
+    padding:clamp(12px,2vh,22px) 4px;
+  }
+  .roster .cell:nth-child(4n+1),.roster .cell:nth-child(4n+2),.roster .cell:nth-child(4n+3){border-right:2px solid currentColor}
+  .roster .nm{font-weight:700;font-size:clamp(14px,1.7vw,24px);letter-spacing:-.01em}
+  .roster .rl{font-family:'IBM Plex Mono',monospace;font-size:clamp(9px,1vw,12px);letter-spacing:.1em;text-transform:uppercase;opacity:.6;margin-top:6px}
+
+  /* 5 stats */
+  #s5 .statline{display:flex;flex-direction:column;gap:clamp(4px,1vh,12px)}
+  #s5 .stat{display:flex;align-items:baseline;gap:clamp(12px,2vw,28px)}
+  #s5 .stat .n{font-weight:900;font-size:clamp(56px,12vw,180px);letter-spacing:-.04em;line-height:.95}
+  #s5 .stat .l{font-family:'IBM Plex Mono',monospace;font-size:clamp(11px,1.3vw,15px);letter-spacing:.14em;text-transform:uppercase}
+
+  /* 6 steps */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(18px,3vw,48px);margin-top:36px}
+  .steps .step{border-top:4px solid var(--ink);padding-top:18px}
+  .steps .num{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;margin-bottom:10px}
+  .steps h3{font-weight:700;font-size:clamp(18px,2.2vw,30px);letter-spacing:-.015em;margin-bottom:10px}
+  .steps p{font-size:clamp(14px,1.3vw,17px);line-height:1.55}
+
+  /* quotes */
+  .quote{font-weight:700;font-size:clamp(28px,4.8vw,72px);letter-spacing:-.025em;line-height:1.08;max-width:22ch}
+  .attr{margin-top:28px;font-family:'IBM Plex Mono',monospace;font-size:clamp(11px,1.2vw,14px);letter-spacing:.12em}
+  .attr::before{content:"_ ";color:var(--yellow)}
+  .t-cream .attr::before{color:var(--ink)}
+
+  /* 9 cost */
+  #s9 .zero{font-weight:900;font-size:clamp(90px,20vw,300px);letter-spacing:-.05em;line-height:.9}
+  #s9 .zero span{color:var(--yellow)}
+
+  /* 10 join */
+  .join-form{display:grid;grid-template-columns:1fr 1fr;gap:18px 24px;max-width:680px;margin-top:36px}
+  .join-form .full{grid-column:1 / -1}
+  .join-form label{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;opacity:.65;margin-bottom:6px}
+  .join-form input,.join-form textarea{
+    width:100%;
+    font-family:'Archivo',sans-serif;font-size:17px;
+    background:transparent;color:inherit;
+    border:none;border-bottom:2px solid currentColor;
+    padding:8px 2px;border-radius:0;
+  }
+  .join-form input:focus,.join-form textarea:focus{outline:none;border-bottom-color:var(--yellow)}
+  .join-form textarea{resize:none;height:52px}
+  .join-form button{
+    grid-column:1 / -1;justify-self:start;
+    font-family:'Archivo',sans-serif;font-weight:900;font-size:clamp(17px,2vw,24px);
+    letter-spacing:-.01em;
+    background:var(--yellow);color:var(--ink);
+    border:none;padding:18px 34px;cursor:pointer;
+  }
+  .join-form button:hover,.join-form button:focus-visible{background:var(--cream);outline:none}
+  #join-done{display:none;margin-top:36px;font-size:clamp(17px,1.8vw,24px);font-weight:500;max-width:36ch;line-height:1.5}
+
+  /* mobile */
+  @media (max-width:767px){
+    .roster{grid-template-columns:repeat(2,1fr)}
+    .roster .cell:nth-child(4n+2){border-right:none}
+    .roster .cell:nth-child(2n+1){border-right:2px solid currentColor}
+    .steps{grid-template-columns:1fr;gap:16px}
+    .join-form{grid-template-columns:1fr}
+    .slide{padding-bottom:120px}
+    #marks{gap:4px}
+    #s1 .hint{display:none}
+  }
+</style>
+</head>
+<body data-theme="ink">
+
+<div id="deck" aria-live="polite">
+
+  <!-- 01 · TITLE -->
+  <section class="slide t-ink active" id="s1" data-theme="ink" aria-label="Slide 1 of 10: Title">
+    <div class="kicker"><b>UNDERSCORE</b> · EST. 2021</div>
+    <h1 class="huge wordmark">underscore<span class="us">_</span></h1>
+    <p class="tag">A community that gives first.</p>
+    <span class="hint" aria-hidden="true">&rarr; TO ADVANCE · OR CLICK ANYWHERE</span>
+  </section>
+
+  <!-- 02 · PROBLEM -->
+  <section class="slide t-cream" id="s2" data-theme="cream" aria-label="Slide 2 of 10: The problem">
+    <div class="kicker">02 · THE PROBLEM</div>
+    <h2 class="big">Building anything real is mostly done <span class="yellow" style="color:inherit;background:var(--yellow);padding:0 .08em">alone</span>.</h2>
+    <p class="body" style="margin-top:28px">The hard questions land at 11pm. The person who has solved your exact problem exists — somewhere — and you have no way to reach them. Networking events don't fix this. Follower counts don't fix this.</p>
+  </section>
+
+  <!-- 03 · THE IDEA -->
+  <section class="slide t-yellow" id="s3" data-theme="yellow" aria-label="Slide 3 of 10: The idea">
+    <div class="kicker">03 · THE IDEA</div>
+    <h2 class="big">So we made one rule:<br>give an hour before you ask for one.</h2>
+    <p class="body" style="margin-top:28px">Underscore is a community of builders, operators and experts who put their time in first. No leaderboard. No clout. Just a standing answer to the question: who's got an hour for this?</p>
+  </section>
+
+  <!-- 04 · ROSTER -->
+  <section class="slide t-cream" id="s4" data-theme="cream" aria-label="Slide 4 of 10: The Core roster">
+    <div class="kicker">04 · THE CORE — OUR MEMBER COMMUNITY</div>
+    <h2 class="big">The Core.</h2>
+    <div class="roster">
+      <div class="cell"><div class="nm">Maya Chen</div><div class="rl">Founder · Oakland</div></div>
+      <div class="cell"><div class="nm">Sam Osei</div><div class="rl">Engineer · Boston</div></div>
+      <div class="cell"><div class="nm">Ana Reyes</div><div class="rl">Designer · Mexico City</div></div>
+      <div class="cell"><div class="nm">David Park</div><div class="rl">Operator · Seoul</div></div>
+      <div class="cell"><div class="nm">Leila Haddad</div><div class="rl">Researcher · Beirut</div></div>
+      <div class="cell"><div class="nm">Jonas Weber</div><div class="rl">Builder · Berlin</div></div>
+      <div class="cell"><div class="nm">Priya Nair</div><div class="rl">Product · Bangalore</div></div>
+      <div class="cell"><div class="nm">Tom Aiello</div><div class="rl">Manufacturer · Detroit</div></div>
+    </div>
+    <p class="body" style="margin-top:22px;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em">+ 1,192 MORE, ACROSS 40 CITIES</p>
+  </section>
+
+  <!-- 05 · STATS -->
+  <section class="slide t-ink" id="s5" data-theme="ink" aria-label="Slide 5 of 10: Stats">
+    <div class="kicker">05 · THE NUMBERS</div>
+    <div class="statline">
+      <div class="stat"><span class="n">1,200<span class="yellow">+</span></span><span class="l">members</span></div>
+      <div class="stat"><span class="n">40<span class="yellow">_</span></span><span class="l">cities</span></div>
+      <div class="stat"><span class="n">9,000<span class="yellow">_</span></span><span class="l">hours given since 2021</span></div>
+    </div>
+  </section>
+
+  <!-- 06 · HOW GIVING WORKS -->
+  <section class="slide t-yellow" id="s6" data-theme="yellow" aria-label="Slide 6 of 10: How giving works">
+    <div class="kicker">06 · HOW GIVING WORKS</div>
+    <h2 class="big">Three steps. No ceremony.</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="num">STEP_01</div>
+        <h3>Someone asks.</h3>
+        <p>A real question from real work — a contract, a tool, a hire, a wall they've hit. Posted plainly to the Core.</p>
+      </div>
+      <div class="step">
+        <div class="num">STEP_02</div>
+        <h3>Someone who knows shows up.</h3>
+        <p>Usually within a day. A reply, a call, a working session. Time, not links.</p>
+      </div>
+      <div class="step">
+        <div class="num">STEP_03</div>
+        <h3>The favor moves forward.</h3>
+        <p>You don't pay it back. You pay it down the line, to the next person stuck where you were.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 07 · QUOTE 1 -->
+  <section class="slide t-ink" id="s7" data-theme="ink" aria-label="Slide 7 of 10: Member quote">
+    <div class="kicker">07 · FROM THE CORE</div>
+    <blockquote class="quote">&ldquo;Tom found the flaw in my mold design in nine minutes. It had cost me three months.&rdquo;</blockquote>
+    <p class="attr">MAYA CHEN — FOUNDER, OAKLAND · MEMBER SINCE 2021</p>
+  </section>
+
+  <!-- 08 · QUOTE 2 -->
+  <section class="slide t-cream" id="s8" data-theme="cream" aria-label="Slide 8 of 10: Second member quote">
+    <div class="kicker">08 · FROM THE CORE</div>
+    <blockquote class="quote">&ldquo;I've given maybe sixty hours. I can't count what I've gotten back, and that's the point — nobody's counting.&rdquo;</blockquote>
+    <p class="attr">LEILA HADDAD — RESEARCHER, BEIRUT · MEMBER SINCE 2022</p>
+  </section>
+
+  <!-- 09 · COST -->
+  <section class="slide t-ink" id="s9" data-theme="ink" aria-label="Slide 9 of 10: What it costs">
+    <div class="kicker">09 · WHAT IT COSTS</div>
+    <div class="zero">$0<span>_</span></div>
+    <p class="body" style="margin-top:24px">No dues. No tiers. No upsell. Membership costs time — the hours you give the Core. That's the only currency we've ever run on.</p>
+  </section>
+
+  <!-- 10 · JOIN -->
+  <section class="slide t-yellow" id="s10" data-theme="yellow" aria-label="Slide 10 of 10: Join the Core">
+    <div class="kicker">10 · THE ASK</div>
+    <h2 class="big">Join the Core.</h2>
+    <form class="join-form" id="join-form">
+      <div>
+        <label for="j-name">Name</label>
+        <input id="j-name" name="name" type="text" autocomplete="name" required>
+      </div>
+      <div>
+        <label for="j-city">City</label>
+        <input id="j-city" name="city" type="text" autocomplete="address-level2" required>
+      </div>
+      <div class="full">
+        <label for="j-give">The first hour you'd give</label>
+        <textarea id="j-give" name="give" placeholder="e.g. I can read anyone's first supplier contract" required></textarea>
+      </div>
+      <button type="submit">Send it _</button>
+    </form>
+    <p id="join-done">Received. A member of the Core reads every application and replies personally — usually within a week. Thanks for leading with an hour.</p>
+  </section>
+
+</div>
+
+<div id="chrome">
+  <div id="counter" class="mono" aria-live="polite">01 / 10</div>
+  <div id="marks" role="tablist" aria-label="Slides"></div>
+  <div class="navbtns">
+    <button id="prev" aria-label="Previous slide">&larr;</button>
+    <button id="next" aria-label="Next slide">&rarr;</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var counter = document.getElementById('counter');
+  var marks = document.getElementById('marks');
+  var prevBtn = document.getElementById('prev');
+  var nextBtn = document.getElementById('next');
+  var current = 0;
+
+  /* build the underscore progress row */
+  slides.forEach(function(s, i){
+    var b = document.createElement('button');
+    b.setAttribute('role','tab');
+    b.setAttribute('aria-label','Go to slide ' + (i+1));
+    b.addEventListener('click', function(e){ e.stopPropagation(); go(i); });
+    marks.appendChild(b);
+  });
+  var markBtns = Array.prototype.slice.call(marks.children);
+
+  function pad(n){ return n < 10 ? '0' + n : '' + n; }
+
+  function go(i){
+    if(i < 0 || i >= slides.length || i === current && slides[i].classList.contains('active')) {
+      if(i !== current) return;
+    }
+    if(i < 0 || i >= slides.length) return;
+    slides.forEach(function(s, k){
+      s.classList.toggle('active', k === i);
+      s.classList.toggle('before', k < i);
+    });
+    current = i;
+    counter.textContent = pad(i+1) + ' / ' + pad(slides.length);
+    document.body.setAttribute('data-theme', slides[i].getAttribute('data-theme'));
+    markBtns.forEach(function(b, k){
+      b.classList.toggle('filled', k <= i);
+      b.setAttribute('aria-selected', k === i ? 'true' : 'false');
+    });
+    prevBtn.disabled = (i === 0);
+    nextBtn.disabled = (i === slides.length - 1);
+  }
+
+  prevBtn.addEventListener('click', function(e){ e.stopPropagation(); go(current - 1); });
+  nextBtn.addEventListener('click', function(e){ e.stopPropagation(); go(current + 1); });
+
+  /* keyboard */
+  window.addEventListener('keydown', function(e){
+    var tag = document.activeElement && document.activeElement.tagName;
+    if(tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'BUTTON') {
+      if(e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      if(tag === 'INPUT' || tag === 'TEXTAREA') return;
+    }
+    if(e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown'){ e.preventDefault(); go(current + 1); }
+    if(e.key === 'ArrowLeft' || e.key === 'PageUp'){ e.preventDefault(); go(current - 1); }
+    if(e.key === 'Home'){ e.preventDefault(); go(0); }
+    if(e.key === 'End'){ e.preventDefault(); go(slides.length - 1); }
+  });
+
+  /* click anywhere advances (except on interactive elements) */
+  document.getElementById('deck').addEventListener('click', function(e){
+    var t = e.target;
+    while(t && t !== document.body){
+      var tag = t.tagName;
+      if(tag === 'BUTTON' || tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'LABEL' || tag === 'A' || tag === 'FORM') return;
+      t = t.parentNode;
+    }
+    go(current + 1);
+  });
+
+  /* touch swipe */
+  var touchX = null;
+  document.addEventListener('touchstart', function(e){ touchX = e.touches[0].clientX; }, {passive:true});
+  document.addEventListener('touchend', function(e){
+    if(touchX === null) return;
+    var dx = e.changedTouches[0].clientX - touchX;
+    if(Math.abs(dx) > 50){ dx < 0 ? go(current + 1) : go(current - 1); }
+    touchX = null;
+  }, {passive:true});
+
+  /* join form */
+  document.getElementById('join-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    this.style.display = 'none';
+    document.getElementById('join-done').style.display = 'block';
+  });
+
+  go(0);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — Both Sides of the Line</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='24' width='24' height='5' rx='2' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --yellow:#F5C518; --ink:#1A1816; --cream:#FAF6EE; --muted:#8a8378; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  ::selection { background:var(--yellow); color:var(--ink); }
+  html { scroll-behavior:smooth; }
+  body { font-family:'Inter Tight',sans-serif; background:var(--cream); color:var(--ink); -webkit-font-smoothing:antialiased; }
+
+  /* fixed center line through the paired panels */
+  .line {
+    position:fixed; left:0; right:0; top:50%; height:8px; margin-top:-4px;
+    background:var(--yellow); z-index:50; transition:opacity .3s;
+    box-shadow:0 1px 0 rgba(0,0,0,.15);
+  }
+  .line.hidden { opacity:0; pointer-events:none; }
+  .line .tag {
+    position:absolute; right:18px; top:-26px; font-family:'IBM Plex Mono',monospace;
+    font-size:11px; letter-spacing:.12em; color:var(--ink); background:var(--yellow);
+    padding:3px 10px; border-radius:999px;
+  }
+
+  .pair { height:100vh; position:relative; }
+  .half { position:absolute; left:0; right:0; height:50%; display:flex; align-items:center; overflow:hidden; }
+  .half.top { top:0; background:var(--ink); color:var(--cream); }
+  .half.bottom { bottom:0; background:var(--cream); color:var(--ink); }
+  .half .inner { width:min(1100px,90vw); margin:0 auto; padding:0 24px; }
+  .who { font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.18em; margin-bottom:14px; }
+  .half.top .who { color:#9a9384; }
+  .half.bottom .who { color:var(--muted); }
+  .half h2 { font-size:clamp(24px,3.4vw,44px); font-weight:600; letter-spacing:-0.02em; line-height:1.18; max-width:24ch; }
+  .half .note { margin-top:12px; font-size:15px; color:inherit; opacity:.65; max-width:48ch; line-height:1.5; }
+  .timestamp { font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--yellow); margin-top:14px; }
+
+  /* convergence */
+  .converge { background:var(--cream); padding:120px 24px 40px; position:relative; }
+  .converge .open { width:min(1100px,100%); margin:0 auto; }
+  .breakline { display:flex; align-items:center; gap:18px; margin-bottom:64px; }
+  .breakline .seg { height:8px; background:var(--yellow); border-radius:4px; flex:1; }
+  .breakline .word { font-family:'IBM Plex Mono',monospace; font-size:13px; letter-spacing:.2em; color:var(--ink); }
+  .converge h2 { font-size:clamp(36px,5.5vw,72px); font-weight:800; letter-spacing:-0.03em; line-height:1.02; max-width:16ch; }
+  .converge .lede { margin-top:22px; font-size:19px; line-height:1.6; color:#4d4840; max-width:56ch; }
+
+  .roster { margin-top:72px; display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:1px; background:#e2dac9; border:1px solid #e2dac9; }
+  .member { background:var(--cream); padding:22px 20px; }
+  .member:hover { background:#fff; }
+  .member b { font-weight:600; font-size:16px; display:block; }
+  .member span { font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--muted); letter-spacing:.06em; }
+  .member .gave { margin-top:10px; font-size:13.5px; color:#4d4840; line-height:1.45; }
+  .member.you { background:var(--yellow); }
+  .member.you b { font-size:16px; }
+
+  .stats { display:flex; gap:56px; flex-wrap:wrap; margin-top:72px; }
+  .stat .n { font-size:clamp(40px,6vw,72px); font-weight:800; letter-spacing:-0.03em; }
+  .stat .l { font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.16em; color:var(--muted); }
+  .quote { margin-top:88px; border-left:4px solid var(--yellow); padding-left:26px; max-width:62ch; }
+  .quote p { font-size:24px; line-height:1.45; font-weight:500; }
+  .quote .attr { margin-top:14px; font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--muted); }
+
+  .joinband { margin-top:110px; padding:64px 0 90px; position:relative; }
+  .joinband::before { content:""; position:absolute; top:0; left:0; right:0; height:8px; background:var(--yellow); border-radius:4px; }
+  .joinband h3 { font-size:clamp(26px,3.6vw,44px); font-weight:800; letter-spacing:-0.02em; }
+  .joinband p { margin-top:12px; color:#4d4840; max-width:52ch; line-height:1.6; }
+  form { margin-top:34px; display:flex; gap:14px; flex-wrap:wrap; }
+  input { flex:1 1 200px; border:1.5px solid var(--ink); background:#fff; padding:14px 16px; font-family:inherit; font-size:15px; border-radius:6px; outline:none; }
+  input:focus { border-color:var(--yellow); box-shadow:0 0 0 3px rgba(245,197,24,.25); }
+  button { background:var(--ink); color:var(--cream); border:0; padding:14px 28px; font-family:'IBM Plex Mono',monospace; font-size:13px; letter-spacing:.1em; border-radius:6px; cursor:pointer; }
+  button:hover { background:#000; box-shadow:0 3px 0 var(--yellow); }
+  footer { padding:26px 24px; font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--muted); display:flex; justify-content:space-between; width:min(1100px,100%); margin:0 auto; }
+
+  @media (max-width:768px){
+    .line { display:none; }
+    .pair { height:auto; }
+    .half { position:static; height:auto; padding:56px 0; }
+    .pair::after { content:""; display:block; height:8px; background:var(--yellow); }
+    .stats { gap:32px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="line" id="theLine"><span class="tag">the line</span></div>
+
+<!-- PAIR 1 -->
+<section class="pair">
+  <div class="half top"><div class="inner">
+    <div class="who">ABOVE THE LINE — BUILDING ALONE</div>
+    <h2>It's 12:01am. The bug has been winning since Tuesday.</h2>
+    <p class="note">You've read every thread. The last reply is from 2019 and ends with "nvm fixed it."</p>
+  </div></div>
+  <div class="half bottom"><div class="inner">
+    <div class="who">BELOW THE LINE — WITH THE CORE</div>
+    <h2>Sam answered at 12:04. He'd hit it before.</h2>
+    <p class="note">"Race condition in the driver. Call me, this is faster out loud." Twenty minutes, done.</p>
+    <div class="timestamp">elapsed: 00:23</div>
+  </div></div>
+</section>
+
+<!-- PAIR 2 -->
+<section class="pair">
+  <div class="half top"><div class="inner">
+    <div class="who">ABOVE THE LINE</div>
+    <h2>You need a factory and you know exactly zero factories.</h2>
+    <p class="note">Cold emails to suppliers have a 4% reply rate. You did the math on your own inbox.</p>
+  </div></div>
+  <div class="half bottom"><div class="inner">
+    <div class="who">BELOW THE LINE</div>
+    <h2>Tom walked Ana's drawings to a shop he's known for 20 years.</h2>
+    <p class="note">The quote came back in three days, at a price for friends-of-Tom. That's a real category.</p>
+    <div class="timestamp">elapsed: 3 days</div>
+  </div></div>
+</section>
+
+<!-- PAIR 3 -->
+<section class="pair">
+  <div class="half top"><div class="inner">
+    <div class="who">ABOVE THE LINE</div>
+    <h2>Your pitch deck has been "almost done" for a month.</h2>
+    <p class="note">Everyone you could ask is either invested, competing, or your mother.</p>
+  </div></div>
+  <div class="half bottom"><div class="inner">
+    <div class="who">BELOW THE LINE</div>
+    <h2>Priya tore it apart kindly on a Sunday call.</h2>
+    <p class="note">Slide count: 19 → 11. The one she said to cut first was the one you secretly knew about.</p>
+    <div class="timestamp">elapsed: one Sunday</div>
+  </div></div>
+</section>
+
+<!-- PAIR 4 -->
+<section class="pair">
+  <div class="half top"><div class="inner">
+    <div class="who">ABOVE THE LINE</div>
+    <h2>New city. You know the barista and the barista knows your order.</h2>
+    <p class="note">Networking events exist. So does staying home, which usually wins.</p>
+  </div></div>
+  <div class="half bottom"><div class="inner">
+    <div class="who">BELOW THE LINE</div>
+    <h2>The Berlin chapter meets Thursdays. Jonas saved you a seat.</h2>
+    <p class="note">Forty cities run open tables. You're a stranger at exactly one of them, once.</p>
+    <div class="timestamp">elapsed: one Thursday</div>
+  </div></div>
+</section>
+
+<!-- PAIR 5 -->
+<section class="pair">
+  <div class="half top"><div class="inner">
+    <div class="who">ABOVE THE LINE</div>
+    <h2>Asking for help feels like admitting something.</h2>
+    <p class="note">So you don't. The problem compounds quietly, like interest.</p>
+  </div></div>
+  <div class="half bottom"><div class="inner">
+    <div class="who">BELOW THE LINE</div>
+    <h2>Here, the ask is the contribution.</h2>
+    <p class="note">Your question becomes the next person's search result. Asks unanswered last year: zero.</p>
+    <div class="timestamp">elapsed: 5 years, holding</div>
+  </div></div>
+</section>
+
+<!-- CONVERGENCE -->
+<section class="converge" id="converge">
+  <div class="open">
+    <div class="breakline" aria-hidden="true">
+      <div class="seg"></div><div class="word">THE HALVES MEET HERE</div><div class="seg"></div>
+    </div>
+    <h2>Same life. One line of difference.</h2>
+    <p class="lede">Underscore is the line between building alone and building accompanied. Our community — the Core — is 1,200 builders, operators, and researchers who give first and ask later. Everything above this point actually happened; only the loneliness was optional.</p>
+
+    <div class="roster">
+      <div class="member"><b>Maya Chen</b><span>FOUNDER · OAKLAND</span><div class="gave">Gave: 31 intros, one borrowed truck</div></div>
+      <div class="member"><b>Sam Osei</b><span>ENGINEER · BOSTON</span><div class="gave">Gave: midnight debugging, 14 calls</div></div>
+      <div class="member"><b>Ana Reyes</b><span>DESIGNER · MEXICO CITY</span><div class="gave">Gave: 9 brand teardowns</div></div>
+      <div class="member"><b>David Park</b><span>OPERATOR · SEOUL</span><div class="gave">Gave: a supply-chain playbook</div></div>
+      <div class="member"><b>Leila Haddad</b><span>RESEARCHER · BEIRUT</span><div class="gave">Gave: weekly office hours, 2 years</div></div>
+      <div class="member"><b>Jonas Weber</b><span>BUILDER · BERLIN</span><div class="gave">Gave: a Stuttgart tooling shop</div></div>
+      <div class="member"><b>Priya Nair</b><span>PRODUCT · BANGALORE</span><div class="gave">Gave: Sunday deck surgery</div></div>
+      <div class="member you"><b>your_name_here</b><span>JOIN BELOW ↓</span><div class="gave">Gives: to be determined</div></div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="n">1,200+</div><div class="l">MEMBERS</div></div>
+      <div class="stat"><div class="n">40</div><div class="l">CITIES</div></div>
+      <div class="stat"><div class="n">9,000</div><div class="l">HOURS GIVEN</div></div>
+      <div class="stat"><div class="n">0</div><div class="l">ASKS UNANSWERED</div></div>
+    </div>
+
+    <div class="quote">
+      <p>"I spent six years above the line. I wish someone had told me the line was right there."</p>
+      <div class="attr">— DAVID PARK, OPERATOR, SEOUL</div>
+    </div>
+
+    <div class="joinband">
+      <h3>Cross over. Join the Core.</h3>
+      <p>Free, human-reviewed, and quietly demanding: you'll be asked to give an hour now and then. That's the whole tax.</p>
+      <form onsubmit="event.preventDefault(); this.innerHTML='<p style=\'font-size:17px; font-weight:600;\'>Received. A human replies within a week. Welcome below the line.</p>';">
+        <input type="text" placeholder="name" required>
+        <input type="text" placeholder="city" required>
+        <input type="text" placeholder="something you could give an hour to">
+        <button type="submit">JOIN THE CORE_</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span>underscore_ — give first, ask later</span>
+  <span>est. 2021</span>
+</footer>
+
+<script>
+  // hide the fixed line once the convergence section takes over
+  const line = document.getElementById('theLine');
+  const converge = document.getElementById('converge');
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => line.classList.toggle('hidden', e.isIntersecting));
+  }, { threshold: 0.08 });
+  io.observe(converge);
+</script>
+</body>
+</html>

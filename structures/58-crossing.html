@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — The Crossing</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='24' width='24' height='5' rx='2' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600&family=Inter+Tight:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --yellow:#F5C518; --ink:#1A1816; --cream:#FAF6EE; --muted:#8a8378; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  ::selection { background:var(--yellow); color:var(--ink); }
+  body { font-family:'Inter Tight',sans-serif; background:var(--cream); color:var(--ink); min-height:100vh; -webkit-font-smoothing:antialiased; }
+
+  .crumb {
+    position:fixed; top:0; left:0; right:0; z-index:20; padding:14px 22px;
+    font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--muted);
+    background:rgba(250,246,238,.92); backdrop-filter:blur(6px); border-bottom:1px solid #E6DFD2;
+    display:flex; gap:16px; align-items:center;
+  }
+  .crumb .logo { color:var(--ink); font-weight:500; }
+  .crumb .logo b { color:var(--yellow); }
+  .crumb .path { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .crumb .path em { color:var(--yellow); font-style:normal; }
+  .back { margin-left:auto; background:none; border:0; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--muted); cursor:pointer; white-space:nowrap; }
+  .back:hover { color:var(--ink); }
+
+  .scene { min-height:100vh; display:none; align-items:center; justify-content:center; padding:110px 22px 70px; }
+  .scene.active { display:flex; animation:fadein .35s ease; }
+  @keyframes fadein { from{opacity:0; transform:translateY(8px);} to{opacity:1;} }
+  @media (prefers-reduced-motion:reduce){ .scene.active{ animation:none; } }
+  .inner { width:min(820px,100%); text-align:center; }
+  .qlabel { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.24em; color:var(--muted); margin-bottom:18px; }
+  h1 { font-family:'Newsreader',serif; font-weight:500; font-size:clamp(30px,4.6vw,52px); line-height:1.15; letter-spacing:-.01em; }
+  .context { margin-top:18px; font-size:16.5px; line-height:1.65; color:#4d4840; max-width:58ch; margin-left:auto; margin-right:auto; }
+  .context b { font-weight:600; }
+  .fork { margin:40px auto 0; max-width:640px; display:grid; gap:12px; }
+  .choice {
+    display:block; width:100%; text-align:left; background:#fff; border:1.5px solid #E0D8C6;
+    border-radius:12px; padding:18px 22px; font-family:'Inter Tight',sans-serif; font-size:16.5px;
+    font-weight:500; cursor:pointer; color:var(--ink); transition:border-color .15s, transform .15s;
+  }
+  .choice:hover { border-color:var(--yellow); transform:translateX(4px); }
+  .choice span { display:block; font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--muted); font-weight:400; margin-top:4px; }
+  .member {
+    margin:26px auto 0; max-width:560px; background:#FBF6E9; border-left:4px solid var(--yellow);
+    padding:16px 20px; text-align:left; font-size:14.5px; line-height:1.6; color:#3d3933;
+  }
+  .member b { display:block; font-family:'IBM Plex Mono',monospace; font-size:11.5px; letter-spacing:.1em; color:#9a7d06; margin-bottom:6px; font-weight:500; }
+
+  .mergeviz { margin:36px auto 8px; display:block; }
+  .mergeviz .branch { stroke:#C9C0AB; stroke-width:2.5; fill:none; }
+  .mergeviz .main { stroke:var(--yellow); stroke-width:6; fill:none; stroke-linecap:round; stroke-dasharray:760; stroke-dashoffset:760; animation:drawline 1.6s ease forwards .3s; }
+  @keyframes drawline { to{ stroke-dashoffset:0; } }
+  @media (prefers-reduced-motion:reduce){ .mergeviz .main { animation:none; stroke-dashoffset:0; } }
+
+  form { margin:34px auto 0; display:flex; gap:10px; flex-wrap:wrap; justify-content:center; max-width:640px; }
+  input { flex:1 1 160px; border:1.5px solid var(--ink); background:#fff; padding:13px 15px; font-family:inherit; font-size:15px; border-radius:8px; outline:none; }
+  input:focus { border-color:var(--yellow); box-shadow:0 0 0 3px rgba(245,197,24,.22); }
+  .joinbtn { background:var(--ink); color:var(--cream); border:0; padding:13px 28px; border-radius:8px; font-family:'IBM Plex Mono',monospace; font-size:13px; letter-spacing:.1em; cursor:pointer; }
+  .joinbtn:hover { box-shadow:0 3px 0 var(--yellow); }
+  .statline { margin-top:26px; font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.12em; color:var(--muted); }
+</style>
+</head>
+<body>
+
+<div class="crumb">
+  <span class="logo">underscore<b>_</b></span>
+  <span class="path" id="path">start</span>
+  <button class="back" id="backBtn" style="display:none">↩ back up the path</button>
+</div>
+
+<div id="scenes"></div>
+
+<script>
+  const SCENES = {
+    start: {
+      label:"THE FIRST FORK", title:"You're building something. Which is true?",
+      context:"This is Underscore — a community of 1,200 people who give time before anyone asks. Different people arrive on different roads. Pick yours.",
+      choices:[
+        ["I'm stuck on something technical","the bug, the tool, the thing that won't work","stuck"],
+        ["I don't know anyone who's done this","no network, new city, new field","alone"],
+        ["I'm fine, just curious","healthy skepticism welcome","curious"],
+      ]
+    },
+    stuck: {
+      label:"STUCK — TECHNICAL", title:"What kind of stuck?",
+      context:"The Core answers technical asks in a median of <b>40 minutes</b>. Last year, zero went unanswered. What's winning right now?",
+      member:["WHO ANSWERS HERE","Sam Osei (engineer, Boston) takes midnight debugging calls — record: 23 minutes. Tom Aiello (manufacturer, Detroit) reviews tooling drawings before you spend money on them."],
+      choices:[
+        ["Software that won't behave","race conditions, drivers, the works","stuck_software"],
+        ["Hardware / manufacturing","tooling, suppliers, factories","stuck_hardware"],
+      ]
+    },
+    stuck_software: {
+      label:"STUCK — SOFTWARE", title:"The midnight rule applies.",
+      context:"Nadia posted a race condition at 12:01am in her first week. Sam called at 12:04 — \"I've hit this exact bug.\" Dead by 12:27. <b>If it's eating you at midnight, it's a midnight problem.</b> The Core treats it that way.",
+      member:["THE RELEVANT STAT","63 midnight calls taken last year. All answered. This is a community of people who remember being stuck."],
+      choices:[["That's the room I need →","","merge"],["What about hardware though?","","stuck_hardware"]]
+    },
+    stuck_hardware: {
+      label:"STUCK — HARDWARE", title:"Tom has seen your quote, basically.",
+      context:"Ana Reyes had drawings, no shop, and quotes at triple budget. Tom redesigned the tool count from 4 to 2 on a Tuesday call; Jonas Weber opened a Stuttgart shop's door. <b>Eleven days from ask to purchase order.</b> Nobody invoiced anybody.",
+      member:["WHO ANSWERS HERE","Tom Aiello (Detroit): \"If a tooling quote feels 3x too high, it's usually the design, not the shop. Send me drawings before you send shops money.\" Standing offer, two years running."],
+      choices:[["I have drawings exactly like that →","","merge"],["Actually my problem is people, not parts","","alone"]]
+    },
+    alone: {
+      label:"ALONE — NO NETWORK", title:"Where are you starting from?",
+      context:"Forty cities run open tables. You're a stranger at exactly one of them, once. The Core's 312 introductions last year averaged <b>4 hours from ask to intro</b>.",
+      member:["WHO ANSWERS HERE","Maya Chen (founder, Oakland) runs a monthly founder circle — one seat always held for the newest member. Jonas Weber (Berlin) hosts Thursdays; newcomers get the good stool."],
+      choices:[
+        ["New city, know nobody","chapters, open tables, Thursdays","alone_city"],
+        ["New field, no peers","operators, researchers, people mid-something","alone_field"],
+      ]
+    },
+    alone_city: {
+      label:"ALONE — NEW CITY", title:"There's probably a table already set.",
+      context:"Oakland, Boston, Mexico City, Seoul, Beirut, Berlin, Bangalore, Detroit, London, Lagos — and thirty more. Every chapter's only agenda item: <b>who needs what, and who's got it.</b>",
+      member:["A WEEK-ONE REPORT","Nadia (Warsaw): \"I posted one question expecting silence. Got four answers, one voice memo, and an intro that ended 'for the Core, no charge.' I don't fully understand this place yet.\""],
+      choices:[["Save me a seat →","","merge"],["My city isn't on that list","","alone_field"]]
+    },
+    alone_field: {
+      label:"ALONE — NEW FIELD", title:"Peers are findable. Hours are givable.",
+      context:"Leila Haddad (researcher, Beirut) has held weekly office hours for two years without a miss — half-formed questions outperform polished ones. Priya Nair (product, Bangalore) runs Sunday deck surgery: average slide reduction 42%.",
+      member:["THE MECHANISM","You don't need to know the right person. You need to ask the room. The room is 1,200 people and the median answer arrives in 40 minutes."],
+      choices:[["I have a half-formed question already →","","merge"],["Still just browsing","","curious"]]
+    },
+    curious: {
+      label:"CURIOUS", title:"Fair. Here's the whole thing, no varnish.",
+      context:"Underscore is a give-first community, est. 2021. <b>1,200+ members, 40 cities, 9,000 hours given, zero asks unanswered.</b> No fees, no points, no algorithm. The only dues is an occasional hour of your experience. The catch, per Maya Chen: \"It works on you. Give a few hours and watch what it does to your default settings.\"",
+      member:["HEALTHY SKEPTICISM, ANSWERED","\"What's the business model?\" There isn't one. Time in, time out. The books are published monthly and the zero is audited by everyone it didn't happen to."],
+      choices:[["Okay, that's compelling →","","merge"],["Show me the stuck-people road","","stuck"]]
+    },
+    merge: {
+      label:"THE CROSSING", title:"Different roads. Same line.",
+      context:"Everyone arrives differently — stuck, alone, or just curious. The paths converge here, at the line. Join the Core: free, human-reviewed, paid for in occasional hours.",
+      merge:true
+    }
+  };
+
+  let trail = [];
+  const scenesEl = document.getElementById('scenes');
+  const pathEl = document.getElementById('path');
+  const backBtn = document.getElementById('backBtn');
+
+  function render(key){
+    const s = SCENES[key];
+    scenesEl.innerHTML = `
+      <section class="scene active"><div class="inner">
+        <div class="qlabel">${s.label}</div>
+        <h1>${s.title}</h1>
+        <p class="context">${s.context}</p>
+        ${s.member ? `<div class="member"><b>${s.member[0]}</b>${s.member[1]}</div>` : ''}
+        ${s.merge ? `
+          <svg class="mergeviz" width="660" height="120" viewBox="0 0 660 120">
+            <path class="branch" d="M30 14 C 200 14, 240 60, 330 60"/>
+            <path class="branch" d="M30 60 C 160 60, 220 60, 330 60"/>
+            <path class="branch" d="M30 106 C 200 106, 240 60, 330 60"/>
+            <path class="main" d="M330 60 L 640 60"/>
+            <text x="26" y="18" font-family="IBM Plex Mono" font-size="10" fill="#8a8378" text-anchor="end" transform="translate(20,0)"></text>
+          </svg>
+          <form onsubmit="event.preventDefault(); this.innerHTML='<p class=context style=&quot;font-weight:600&quot;>Received. A human replies within a week. See you on the line.</p>';">
+            <input type="text" placeholder="name" required>
+            <input type="text" placeholder="city" required>
+            <input type="text" placeholder="an hour you could give">
+            <button class="joinbtn" type="submit">JOIN THE CORE_</button>
+          </form>
+          <div class="statline">1,200+ MEMBERS · 40 CITIES · 9,000 HOURS · 0 ASKS UNANSWERED</div>
+        ` : `
+          <div class="fork">
+            ${s.choices.map(c=>`<button class="choice" data-to="${c[2]}">${c[0]}${c[1]?`<span>${c[1]}</span>`:''}</button>`).join('')}
+          </div>
+        `}
+      </div></section>`;
+    scenesEl.querySelectorAll('.choice').forEach(b=>b.onclick=()=>{
+      trail.push(key);
+      go(b.dataset.to);
+    });
+    pathEl.innerHTML = [...trail, key].map(k=>k).join('<em>_</em>');
+    backBtn.style.display = trail.length ? 'block' : 'none';
+    scrollTo(0,0);
+  }
+  function go(key){ render(key); }
+  backBtn.onclick = ()=>{ const prev = trail.pop(); if(prev) render(prev); };
+  render('start');
+</script>
+</body>
+</html>

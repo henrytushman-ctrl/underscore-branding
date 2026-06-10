@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — The Depths</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='24' width='24' height='5' rx='2' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --yellow:#F5C518; --ink:#14120E; --cream:#FAF6EE; --muted:#8a8378; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  ::selection { background:var(--yellow); color:var(--ink); }
+  body {
+    font-family:'Space Grotesk',sans-serif; color:var(--ink); -webkit-font-smoothing:antialiased;
+    background:linear-gradient(180deg,
+      #FAF6EE 0%, #F0EADA 12%, #DDD5C0 24%, #BDB49C 36%, #968D76 48%,
+      #6E6753 60%, #4A4537 72%, #2C2920 84%, #14120E 100%);
+  }
+  .ruler {
+    position:fixed; left:0; top:0; bottom:0; width:74px; z-index:40;
+    border-right:1px solid rgba(138,131,120,.4); font-family:'IBM Plex Mono',monospace;
+    pointer-events:none;
+  }
+  .tick { position:absolute; left:0; width:100%; font-size:10px; color:var(--muted); padding-left:10px; }
+  .tick::before { content:""; position:absolute; right:0; top:50%; width:14px; height:1px; background:rgba(138,131,120,.6); }
+  .pos {
+    position:absolute; right:-7px; width:14px; height:14px; border-radius:50%;
+    background:var(--yellow); border:2px solid var(--ink); top:0; transition:top .1s linear;
+  }
+  .ruler .note { position:absolute; bottom:14px; left:10px; font-size:9px; color:var(--muted); width:60px; line-height:1.5; }
+
+  .station { min-height:100vh; display:flex; align-items:center; padding:60px 8vw 60px calc(74px + 6vw); }
+  .station .in { max-width:760px; }
+  .depth { font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.24em; margin-bottom:18px; }
+  h1, h2 { font-weight:700; letter-spacing:-.02em; line-height:1.04; }
+  h1 { font-size:clamp(44px,7vw,96px); }
+  h2 { font-size:clamp(30px,4.6vw,58px); }
+  .copy { margin-top:20px; font-size:clamp(16px,1.6vw,19px); line-height:1.65; max-width:56ch; }
+
+  .light .depth { color:#8a7a3a; } .light .copy { color:#4d4840; }
+  .mid { color:var(--cream); } .mid .depth { color:var(--yellow); } .mid .copy { color:#E4DECF; }
+  .dark { color:var(--cream); } .dark .depth { color:var(--yellow); } .dark .copy { color:#B8B09E; }
+
+  .tether { list-style:none; margin-top:34px; position:relative; padding-left:30px; }
+  .tether::before { content:""; position:absolute; left:9px; top:8px; bottom:8px; width:2px; background:var(--yellow); }
+  .tether li { position:relative; padding:11px 0; }
+  .tether li::before { content:""; position:absolute; left:-27px; top:50%; width:10px; height:10px; border-radius:50%; background:var(--yellow); transform:translateY(-50%); }
+  .tether b { font-weight:700; font-size:18px; display:block; }
+  .tether span { font-family:'IBM Plex Mono',monospace; font-size:11.5px; letter-spacing:.1em; opacity:.75; }
+
+  .pressure { margin-top:36px; display:flex; gap:54px; flex-wrap:wrap; }
+  .pg .n { font-size:clamp(48px,7vw,96px); font-weight:700; letter-spacing:-.04em; line-height:1; }
+  .pg .l { font-family:'IBM Plex Mono',monospace; font-size:11.5px; letter-spacing:.2em; margin-top:8px; opacity:.75; }
+
+  .engraved h2, .engraved .article {
+    text-shadow:0 1px 0 rgba(255,255,255,.06), 0 -1px 1px rgba(0,0,0,.5);
+  }
+  .article { margin-top:26px; font-size:clamp(18px,2.2vw,26px); font-weight:500; padding:16px 0; border-top:1px solid rgba(245,197,24,.3); }
+  .article .no { font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--yellow); margin-right:16px; }
+
+  .bedrock { position:relative; }
+  .bedrock .line { width:min(420px,70%); height:16px; background:var(--yellow); border-radius:3px; margin-top:44px; box-shadow:0 0 50px rgba(245,197,24,.4); }
+  form { margin-top:38px; display:flex; gap:12px; flex-wrap:wrap; max-width:700px; }
+  input { flex:1 1 170px; background:#221F18; border:1px solid #3A3528; color:var(--cream); padding:14px 16px; border-radius:6px; font-family:inherit; font-size:15px; outline:none; }
+  input:focus { border-color:var(--yellow); }
+  button { background:var(--yellow); color:var(--ink); border:0; padding:14px 30px; border-radius:6px; font-family:'IBM Plex Mono',monospace; font-size:13px; letter-spacing:.12em; font-weight:500; cursor:pointer; }
+  button:hover { filter:brightness(1.07); }
+  .colophon { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.18em; color:var(--muted); margin-top:60px; }
+
+  .mote { position:fixed; width:3px; height:3px; border-radius:50%; background:rgba(245,197,24,.35); pointer-events:none; z-index:5; animation:rise linear infinite; }
+  @keyframes rise { from{ transform:translateY(0); opacity:.5;} to{ transform:translateY(-110vh); opacity:0;} }
+  @media (prefers-reduced-motion:reduce){ .mote { display:none; } }
+  @media (max-width:768px){ .ruler { width:46px; } .station { padding-left:calc(46px + 5vw); } .tick { padding-left:5px; font-size:8.5px; } }
+</style>
+</head>
+<body>
+
+<div class="ruler" aria-hidden="true">
+  <div class="pos" id="pos"></div>
+  <div class="note">1,200m — ONE METER PER MEMBER</div>
+</div>
+
+<!-- 0m -->
+<section class="station light">
+  <div class="in">
+    <div class="depth">DEPTH 0M — SURFACE</div>
+    <h1>underscore<span style="color:#C9A22B">_</span></h1>
+    <p class="copy">Most communities are surface area — wide, bright, and an inch deep. We went the other way. This page descends 1,200 meters: one for each member of the Core. Scroll to dive.</p>
+  </div>
+</section>
+
+<!-- 100m -->
+<section class="station light">
+  <div class="in">
+    <div class="depth">DEPTH 100M — THE IDEA</div>
+    <h2>Give first. Ask later.</h2>
+    <p class="copy">That's the entire mechanism. An hour of your experience costs you little and is worth a month to someone stuck below you. Underscore exists to route those hours. No points, no leaderboard, no surface glare.</p>
+  </div>
+</section>
+
+<!-- 300m -->
+<section class="station mid">
+  <div class="in">
+    <div class="depth">DEPTH 300M — THE CORE</div>
+    <h2>The research station.</h2>
+    <p class="copy">The Core is the crew: 1,200 builders, operators, and researchers tethered to the same line. A few of the people holding it:</p>
+    <ul class="tether">
+      <li><b>Maya Chen</b><span>FOUNDER · OAKLAND · DOWN SINCE 2021</span></li>
+      <li><b>Sam Osei</b><span>ENGINEER · BOSTON · DOWN SINCE 2021</span></li>
+      <li><b>Ana Reyes</b><span>DESIGNER · MEXICO CITY · 2022</span></li>
+      <li><b>Jonas Weber</b><span>BUILDER · BERLIN · 2022</span></li>
+      <li><b>Leila Haddad</b><span>RESEARCHER · BEIRUT · 2023</span></li>
+      <li><b>Tom Aiello</b><span>MANUFACTURER · DETROIT · 2023</span></li>
+      <li><b>Priya Nair</b><span>PRODUCT · BANGALORE · 2024</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- 500m -->
+<section class="station mid">
+  <div class="in">
+    <div class="depth">DEPTH 500M — THE NUMBERS</div>
+    <h2>Pressure-rated.</h2>
+    <div class="pressure">
+      <div class="pg"><div class="n">9,000</div><div class="l">HOURS — HOLDS AT ANY DEPTH</div></div>
+      <div class="pg"><div class="n">40</div><div class="l">CITIES</div></div>
+      <div class="pg"><div class="n">0</div><div class="l">ASKS UNANSWERED</div></div>
+    </div>
+    <p class="copy" style="margin-top:30px;">Five years of load and the seals hold. The zero is the number we check first every month.</p>
+  </div>
+</section>
+
+<!-- 700m -->
+<section class="station dark">
+  <div class="in">
+    <div class="depth">DEPTH 700M — A STORY FROM DOWN HERE</div>
+    <h2>The midnight call.</h2>
+    <p class="copy">Nadia, week one in the Core, posted a race condition at 12:01am expecting to be alone with it. Sam Osei called at 12:04 — "I've hit this exact bug." Dead by 12:27. She asked how to repay him. The answer is the standing rule of the deep: you don't. You pass it down.</p>
+  </div>
+</section>
+
+<!-- 900m -->
+<section class="station dark engraved">
+  <div class="in">
+    <div class="depth">DEPTH 900M — PRINCIPLES, ENGRAVED</div>
+    <h2>Cut into the rock.</h2>
+    <div class="article"><span class="no">I.</span>Time is the only dues.</div>
+    <div class="article"><span class="no">II.</span>The ask is a contribution.</div>
+    <div class="article"><span class="no">III.</span>Nobody keeps score. Everybody keeps showing up.</div>
+    <div class="article"><span class="no">IV.</span>What you take, you pass down.</div>
+  </div>
+</section>
+
+<!-- 1200m -->
+<section class="station dark bedrock">
+  <div class="in">
+    <div class="depth">DEPTH 1,200M — BEDROCK</div>
+    <h2>At the bottom of every good community is a line that doesn't move.</h2>
+    <div class="line" aria-hidden="true"></div>
+    <p class="copy" style="margin-top:34px;">This is it. Join the Core: free, human-reviewed, paid for in occasional hours. The line gets one meter longer when you do.</p>
+    <form onsubmit="event.preventDefault(); this.innerHTML='<p class=copy style=\'color:#FAF6EE\'>Received. A human replies within a week. Welcome to the bottom — it holds.</p>';">
+      <input type="text" placeholder="name" required>
+      <input type="text" placeholder="city" required>
+      <input type="text" placeholder="an hour you could give">
+      <button type="submit">JOIN THE CORE_</button>
+    </form>
+    <div class="colophon">UNDERSCORE_ — EST. 2021 · GIVE FIRST, ASK LATER · SURFACE OPTIONAL</div>
+  </div>
+</section>
+
+<script>
+  // ruler ticks
+  const ruler = document.querySelector('.ruler');
+  [0,100,300,500,700,900,1200].forEach(m=>{
+    const t = document.createElement('div');
+    t.className = 'tick';
+    t.style.top = (m/1200*88+4) + '%';
+    t.textContent = m + 'm';
+    ruler.appendChild(t);
+  });
+  // position marker
+  const pos = document.getElementById('pos');
+  addEventListener('scroll', ()=>{
+    const p = scrollY / (document.body.scrollHeight - innerHeight);
+    pos.style.top = 'calc(' + (p*88+4) + '% - 7px)';
+  }, { passive:true });
+  // rising motes
+  if(!matchMedia('(prefers-reduced-motion: reduce)').matches){
+    for(let i=0;i<18;i++){
+      const m = document.createElement('div');
+      m.className='mote';
+      m.style.left = (6+ (i*5.2)%90) + 'vw';
+      m.style.bottom = '-4px';
+      m.style.animationDuration = (14 + (i%7)*4) + 's';
+      m.style.animationDelay = (i*1.7) + 's';
+      document.body.appendChild(m);
+    }
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — Join the Core</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='23' width='24' height='6' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --yellow:#F5C518;
+    --ink:#1A1816;
+    --cream:#FAF6EE;
+    --ink-soft:rgba(26,24,22,.62);
+    --ink-faint:rgba(26,24,22,.34);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  ::selection{background:var(--yellow);color:var(--ink)}
+  html,body{height:100%}
+  body{
+    background:var(--cream);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    overflow:hidden;
+  }
+  /* ---------- frame ---------- */
+  .brand{
+    position:fixed;top:0;left:0;right:0;
+    display:flex;justify-content:space-between;align-items:baseline;
+    padding:22px 28px;z-index:30;pointer-events:none;
+  }
+  .brand .mark{font-family:'Inter';font-weight:600;font-size:15px;letter-spacing:.02em}
+  .brand .mark .u{color:var(--yellow);font-weight:600}
+  .brand .count{font-size:12px;color:var(--ink-faint);letter-spacing:.04em}
+
+  /* ---------- stage ---------- */
+  .stage{position:fixed;inset:0;overflow:hidden}
+  .step{
+    position:absolute;inset:0;
+    display:flex;align-items:center;justify-content:center;
+    padding:80px 24px 110px;
+    opacity:0;visibility:hidden;
+    transform:translateY(48px);
+    transition:opacity .45s ease,transform .45s ease,visibility 0s linear .45s;
+  }
+  .step.active{
+    opacity:1;visibility:visible;transform:translateY(0);
+    transition:opacity .45s ease .1s,transform .45s ease .1s,visibility 0s;
+  }
+  .step.above{transform:translateY(-48px)}
+  .step-inner{width:100%;max-width:640px}
+
+  .qnum{
+    font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--ink-faint);margin-bottom:22px;
+  }
+  .qnum b{color:var(--ink);font-weight:600}
+  .context{
+    font-family:'Newsreader',serif;font-size:clamp(17px,2vw,20px);
+    line-height:1.55;color:var(--ink-soft);margin-bottom:18px;max-width:56ch;
+  }
+  .context strong{color:var(--ink);font-weight:500}
+  .context .stat{color:var(--ink);font-weight:500;
+    border-bottom:3px solid var(--yellow)}
+  .question{
+    font-family:'Newsreader',serif;font-weight:500;
+    font-size:clamp(28px,4.4vw,42px);line-height:1.16;
+    margin-bottom:30px;letter-spacing:-.01em;
+  }
+  .question .u{color:var(--yellow)}
+
+  input[type=text]{
+    width:100%;background:transparent;border:none;
+    border-bottom:2px solid var(--ink-faint);
+    font-family:'Inter';font-size:clamp(20px,2.6vw,26px);font-weight:500;
+    color:var(--ink);padding:8px 2px 12px;outline:none;
+    caret-color:var(--yellow);border-radius:0;
+    transition:border-color .2s;
+  }
+  input[type=text]:focus{border-bottom-color:var(--yellow);border-bottom-width:3px;margin-bottom:-1px}
+  input[type=text]::placeholder{color:var(--ink-faint);font-weight:400}
+
+  .chips{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+  .chip{
+    font-family:'Inter';font-size:15px;font-weight:500;color:var(--ink);
+    background:transparent;border:1.5px solid rgba(26,24,22,.3);
+    border-radius:999px;padding:10px 18px;cursor:pointer;
+    transition:background .15s,border-color .15s;
+  }
+  .chip:hover{border-color:var(--ink)}
+  .chip:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+  .chip[aria-pressed="true"]{background:var(--yellow);border-color:var(--yellow)}
+
+  .controls{display:flex;align-items:center;gap:18px;margin-top:34px}
+  .btn{
+    font-family:'Inter';font-weight:600;font-size:16px;
+    background:var(--ink);color:var(--cream);border:none;cursor:pointer;
+    padding:13px 26px;border-radius:6px;
+    transition:transform .15s,background .15s;
+  }
+  .btn:hover{background:#000}
+  .btn:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+  .btn:active{transform:translateY(1px)}
+  .btn.yellow{background:var(--yellow);color:var(--ink)}
+  .btn.yellow:hover{background:#ffd335}
+  .hint{font-size:13px;color:var(--ink-faint)}
+  .hint kbd{
+    font-family:'Inter';font-size:12px;border:1px solid var(--ink-faint);
+    border-radius:4px;padding:1px 6px;margin:0 2px;
+  }
+  .err{font-size:13px;color:#a23b1e;margin-top:10px;min-height:18px}
+
+  .backlink{
+    position:fixed;left:28px;bottom:64px;z-index:30;
+    font-family:'Inter';font-size:13px;font-weight:500;color:var(--ink-soft);
+    background:none;border:none;cursor:pointer;padding:8px 4px;
+    visibility:hidden;
+  }
+  .backlink.show{visibility:visible}
+  .backlink:hover{color:var(--ink)}
+  .backlink:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+
+  /* ---------- progress underscores ---------- */
+  .progress{
+    position:fixed;left:0;right:0;bottom:0;z-index:30;
+    display:flex;justify-content:center;gap:10px;
+    padding:24px 24px 26px;
+  }
+  .tick{
+    width:clamp(26px,6vw,48px);height:5px;background:rgba(26,24,22,.14);
+    transition:background .35s;
+  }
+  .tick.done{background:var(--yellow)}
+  .tick.now{background:var(--ink)}
+
+  /* ---------- review card ---------- */
+  .card{
+    border:2px solid var(--ink);border-radius:12px;background:#fff;
+    padding:26px 28px 22px;margin:6px 0 8px;
+    box-shadow:6px 6px 0 var(--yellow);
+  }
+  .card .handle{
+    font-family:'Inter';font-weight:600;
+    font-size:clamp(20px,3.4vw,30px);letter-spacing:.01em;
+    word-break:break-all;margin-bottom:18px;
+  }
+  .card .handle .u{color:var(--yellow)}
+  .card dl{display:grid;grid-template-columns:auto 1fr;gap:7px 18px;font-size:14.5px}
+  .card dt{color:var(--ink-faint);letter-spacing:.06em;text-transform:uppercase;font-size:11.5px;padding-top:2px}
+  .card dd{color:var(--ink);line-height:1.45}
+  .card .foot{
+    margin-top:18px;padding-top:12px;border-top:1px solid rgba(26,24,22,.12);
+    font-size:11.5px;color:var(--ink-faint);letter-spacing:.08em;text-transform:uppercase;
+    display:flex;justify-content:space-between;
+  }
+  .editlink{background:none;border:none;font-size:13px;color:var(--ink-soft);
+    text-decoration:underline;text-underline-offset:3px;cursor:pointer;font-family:'Inter'}
+  .editlink:hover{color:var(--ink)}
+  .editlink:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+
+  /* ---------- done ---------- */
+  .done-mark{display:block;width:64px;height:10px;background:var(--yellow);margin-bottom:34px}
+  .done-text{font-family:'Newsreader',serif;font-size:clamp(24px,3.6vw,34px);line-height:1.3;max-width:24ch}
+  .done-sign{margin-top:28px;font-size:15px;color:var(--ink-soft)}
+
+  .roster{list-style:none;margin:14px 0 4px;font-size:15px;line-height:2;color:var(--ink-soft)}
+  .roster b{color:var(--ink);font-weight:600}
+  .roster span{color:var(--ink-faint)}
+
+  @media (max-width:768px){
+    .step{padding:70px 20px 96px}
+    .brand{padding:18px 20px}
+    .backlink{left:20px;bottom:58px}
+    .controls{flex-wrap:wrap}
+    .hint{display:none}
+    .card dl{grid-template-columns:1fr;gap:2px}
+    .card dt{margin-top:10px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .step,.step.active{transition:none}
+    .tick{transition:none}
+    .btn{transition:none}
+  }
+</style>
+</head>
+<body>
+
+<header class="brand" aria-hidden="true">
+  <span class="mark">underscore<span class="u">_</span></span>
+  <span class="count">application · est. 2021</span>
+</header>
+
+<button class="backlink" id="backBtn" type="button">&larr; Back</button>
+
+<main class="stage" id="stage">
+
+  <!-- Q1 — name -->
+  <section class="step" data-step="0" aria-labelledby="q1">
+    <div class="step-inner">
+      <p class="qnum"><b>1</b> / 6</p>
+      <p class="context">We're Underscore. <span class="stat">1,247 people</span> who give time to each other — founders, engineers, operators, the people who hold things up. This whole site is the application. It takes three minutes and teaches you everything as it goes.</p>
+      <h1 class="question" id="q1">First — what do people call you<span class="u">?</span></h1>
+      <input type="text" id="in-name" placeholder="Type your name" autocomplete="name" aria-label="Your name">
+      <p class="err" id="err-0"></p>
+      <div class="controls">
+        <button class="btn" type="button" data-next>OK</button>
+        <span class="hint">press <kbd>Enter ↵</kbd></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Q2 — city -->
+  <section class="step" data-step="1" aria-labelledby="q2">
+    <div class="step-inner">
+      <p class="qnum"><b>2</b> / 6</p>
+      <p class="context">The Core runs on chapters — <span class="stat">40 cities</span>, each one a small standing dinner table, not a conference. <strong>oakland_</strong>, <strong>berlin_</strong>, <strong>seoul_</strong>, <strong>detroit_</strong>. If your city isn't on the map yet, you might be the reason it gets there.</p>
+      <h2 class="question" id="q2">Where do you live<span class="u">?</span></h2>
+      <input type="text" id="in-city" placeholder="Your city" autocomplete="address-level2" aria-label="Your city">
+      <p class="err" id="err-1"></p>
+      <div class="controls">
+        <button class="btn" type="button" data-next>OK</button>
+        <span class="hint">press <kbd>Enter ↵</kbd></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Q3 — what do you build -->
+  <section class="step" data-step="2" aria-labelledby="q3">
+    <div class="step-inner">
+      <p class="qnum"><b>3</b> / 6</p>
+      <p class="context">Who's already in? People mid-build, like you:</p>
+      <ul class="roster" aria-label="Example members of the Core">
+        <li><b>Maya Chen</b> — founder <span>· Oakland</span></li>
+        <li><b>Sam Osei</b> — engineer <span>· Boston</span></li>
+        <li><b>Ana Reyes</b> — designer <span>· Mexico City</span></li>
+        <li><b>Leila Haddad</b> — researcher <span>· Beirut</span></li>
+        <li><b>Priya Nair</b> — product <span>· Bangalore</span></li>
+        <li><b>Tom Aiello</b> — manufacturer <span>· Detroit</span></li>
+      </ul>
+      <h2 class="question" id="q3">What are you building<span class="u">?</span></h2>
+      <input type="text" id="in-build" placeholder="One line is plenty" aria-label="What you are building">
+      <p class="err" id="err-2"></p>
+      <div class="controls">
+        <button class="btn" type="button" data-next>OK</button>
+        <span class="hint">press <kbd>Enter ↵</kbd></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Q4 — what could you give -->
+  <section class="step" data-step="3" aria-labelledby="q4">
+    <div class="step-inner">
+      <p class="qnum"><b>4</b> / 6</p>
+      <p class="context">Membership isn't dues — it's hours. The Core has logged <span class="stat">9,000 hours given</span> since 2021: intros made, office hours held, decks torn apart, hard calls taken. You give first. It comes back.</p>
+      <h2 class="question" id="q4">What could you give an hour to<span class="u">?</span></h2>
+      <div class="chips" role="group" aria-label="Pick what you could give. Choose any that fit.">
+        <button class="chip" type="button" aria-pressed="false">a warm intro</button>
+        <button class="chip" type="button" aria-pressed="false">office hours</button>
+        <button class="chip" type="button" aria-pressed="false">a code review</button>
+        <button class="chip" type="button" aria-pressed="false">a design crit</button>
+        <button class="chip" type="button" aria-pressed="false">a hiring call</button>
+        <button class="chip" type="button" aria-pressed="false">a pricing gut-check</button>
+        <button class="chip" type="button" aria-pressed="false">a factory question</button>
+        <button class="chip" type="button" aria-pressed="false">a first-customer push</button>
+      </div>
+      <p class="err" id="err-3"></p>
+      <div class="controls">
+        <button class="btn" type="button" data-next>OK</button>
+        <span class="hint">pick any, then <kbd>Enter ↵</kbd></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Q5 — what do you need -->
+  <section class="step" data-step="4" aria-labelledby="q5">
+    <div class="step-inner">
+      <p class="qnum"><b>5</b> / 6</p>
+      <p class="context">Here's the number we're proudest of. <span class="stat">Asks unanswered last year: 0.</span> Every member who raised a hand got an answer from another member. That only works if you actually ask. So — practice now.</p>
+      <h2 class="question" id="q5">What do you need right now<span class="u">?</span></h2>
+      <input type="text" id="in-need" placeholder="Be specific. Specific gets answered." aria-label="What you need right now">
+      <p class="err" id="err-4"></p>
+      <div class="controls">
+        <button class="btn" type="button" data-next>OK</button>
+        <span class="hint">press <kbd>Enter ↵</kbd></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Q6 — review + submit -->
+  <section class="step" data-step="5" aria-labelledby="q6">
+    <div class="step-inner">
+      <p class="qnum"><b>6</b> / 6</p>
+      <h2 class="question" id="q6" style="font-size:clamp(24px,3.4vw,34px)">This is how the Core would see you<span class="u">.</span></h2>
+      <div class="card" id="cardEl">
+        <p class="handle" id="cardHandle"></p>
+        <dl>
+          <dt>Builds</dt><dd id="cardBuild"></dd>
+          <dt>Gives</dt><dd id="cardGive"></dd>
+          <dt>Needs</dt><dd id="cardNeed"></dd>
+        </dl>
+        <p class="foot"><span>underscore_ · the core</span><span id="cardCity"></span></p>
+      </div>
+      <p class="err" id="err-5"></p>
+      <div class="controls">
+        <button class="btn yellow" type="button" data-next>Join the Core</button>
+        <button class="editlink" type="button" id="editBtn">edit an answer</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- done -->
+  <section class="step" data-step="6" aria-labelledby="qdone">
+    <div class="step-inner">
+      <span class="done-mark" aria-hidden="true"></span>
+      <p class="done-text" id="qdone">We read everything. A human replies within a week.</p>
+      <p class="done-sign">— the Core</p>
+    </div>
+  </section>
+
+</main>
+
+<nav class="progress" id="progress" aria-label="Application progress">
+  <span class="tick" data-tick="0"></span>
+  <span class="tick" data-tick="1"></span>
+  <span class="tick" data-tick="2"></span>
+  <span class="tick" data-tick="3"></span>
+  <span class="tick" data-tick="4"></span>
+  <span class="tick" data-tick="5"></span>
+</nav>
+
+<script>
+(function(){
+  var steps = Array.prototype.slice.call(document.querySelectorAll('.step'));
+  var ticks = Array.prototype.slice.call(document.querySelectorAll('.tick'));
+  var backBtn = document.getElementById('backBtn');
+  var state = { name:'', city:'', build:'', gives:[], need:'' };
+  var cur = 0;
+  var TOTAL = 6; // questions (step 6 is the done screen)
+
+  function inputFor(i){
+    return [ 'in-name','in-city','in-build',null,'in-need',null ][i]
+      ? document.getElementById([ 'in-name','in-city','in-build',null,'in-need',null ][i]) : null;
+  }
+
+  function snake(s){
+    return s.trim().toLowerCase().replace(/[^a-z0-9À-ɏ\s-]/gi,'').replace(/[\s-]+/g,'_');
+  }
+
+  function renderCard(){
+    var n = snake(state.name)||'you', c = snake(state.city)||'somewhere';
+    var handle = (n + '_' + c).split('_');
+    document.getElementById('cardHandle').innerHTML =
+      handle.map(function(p){ return p; }).join('<span class="u">_</span>');
+    document.getElementById('cardBuild').textContent = state.build || '—';
+    document.getElementById('cardGive').textContent = state.gives.length ? state.gives.join(', ') : '—';
+    document.getElementById('cardNeed').textContent = state.need || '—';
+    document.getElementById('cardCity').textContent = (state.city||'').toLowerCase() + ' · ' + new Date().getFullYear();
+  }
+
+  function paintProgress(){
+    ticks.forEach(function(t,i){
+      t.classList.toggle('done', i < cur);
+      t.classList.toggle('now', i === cur);
+    });
+    backBtn.classList.toggle('show', cur > 0 && cur < 6);
+  }
+
+  function show(i, goingBack){
+    steps.forEach(function(s, idx){
+      s.classList.remove('active','above');
+      if (idx < i) s.classList.add('above');
+      if (idx === i) s.classList.add('active');
+    });
+    cur = i;
+    if (i === 5) renderCard();
+    paintProgress();
+    // restore + focus
+    var inp = inputFor(i);
+    setTimeout(function(){
+      if (inp){ inp.focus(); }
+      else if (i === 3){ var c = steps[3].querySelector('.chip'); if(c) c.focus(); }
+      else if (i === 5){ var b = steps[5].querySelector('.btn'); if(b) b.focus(); }
+    }, 200);
+  }
+
+  function err(i, msg){
+    var el = document.getElementById('err-' + i);
+    if (el) el.textContent = msg || '';
+  }
+
+  function save(i){
+    var inp = inputFor(i);
+    if (i === 0) state.name = inp.value;
+    if (i === 1) state.city = inp.value;
+    if (i === 2) state.build = inp.value;
+    if (i === 4) state.need = inp.value;
+  }
+
+  function valid(i){
+    err(i,'');
+    if (i === 0 && !state.name.trim()){ err(0,'Even a nickname works.'); return false; }
+    if (i === 1 && !state.city.trim()){ err(1,'Anywhere on Earth counts.'); return false; }
+    if (i === 2 && !state.build.trim()){ err(2,'"Not sure yet" is an honest answer — type that.'); return false; }
+    if (i === 3 && !state.gives.length){ err(3,'Pick at least one. Giving first is the whole deal.'); return false; }
+    if (i === 4 && !state.need.trim()){ err(4,'Everyone needs something. That’s why this works.'); return false; }
+    return true;
+  }
+
+  function next(){
+    if (cur < 6){ save(cur); if (!valid(cur)) return; }
+    if (cur === 5){ show(6); return; } // submit
+    show(cur + 1);
+  }
+  function back(){ if (cur > 0 && cur < 6){ save(cur); err(cur,''); show(cur - 1, true); } }
+
+  // wire buttons
+  document.querySelectorAll('[data-next]').forEach(function(b){
+    b.addEventListener('click', next);
+  });
+  backBtn.addEventListener('click', back);
+  document.getElementById('editBtn').addEventListener('click', function(){ show(0); });
+
+  // chips
+  steps[3].querySelectorAll('.chip').forEach(function(chip){
+    chip.addEventListener('click', function(){
+      var on = chip.getAttribute('aria-pressed') === 'true';
+      chip.setAttribute('aria-pressed', on ? 'false' : 'true');
+      var label = chip.textContent;
+      if (on) state.gives = state.gives.filter(function(g){ return g !== label; });
+      else state.gives.push(label);
+      err(3,'');
+    });
+  });
+
+  // inputs persist on type
+  [0,1,2,4].forEach(function(i){
+    var inp = inputFor(i);
+    inp.addEventListener('input', function(){ save(i); err(i,''); });
+  });
+
+  // keyboard
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Enter'){
+      var t = e.target;
+      if (t && (t.tagName === 'BUTTON')) return; // let buttons behave
+      e.preventDefault();
+      next();
+    }
+    if (e.key === 'Escape') back();
+  });
+
+  show(0);
+})();
+</script>
+</body>
+</html>

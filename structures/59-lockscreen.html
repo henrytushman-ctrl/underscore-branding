@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — The Lock Screen</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='24' width='24' height='5' rx='2' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --yellow:#F5C518; --ink:#1A1816; --cream:#FAF6EE; --muted:#8a8378; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  ::selection { background:var(--yellow); color:var(--ink); }
+  body {
+    font-family:'Inter',sans-serif; background:#A8A294; min-height:100vh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; padding:46px 12px;
+    background-image:linear-gradient(rgba(0,0,0,.05) 1px, transparent 1px); background-size:100% 30px;
+  }
+  .device {
+    width:390px; max-width:96vw; height:780px; max-height:88vh; border-radius:46px;
+    background:#221F18; box-shadow:0 0 0 10px #14120E, 0 0 0 12px #34302A, 0 40px 90px rgba(0,0,0,.45);
+    position:relative; overflow:hidden; color:var(--cream);
+  }
+  .wallpaper {
+    position:absolute; inset:0;
+    background:radial-gradient(ellipse 90% 60% at 50% 70%, #2B2618 0%, #1C1913 55%, #14120E 100%);
+  }
+  .wallpaper::after {
+    content:""; position:absolute; left:50%; top:56%; transform:translateX(-50%);
+    width:120px; height:18px; background:var(--yellow); opacity:.16; border-radius:4px; filter:blur(2px);
+  }
+  .notch { position:absolute; top:12px; left:50%; transform:translateX(-50%); width:118px; height:28px; background:#0C0B08; border-radius:16px; z-index:6; }
+  .statusbar { position:absolute; top:16px; left:0; right:0; display:flex; justify-content:space-between; padding:0 28px; font-family:'IBM Plex Mono',monospace; font-size:12px; z-index:5; color:#CFC8B8; }
+
+  .screen { position:absolute; inset:0; overflow-y:auto; padding:64px 16px 90px; z-index:4; }
+  .clock { text-align:center; margin:26px 0 8px; }
+  .clock .t { font-size:64px; font-weight:300; letter-spacing:-.02em; }
+  .clock .d { font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:#A9A292; letter-spacing:.1em; margin-top:2px; }
+
+  .notif {
+    background:rgba(250,246,238,.1); backdrop-filter:blur(10px); border:1px solid rgba(250,246,238,.12);
+    border-radius:18px; padding:13px 15px; margin:10px 4px; cursor:pointer;
+    opacity:0; transform:translateY(-14px); animation:drop .5s ease forwards;
+    transition:background .15s;
+  }
+  .notif:hover { background:rgba(250,246,238,.16); }
+  @keyframes drop { to{ opacity:1; transform:none; } }
+  @media (prefers-reduced-motion:reduce){ .notif { animation:none; opacity:1; transform:none; } }
+  .nh { display:flex; align-items:center; gap:8px; }
+  .appicon { width:20px; height:20px; border-radius:5px; background:var(--yellow); color:var(--ink); display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700; flex-shrink:0; }
+  .appicon.call { background:#7BC47F; }
+  .appicon.cal { background:#E2742F; color:#fff; }
+  .nh .app { font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:.1em; color:#B8B09E; }
+  .nh .when { margin-left:auto; font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#8a8378; }
+  .nt { font-size:13.5px; font-weight:600; margin-top:7px; }
+  .nb { font-size:13px; color:#CFC8B8; line-height:1.45; margin-top:2px; }
+
+  .handle {
+    position:absolute; bottom:0; left:0; right:0; z-index:6; text-align:center; padding:14px 0 18px; cursor:pointer;
+    background:linear-gradient(transparent, rgba(12,11,8,.85) 55%);
+  }
+  .handle .pill { width:120px; height:5px; background:var(--yellow); border-radius:3px; margin:0 auto 8px; }
+  .handle .lbl { font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:.18em; color:#CFC8B8; }
+  .handle:hover .pill { box-shadow:0 0 14px rgba(245,197,24,.7); }
+
+  .appview {
+    position:absolute; inset:0; z-index:8; background:#17150F; padding:60px 20px 30px; overflow-y:auto;
+    transform:translateX(105%); transition:transform .3s ease;
+  }
+  .appview.open { transform:none; }
+  .backbar { position:absolute; top:18px; left:14px; z-index:9; background:none; border:0; color:var(--yellow); font-family:'IBM Plex Mono',monospace; font-size:13px; cursor:pointer; padding:8px; }
+  .appview h2 { font-size:21px; font-weight:700; margin-bottom:4px; }
+  .appview .meta { font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8a8378; letter-spacing:.1em; margin-bottom:18px; }
+  .appview p { font-size:14.5px; line-height:1.65; color:#D8D1C0; margin-bottom:14px; }
+  .appview .hl { background:rgba(245,197,24,.12); border-left:3px solid var(--yellow); padding:12px 14px; font-size:13.5px; color:#E4DECF; margin:14px 0; line-height:1.55; }
+
+  .sheet {
+    position:absolute; left:0; right:0; bottom:0; z-index:10; background:#221F18; border-radius:24px 24px 0 0;
+    padding:22px 22px 30px; transform:translateY(105%); transition:transform .32s ease;
+    border-top:1px solid #3A3528;
+  }
+  .sheet.open { transform:none; }
+  .sheet .grab { width:42px; height:4px; background:#4A4537; border-radius:2px; margin:0 auto 16px; }
+  .sheet h3 { font-size:18px; font-weight:700; }
+  .sheet p { font-size:13px; color:#A9A292; line-height:1.55; margin:8px 0 16px; }
+  .sheet input { width:100%; margin-bottom:10px; background:#17150F; border:1px solid #3A3528; color:var(--cream); padding:12px 14px; border-radius:10px; font-family:inherit; font-size:14px; outline:none; }
+  .sheet input:focus { border-color:var(--yellow); }
+  .sheet button.go { width:100%; background:var(--yellow); color:var(--ink); border:0; padding:14px; border-radius:10px; font-family:'IBM Plex Mono',monospace; font-size:13px; letter-spacing:.1em; font-weight:600; cursor:pointer; }
+
+  .caption { margin-top:26px; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.22em; color:#5d574b; text-align:center; }
+  @media (max-width:430px){ body{ padding:0; background:#221F18; } .device{ width:100%; height:100vh; max-height:none; border-radius:0; box-shadow:none; } .caption{ display:none; } }
+</style>
+</head>
+<body>
+
+<div class="device">
+  <div class="wallpaper"></div>
+  <div class="notch"></div>
+  <div class="statusbar">
+    <span id="sbTime">--:--</span>
+    <span>
+      <svg width="34" height="10" viewBox="0 0 34 10" style="vertical-align:middle"><g fill="#CFC8B8"><rect x="0" y="6" width="2" height="4" rx=".5"/><rect x="3" y="4" width="2" height="6" rx=".5"/><rect x="6" y="2" width="2" height="8" rx=".5"/><rect x="9" y="0" width="2" height="10" rx=".5"/><rect x="14" y="1" width="14" height="8" rx="2" fill="none" stroke="#CFC8B8"/><rect x="16" y="3" width="8" height="4" rx="1"/><rect x="29" y="3.5" width="2" height="3" rx="1"/></g></svg>
+    </span>
+  </div>
+
+  <div class="screen" id="lockscreen">
+    <div class="clock">
+      <div class="t" id="bigTime">--:--</div>
+      <div class="d" id="bigDate">—</div>
+    </div>
+    <div id="notifs"></div>
+  </div>
+
+  <div class="handle" id="joinHandle">
+    <div class="pill"></div>
+    <div class="lbl">SWIPE UP — JOIN THE CORE</div>
+  </div>
+
+  <div class="appview" id="appview">
+    <button class="backbar" id="backBtn">‹ back</button>
+    <div id="appBody"></div>
+  </div>
+
+  <div class="sheet" id="sheet">
+    <div class="grab"></div>
+    <h3>Join the Core</h3>
+    <p>1,247 members, 40 cities, 9,000 hours given, zero asks unanswered. Free; a human reads everything; the only dues is an occasional hour.</p>
+    <form onsubmit="event.preventDefault(); this.innerHTML='<p style=\'color:#FAF6EE; font-size:14px;\'>Received. A human replies within a week. Your phone will ring with help.</p>';">
+      <input type="text" placeholder="name" required>
+      <input type="text" placeholder="city" required>
+      <input type="text" placeholder="an hour you could give">
+      <button class="go" type="submit">SEND APPLICATION_</button>
+    </form>
+  </div>
+</div>
+
+<div class="caption">IMAGINE A PHONE THAT ONLY RANG WITH HELP. — UNDERSCORE_</div>
+
+<script>
+  // live clock
+  function tick(){
+    const d = new Date();
+    const hm = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    document.getElementById('sbTime').textContent = hm;
+    document.getElementById('bigTime').textContent = hm;
+    document.getElementById('bigDate').textContent = d.toLocaleDateString([], {weekday:'long', month:'long', day:'numeric'}).toUpperCase();
+  }
+  tick(); setInterval(tick, 1000);
+
+  const NOTIFS = [
+    { app:"THE_CORE", icon:"_", when:"now", title:"Sam Osei answered your post", body:"\"I've hit this exact bug. Call? This is faster out loud.\"",
+      view:{ title:"Sam answered in 3 minutes", meta:"THE_CORE · ASK #4,112", html:"<p>You posted a race condition at 12:01am. Sam Osei (engineer, Boston) called at 12:04 — he'd hit it before. The bug was dead by 12:27.</p><div class='hl'>House rule: if it's eating you at midnight, it's a midnight problem. 63 midnight calls were taken last year. All answered.</div><p>You asked how to repay him. You don't. You pass it on — that's the entire mechanism of the Core.</p>" } },
+    { app:"THE_CORE", icon:"_", when:"2m", title:"Berlin chapter — Thursday", body:"Jonas is hosting at the workshop. The good stool goes to whoever's newest.",
+      view:{ title:"Berlin chapter, Thursday 19:00", meta:"THE_CORE · CHAPTERS", html:"<p>Standing weekly table hosted by Jonas Weber (builder, Berlin). One agenda item, same as always: who needs what, and who's got it.</p><div class='hl'>Forty cities run open tables. You're a stranger at exactly one of them, once.</div><p>Bring a problem, ideally. Beer optional.</p>" } },
+    { app:"UNDERSCORE_", icon:"_", when:"9m", title:"This month the Core gave 740 hours", body:"31 intros · 58 asks · 0 unanswered. Books published, as always.",
+      view:{ title:"May digest — published", meta:"UNDERSCORE_ · ANNOUNCEMENTS", html:"<p>Underscore is a give-first community, est. 2021. The books are public every month:</p><div class='hl'>740 hours given · 31 introductions · 58 asks posted · 0 unanswered.</div><p>There's no business model. Time in, time out. The zero is the number we protect — five years and holding.</p>" } },
+    { app:"MESSAGES", icon:"M", when:"21m", title:"Maya Chen", body:"intro made → Jonas (Berlin). He's expecting your drawings. Deadline's already in the thread.",
+      view:{ title:"Maya Chen", meta:"MESSAGES · OAKLAND", html:"<p>\"Intro made → Jonas (Berlin). He's expecting your drawings — I put your deadline in the thread so you don't have to do the awkward part.\"</p><div class='hl'>The Core made 312 introductions last year. Average time from ask to intro: 4 hours.</div><p>\"Also: when this works, do it for the next person. That's the dues.\"</p>" } },
+    { app:"PHONE", icon:"✆", iconClass:"call", when:"1h", title:"Missed call — Leila Haddad", body:"Beirut · \"Saw your question in the research channel. Calling with a shortcut.\"",
+      view:{ title:"Leila Haddad — voicemail", meta:"PHONE · BEIRUT", html:"<p>\"Hi — saw your study-design question. You're asking the wrong question, which is the good news, because the right one is easier. Calling back at four, or come to office hours.\"</p><div class='hl'>Leila has held weekly office hours for two years without a miss. Half-formed questions outperform polished ones.</div>" } },
+    { app:"CALENDAR", icon:"17", iconClass:"cal", when:"2h", title:"Office hours with Priya — 16:00", body:"Bring the roadmap knot. Average slide reduction: 42%.",
+      view:{ title:"Office hours with Priya Nair", meta:"CALENDAR · TOMORROW 16:00", html:"<p>Priya Nair (product, Bangalore) runs deck and roadmap surgery. Kind in tone, surgical in effect.</p><div class='hl'>What to bring: a problem, ideally. What it costs: nothing. What she asks: that you do this for someone else within the year.</div>" } },
+  ];
+
+  const notifsEl = document.getElementById('notifs');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  NOTIFS.forEach((n, i)=>{
+    const el = document.createElement('div');
+    el.className = 'notif';
+    el.style.animationDelay = reduced ? '0s' : (i * 1.4) + 's';
+    el.innerHTML = `<div class="nh"><div class="appicon ${n.iconClass||''}">${n.icon}</div><span class="app">${n.app}</span><span class="when">${n.when}</span></div>
+      <div class="nt">${n.title}</div><div class="nb">${n.body}</div>`;
+    el.onclick = ()=>{
+      document.getElementById('appBody').innerHTML = `<h2>${n.view.title}</h2><div class="meta">${n.view.meta}</div>${n.view.html}`;
+      document.getElementById('appview').classList.add('open');
+    };
+    notifsEl.appendChild(el);
+  });
+  document.getElementById('backBtn').onclick = ()=>document.getElementById('appview').classList.remove('open');
+  document.getElementById('joinHandle').onclick = ()=>document.getElementById('sheet').classList.add('open');
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ document.getElementById('sheet').classList.remove('open'); document.getElementById('appview').classList.remove('open'); } });
+  // tap outside sheet closes it
+  document.querySelector('.device').addEventListener('click', e=>{
+    const sheet = document.getElementById('sheet');
+    if(sheet.classList.contains('open') && !sheet.contains(e.target) && e.target.id!=='joinHandle' && !document.getElementById('joinHandle').contains(e.target)) sheet.classList.remove('open');
+  });
+</script>
+</body>
+</html>

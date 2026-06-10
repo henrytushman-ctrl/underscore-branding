@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — The Concourse</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='24' width='24' height='5' rx='2' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;900&family=Inter+Tight:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --yellow:#F5C518; --ink:#1A1816; --cream:#FAF6EE; --muted:#8a8378; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  ::selection { background:var(--yellow); color:var(--ink); }
+  body { font-family:'Inter Tight',sans-serif; background:var(--ink); color:var(--cream); overflow-x:hidden; -webkit-font-smoothing:antialiased; }
+
+  .band { position:relative; border-bottom:1px solid rgba(250,246,238,.12); overflow:hidden; white-space:nowrap; cursor:pointer; }
+  .band .track { display:inline-flex; align-items:center; will-change:transform; animation:scrollL var(--spd,40s) linear infinite; }
+  .band.rev .track { animation-name:scrollR; }
+  .band.paused .track, .band:hover .track { animation-play-state:paused; }
+  @keyframes scrollL { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+  @keyframes scrollR { from{transform:translateX(-50%)} to{transform:translateX(0)} }
+  @media (prefers-reduced-motion:reduce){
+    .band { overflow-x:auto; }
+    .band .track { animation:none !important; }
+  }
+  .seg { display:inline-flex; align-items:center; }
+  .us { color:var(--yellow); margin:0 .35em; font-weight:900; }
+
+  .b-word { background:var(--cream); color:var(--ink); }
+  .b-word .track { font-family:'Archivo',sans-serif; font-weight:900; font-size:clamp(54px,9vw,120px); letter-spacing:-.03em; padding:12px 0; }
+  .b-manif .track { font-size:clamp(20px,2.6vw,30px); font-weight:500; padding:22px 0; color:#D8D1C0; }
+  .b-core { background:#221F18; }
+  .b-core .track { padding:26px 0; }
+  .plate { font-family:'IBM Plex Mono',monospace; font-size:clamp(15px,1.8vw,20px); border:1px solid #3A3528; padding:14px 22px; margin:0 12px; border-radius:4px; background:#1D1A13; letter-spacing:.06em; }
+  .plate b { color:var(--yellow); font-weight:500; }
+  .b-ticker { background:var(--yellow); color:var(--ink); }
+  .b-ticker .track { font-family:'IBM Plex Mono',monospace; font-size:13px; letter-spacing:.1em; padding:10px 0; font-weight:500; }
+  .b-stats .track { font-family:'Archivo',sans-serif; font-weight:900; font-size:clamp(44px,7vw,96px); letter-spacing:-.03em; padding:14px 0; }
+  .b-stats .lbl { font-family:'IBM Plex Mono',monospace; font-size:clamp(11px,1.2vw,14px); letter-spacing:.2em; font-weight:400; color:var(--muted); margin:0 26px 0 10px; }
+  .b-quote { background:var(--cream); color:var(--ink); }
+  .b-quote .track { font-size:clamp(20px,3vw,34px); font-weight:500; font-style:italic; padding:24px 0; }
+  .b-quote .attr { font-family:'IBM Plex Mono',monospace; font-size:13px; font-style:normal; color:var(--muted); margin:0 44px 0 14px; }
+  .b-cities .track { font-family:'IBM Plex Mono',monospace; font-size:14px; letter-spacing:.22em; padding:12px 0; color:#A9A292; }
+
+  .detail { display:none; background:#11100B; color:#CFC8B8; font-family:'IBM Plex Mono',monospace; font-size:12.5px; padding:12px 22px; letter-spacing:.04em; border-bottom:1px solid rgba(250,246,238,.12); white-space:normal; }
+  .detail.show { display:block; }
+
+  .still {
+    background:var(--ink); padding:78px 22px 86px; text-align:center; position:relative;
+    border-top:6px solid var(--yellow); border-bottom:6px solid var(--yellow);
+  }
+  .still .k { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.3em; color:var(--muted); }
+  .still h1 { font-family:'Archivo',sans-serif; font-weight:900; font-size:clamp(30px,4.6vw,58px); letter-spacing:-.02em; margin:16px auto 10px; max-width:22ch; line-height:1.05; }
+  .still p { color:#A9A292; max-width:52ch; margin:0 auto; line-height:1.6; font-size:16px; }
+  .still form { margin:30px auto 0; display:flex; gap:10px; flex-wrap:wrap; justify-content:center; max-width:680px; }
+  .still input { flex:1 1 160px; background:#221F18; border:1px solid #3A3528; color:var(--cream); padding:13px 15px; border-radius:6px; font-family:inherit; font-size:14px; outline:none; }
+  .still input:focus { border-color:var(--yellow); }
+  .still button { background:var(--yellow); color:var(--ink); border:0; padding:13px 28px; border-radius:6px; font-family:'IBM Plex Mono',monospace; font-size:13px; letter-spacing:.1em; font-weight:600; cursor:pointer; }
+  .still button:hover { filter:brightness(1.06); }
+  .foot { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--muted); letter-spacing:.16em; text-align:center; padding:20px; }
+  .hint { position:fixed; bottom:14px; right:16px; z-index:10; font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--muted); letter-spacing:.1em; background:rgba(17,16,11,.8); padding:6px 12px; border-radius:999px; }
+</style>
+</head>
+<body>
+
+<!-- 1 wordmark -->
+<div class="band b-word" data-detail="This is Underscore. The line under everything. Hover any band to stop it; click for the small print.">
+  <div class="track" style="--spd:46s">
+    <span class="seg">underscore<span class="us">_</span>a community that gives first<span class="us">_</span>underscore<span class="us">_</span>est. 2021<span class="us">_</span></span>
+    <span class="seg">underscore<span class="us">_</span>a community that gives first<span class="us">_</span>underscore<span class="us">_</span>est. 2021<span class="us">_</span></span>
+  </div>
+</div>
+<div class="detail"></div>
+
+<!-- 2 manifesto -->
+<div class="band b-manif rev" data-detail="The whole philosophy, in transit: give first, ask later. Nobody keeps score. Everybody keeps showing up.">
+  <div class="track" style="--spd:58s">
+    <span class="seg">Give first, ask later.<span class="us">_</span>The ask is a contribution.<span class="us">_</span>Time is the only dues.<span class="us">_</span>Nobody keeps score; everybody shows up.<span class="us">_</span></span>
+    <span class="seg">Give first, ask later.<span class="us">_</span>The ask is a contribution.<span class="us">_</span>Time is the only dues.<span class="us">_</span>Nobody keeps score; everybody shows up.<span class="us">_</span></span>
+  </div>
+</div>
+<div class="detail"></div>
+
+<!-- 3 the Core -->
+<div class="band b-core" data-detail="The Core: Underscore's member community. 1,247 builders, operators and researchers across 40 cities. These plates are real people; the board never shows everyone.">
+  <div class="track" style="--spd:64s">
+    <span class="seg">
+      <span class="plate">maya<b>_</b>oak · FOUNDER</span><span class="plate">sam<b>_</b>bos · ENGINEER</span><span class="plate">ana<b>_</b>mex · DESIGNER</span><span class="plate">david<b>_</b>sel · OPERATOR</span><span class="plate">leila<b>_</b>bey · RESEARCHER</span><span class="plate">jonas<b>_</b>ber · BUILDER</span><span class="plate">priya<b>_</b>blr · PRODUCT</span><span class="plate">tom<b>_</b>det · MANUFACTURER</span>
+    </span>
+    <span class="seg">
+      <span class="plate">maya<b>_</b>oak · FOUNDER</span><span class="plate">sam<b>_</b>bos · ENGINEER</span><span class="plate">ana<b>_</b>mex · DESIGNER</span><span class="plate">david<b>_</b>sel · OPERATOR</span><span class="plate">leila<b>_</b>bey · RESEARCHER</span><span class="plate">jonas<b>_</b>ber · BUILDER</span><span class="plate">priya<b>_</b>blr · PRODUCT</span><span class="plate">tom<b>_</b>det · MANUFACTURER</span>
+    </span>
+  </div>
+</div>
+<div class="detail"></div>
+
+<!-- 4 gives ticker -->
+<div class="band b-ticker rev" data-detail="The departures board of generosity — real exchanges, updated as they happen. Average time from ask to first answer: 40 minutes.">
+  <div class="track" style="--spd:26s">
+    <span class="seg">MAYA→JONAS · SUPPLIER INTRO · OAK-BER&nbsp;&nbsp;_&nbsp;&nbsp;SAM→NADIA · MIDNIGHT DEBUG · 23 MIN&nbsp;&nbsp;_&nbsp;&nbsp;TOM→ANA · TOOLING REDESIGN · 4→2&nbsp;&nbsp;_&nbsp;&nbsp;LEILA · OFFICE HOURS · WK 104&nbsp;&nbsp;_&nbsp;&nbsp;PRIYA→6 DECKS · SUNDAY SURGERY&nbsp;&nbsp;_&nbsp;&nbsp;CHIDI→APAPA CUSTOMS · SAME DAY&nbsp;&nbsp;_&nbsp;&nbsp;</span>
+    <span class="seg">MAYA→JONAS · SUPPLIER INTRO · OAK-BER&nbsp;&nbsp;_&nbsp;&nbsp;SAM→NADIA · MIDNIGHT DEBUG · 23 MIN&nbsp;&nbsp;_&nbsp;&nbsp;TOM→ANA · TOOLING REDESIGN · 4→2&nbsp;&nbsp;_&nbsp;&nbsp;LEILA · OFFICE HOURS · WK 104&nbsp;&nbsp;_&nbsp;&nbsp;PRIYA→6 DECKS · SUNDAY SURGERY&nbsp;&nbsp;_&nbsp;&nbsp;CHIDI→APAPA CUSTOMS · SAME DAY&nbsp;&nbsp;_&nbsp;&nbsp;</span>
+  </div>
+</div>
+<div class="detail"></div>
+
+<!-- 5 stats -->
+<div class="band b-stats" data-detail="Published monthly, every month, since 2021. The zero is the one we protect.">
+  <div class="track" style="--spd:42s">
+    <span class="seg">1,247<span class="lbl">MEMBERS</span>40<span class="lbl">CITIES</span>9,000<span class="lbl">HOURS GIVEN</span><span style="color:var(--yellow)">0</span><span class="lbl">ASKS UNANSWERED</span></span>
+    <span class="seg">1,247<span class="lbl">MEMBERS</span>40<span class="lbl">CITIES</span>9,000<span class="lbl">HOURS GIVEN</span><span style="color:var(--yellow)">0</span><span class="lbl">ASKS UNANSWERED</span></span>
+  </div>
+</div>
+<div class="detail"></div>
+
+<!-- 6 quote -->
+<div class="band b-quote rev" data-detail="Said in week one. Still true in year three. We checked.">
+  <div class="track" style="--spd:52s">
+    <span class="seg">"It's the first room I've been in where being stuck isn't embarrassing."<span class="attr">— PRIYA NAIR, BANGALORE</span>"Give first works because almost nobody tries it."<span class="attr">— MAYA CHEN, OAKLAND</span></span>
+    <span class="seg">"It's the first room I've been in where being stuck isn't embarrassing."<span class="attr">— PRIYA NAIR, BANGALORE</span>"Give first works because almost nobody tries it."<span class="attr">— MAYA CHEN, OAKLAND</span></span>
+  </div>
+</div>
+<div class="detail"></div>
+
+<!-- 7 cities -->
+<div class="band b-cities" data-detail="Every city runs an open table. You're a stranger at exactly one of them, once.">
+  <div class="track" style="--spd:48s">
+    <span class="seg">OAKLAND · BOSTON · MEXICO CITY · SEOUL · BEIRUT · BERLIN · BANGALORE · DETROIT · LONDON · LAGOS · SÃO PAULO · WARSAW · +28 MORE ·&nbsp;</span>
+    <span class="seg">OAKLAND · BOSTON · MEXICO CITY · SEOUL · BEIRUT · BERLIN · BANGALORE · DETROIT · LONDON · LAGOS · SÃO PAULO · WARSAW · +28 MORE ·&nbsp;</span>
+  </div>
+</div>
+<div class="detail"></div>
+
+<!-- 8 THE STILL BAND -->
+<section class="still">
+  <div class="k">THE ONLY BAND THAT DOESN'T MOVE</div>
+  <h1>The only thing standing still is the line.</h1>
+  <p>Everything in here is in motion — asks, answers, intros, hours. The line they all run on doesn't move. Join the Core: free, human-reviewed, paid for in occasional hours.</p>
+  <form onsubmit="event.preventDefault(); this.innerHTML='<p style=\'color:#FAF6EE\'>Received. A human replies within a week. Mind the gap.</p>';">
+    <input type="text" placeholder="name" required>
+    <input type="text" placeholder="city" required>
+    <input type="text" placeholder="an hour you could give">
+    <button type="submit">JOIN THE CORE_</button>
+  </form>
+</section>
+
+<div class="foot">UNDERSCORE_ — A CONCOURSE, NOT A FEED · EST. 2021</div>
+<div class="hint">HOVER = PAUSE · CLICK = SMALL PRINT</div>
+
+<script>
+  document.querySelectorAll('.band').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      b.classList.toggle('paused');
+      const d = b.nextElementSibling;
+      if(d && d.classList.contains('detail')){
+        d.textContent = b.dataset.detail;
+        d.classList.toggle('show');
+      }
+    });
+  });
+</script>
+</body>
+</html>
