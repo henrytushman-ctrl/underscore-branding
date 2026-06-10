@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — The Foundry</title>
+<meta name="description" content="Underscore is where things get made together. Built on a line.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%231A1816'/%3E%3Crect x='12' y='42' width='40' height='9' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --yellow:#F5C518;
+    --yellow-deep:#E3B40E;
+    --ink:#1A1816;
+    --cream:#FAF6EE;
+    --steel:#211E1B;
+    --rule:rgba(26,24,22,.16);
+    --s1:8px; --s2:16px; --s3:24px; --s4:40px; --s5:64px; --s6:96px; --s7:144px;
+    --pad:clamp(20px, 5vw, 72px);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  ::selection{background:var(--yellow);color:var(--ink);}
+  body{
+    font-family:'Archivo',system-ui,sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    /* faint blueprint grid */
+    background-image:
+      linear-gradient(rgba(26,24,22,.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(26,24,22,.045) 1px, transparent 1px);
+    background-size:56px 56px;
+  }
+  .display{font-family:'Anton',sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.01em;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  a{color:inherit;}
+  .wrap{max-width:1280px;margin:0 auto;padding-left:var(--pad);padding-right:var(--pad);}
+
+  /* ---------- NAV ---------- */
+  .nav{
+    position:sticky;top:0;z-index:50;
+    background:var(--ink);color:var(--cream);
+    border-bottom:6px solid var(--yellow);
+  }
+  .nav-inner{
+    max-width:1280px;margin:0 auto;
+    padding:14px var(--pad);
+    display:flex;align-items:center;gap:var(--s4);
+  }
+  .logo{
+    display:flex;align-items:baseline;gap:10px;
+    text-decoration:none;font-weight:700;font-size:18px;
+    letter-spacing:.04em;text-transform:uppercase;
+  }
+  .logo .mark{
+    display:inline-block;width:34px;height:9px;background:var(--yellow);
+    transform:translateY(-1px);
+  }
+  .nav-links{display:flex;gap:var(--s3);margin-left:auto;align-items:center;}
+  .nav-links a{
+    text-decoration:none;font-weight:600;font-size:13px;
+    text-transform:uppercase;letter-spacing:.12em;
+    padding:6px 2px;border-bottom:3px solid transparent;
+    transition:border-color .15s ease,color .15s ease;
+  }
+  .nav-links a:hover{border-bottom-color:var(--yellow);color:var(--yellow);}
+  .btn{
+    display:inline-block;text-decoration:none;font-weight:700;
+    font-size:13px;text-transform:uppercase;letter-spacing:.12em;
+    padding:13px 26px;border:3px solid var(--ink);
+    background:var(--yellow);color:var(--ink);
+    transition:background .15s ease,color .15s ease,transform .15s ease;
+  }
+  .btn:hover{background:var(--ink);color:var(--yellow);border-color:var(--yellow);}
+  .nav .btn{border-color:var(--yellow);padding:10px 20px;}
+  .nav .btn:hover{background:var(--cream);color:var(--ink);border-color:var(--cream);}
+  .menu-note{display:none;}
+
+  /* ---------- HERO ---------- */
+  .hero{padding:var(--s7) 0 var(--s6);}
+  .kicker{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;letter-spacing:.22em;text-transform:uppercase;
+    display:flex;align-items:center;gap:14px;margin-bottom:var(--s4);
+  }
+  .kicker::before{content:"";display:block;width:48px;height:6px;background:var(--yellow);}
+  .hero h1{
+    font-size:clamp(56px, 11.5vw, 168px);
+    line-height:.92;
+    letter-spacing:.005em;
+  }
+  .beam{display:block;width:100%;height:auto;margin:clamp(20px,3.5vw,44px) 0 var(--s5);}
+  .hero-cols{
+    display:grid;grid-template-columns:1.3fr 1fr;gap:var(--s5);
+    align-items:start;
+  }
+  .hero-lede{
+    font-size:clamp(19px,2vw,24px);font-weight:500;line-height:1.45;max-width:30ch;
+  }
+  .hero-side p{font-size:16px;max-width:42ch;margin-bottom:var(--s3);color:rgba(26,24,22,.82);}
+  .hero-side .btn{margin-top:var(--s1);}
+
+  /* ---------- SLABS ---------- */
+  .make{padding:var(--s6) 0 var(--s7);}
+  .sec-head{
+    display:flex;align-items:baseline;justify-content:space-between;
+    gap:var(--s3);flex-wrap:wrap;margin-bottom:var(--s5);
+    border-bottom:3px solid var(--ink);padding-bottom:var(--s2);
+  }
+  .sec-head h2{font-size:clamp(34px,4.5vw,58px);line-height:1;}
+  .sec-head .index{font-family:'IBM Plex Mono',monospace;font-size:14px;letter-spacing:.18em;}
+  .slabs{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s4);}
+  .slab{
+    border-top:14px solid var(--ink);
+    padding-top:var(--s3);
+    transition:border-color .18s ease;
+  }
+  .slab:hover{border-top-color:var(--yellow);}
+  .slab h3{font-size:26px;line-height:1.05;margin-bottom:var(--s2);}
+  .slab .tag{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;
+    letter-spacing:.18em;text-transform:uppercase;
+    color:rgba(26,24,22,.6);display:block;margin-bottom:var(--s2);
+  }
+  .slab p{font-size:16px;color:rgba(26,24,22,.82);max-width:34ch;}
+
+  /* ---------- THE CORE / ROSTER ---------- */
+  .core{
+    background:var(--steel);color:var(--cream);
+    background-image:linear-gradient(180deg, rgba(245,197,24,.04), transparent 240px),
+      linear-gradient(rgba(250,246,238,.035) 1px, transparent 1px);
+    background-size:auto, 100% 8px;
+    border-top:8px solid var(--yellow);
+    padding:var(--s7) 0;
+  }
+  .core .kicker{color:var(--yellow);}
+  .core h2{font-size:clamp(40px,6vw,84px);line-height:.95;margin-bottom:var(--s2);}
+  .core .credo{
+    font-size:clamp(18px,2vw,22px);font-weight:500;color:rgba(250,246,238,.85);
+    max-width:42ch;margin-bottom:var(--s5);
+  }
+  .core .credo strong{color:var(--yellow);font-weight:600;}
+  .roster{border-top:2px solid rgba(250,246,238,.25);}
+  .roster-row{
+    display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:var(--s3);
+    padding:18px 6px;
+    border-bottom:1px solid rgba(250,246,238,.18);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:clamp(13px,1.3vw,16px);
+    letter-spacing:.16em;text-transform:uppercase;
+    transition:background .15s ease,color .15s ease;
+  }
+  .roster-row:hover{background:rgba(245,197,24,.08);}
+  .roster-row .r-name{font-weight:600;}
+  .roster-row .r-trade{color:rgba(250,246,238,.62);}
+  .roster-row .r-city{text-align:right;color:rgba(250,246,238,.62);}
+  .roster-head{
+    font-size:11px;color:var(--yellow);border-bottom:2px solid rgba(250,246,238,.25);
+    padding-bottom:10px;
+  }
+  .roster-head:hover{background:transparent;}
+  .roster-foot{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.18em;
+    text-transform:uppercase;color:rgba(250,246,238,.5);
+    padding-top:14px;
+  }
+  .hours{
+    margin-top:var(--s6);
+    border-top:2px solid rgba(250,246,238,.25);
+    padding-top:var(--s4);
+  }
+  .hours .big{
+    font-size:clamp(64px,12vw,176px);
+    line-height:.92;color:var(--yellow);
+    display:block;
+  }
+  .hours .big-sub{
+    font-size:clamp(28px,4.5vw,64px);line-height:1;display:block;margin-top:6px;
+  }
+  .stat-row{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s4);
+    margin-top:var(--s5);
+  }
+  .stat{border-left:6px solid var(--yellow);padding-left:var(--s2);}
+  .stat .n{font-family:'Anton',sans-serif;font-size:clamp(30px,3.5vw,46px);line-height:1;display:block;}
+  .stat .l{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.2em;
+    text-transform:uppercase;color:rgba(250,246,238,.6);display:block;margin-top:8px;
+  }
+  .core-quote{
+    margin-top:var(--s6);max-width:60ch;
+    font-size:clamp(20px,2.4vw,28px);font-weight:500;line-height:1.4;
+  }
+  .core-quote footer{
+    margin-top:var(--s2);font-family:'IBM Plex Mono',monospace;
+    font-size:13px;letter-spacing:.16em;text-transform:uppercase;
+    color:rgba(250,246,238,.6);
+  }
+
+  /* ---------- JOIN BAND ---------- */
+  .join{background:var(--yellow);color:var(--ink);padding:var(--s7) 0;border-top:8px solid var(--ink);}
+  .join h2{font-size:clamp(52px,9vw,132px);line-height:.92;}
+  .join .beam-under{display:block;width:min(560px,90%);height:auto;margin:var(--s3) 0 var(--s4);}
+  .join p{font-size:clamp(19px,2vw,24px);font-weight:600;max-width:36ch;margin-bottom:var(--s4);}
+  .join .btn{background:var(--ink);color:var(--yellow);border-color:var(--ink);font-size:15px;padding:18px 38px;}
+  .join .btn:hover{background:var(--cream);color:var(--ink);border-color:var(--ink);}
+  .join .fine{
+    margin-top:var(--s3);font-family:'IBM Plex Mono',monospace;font-size:13px;
+    letter-spacing:.14em;text-transform:uppercase;color:rgba(26,24,22,.7);
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer.site{
+    background:var(--ink);color:var(--cream);padding:var(--s5) 0;
+  }
+  .foot-grid{display:flex;justify-content:space-between;gap:var(--s4);flex-wrap:wrap;align-items:flex-end;}
+  .foot-grid .logo{font-size:16px;}
+  .foot-links{display:flex;gap:var(--s3);flex-wrap:wrap;}
+  .foot-links a{
+    text-decoration:none;font-size:13px;font-weight:600;
+    text-transform:uppercase;letter-spacing:.12em;
+    border-bottom:2px solid transparent;transition:border-color .15s ease;
+  }
+  .foot-links a:hover{border-bottom-color:var(--yellow);}
+  .foot-fine{
+    margin-top:var(--s4);padding-top:var(--s3);
+    border-top:1px solid rgba(250,246,238,.2);
+    font-family:'IBM Plex Mono',monospace;font-size:12px;
+    letter-spacing:.12em;color:rgba(250,246,238,.5);
+    display:flex;justify-content:space-between;gap:var(--s3);flex-wrap:wrap;
+  }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width:920px){
+    .slabs{grid-template-columns:1fr;gap:var(--s4);}
+    .hero-cols{grid-template-columns:1fr;}
+  }
+  @media (max-width:768px){
+    .nav-links a:not(.btn){display:none;}
+    .nav-links a.keep{display:inline-block;}
+    .hero{padding:var(--s6) 0 var(--s5);}
+    .roster-row{grid-template-columns:1fr;gap:4px;padding:14px 2px;}
+    .roster-row .r-city{text-align:left;}
+    .roster-head{display:none;}
+    .stat-row{grid-template-columns:1fr;gap:var(--s3);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *,*::before,*::after{transition:none !important;animation:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<header class="nav">
+  <div class="nav-inner">
+    <a class="logo" href="#top" aria-label="Underscore home">
+      <span class="mark" aria-hidden="true"></span>
+      <span>Underscore</span>
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="#make">What we make</a>
+      <a href="#core" class="keep">Core</a>
+      <a href="#join">Join</a>
+      <a class="btn keep" href="#join">Join the Core</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<main id="top">
+<section class="hero">
+  <div class="wrap">
+    <p class="kicker">Underscore — The Foundry</p>
+    <h1 class="display">Built on<br>a line.</h1>
+
+    <!-- structural I-beam underscore -->
+    <svg class="beam" viewBox="0 0 1200 150" role="img" aria-label="A yellow structural I-beam, the Underscore mark" preserveAspectRatio="none">
+      <!-- end plates -->
+      <rect x="0" y="0" width="16" height="150" fill="#1A1816"/>
+      <rect x="1184" y="0" width="16" height="150" fill="#1A1816"/>
+      <!-- web -->
+      <rect x="16" y="28" width="1168" height="94" fill="#E3B40E"/>
+      <!-- flanges -->
+      <rect x="16" y="0" width="1168" height="28" fill="#F5C518" stroke="#1A1816" stroke-width="3"/>
+      <rect x="16" y="122" width="1168" height="28" fill="#F5C518" stroke="#1A1816" stroke-width="3"/>
+      <!-- web seam lines -->
+      <line x1="16" y1="46" x2="1184" y2="46" stroke="#1A1816" stroke-width="2" opacity=".35"/>
+      <line x1="16" y1="104" x2="1184" y2="104" stroke="#1A1816" stroke-width="2" opacity=".35"/>
+      <!-- rivets, two rows -->
+      <g fill="#1A1816">
+        <circle cx="80" cy="58" r="6"/><circle cx="200" cy="58" r="6"/><circle cx="320" cy="58" r="6"/><circle cx="440" cy="58" r="6"/><circle cx="560" cy="58" r="6"/><circle cx="680" cy="58" r="6"/><circle cx="800" cy="58" r="6"/><circle cx="920" cy="58" r="6"/><circle cx="1040" cy="58" r="6"/><circle cx="1130" cy="58" r="6"/>
+        <circle cx="80" cy="92" r="6"/><circle cx="200" cy="92" r="6"/><circle cx="320" cy="92" r="6"/><circle cx="440" cy="92" r="6"/><circle cx="560" cy="92" r="6"/><circle cx="680" cy="92" r="6"/><circle cx="800" cy="92" r="6"/><circle cx="920" cy="92" r="6"/><circle cx="1040" cy="92" r="6"/><circle cx="1130" cy="92" r="6"/>
+      </g>
+      <!-- rivet highlights -->
+      <g fill="#F5C518" opacity=".5">
+        <circle cx="78" cy="56" r="1.8"/><circle cx="198" cy="56" r="1.8"/><circle cx="318" cy="56" r="1.8"/><circle cx="438" cy="56" r="1.8"/><circle cx="558" cy="56" r="1.8"/><circle cx="678" cy="56" r="1.8"/><circle cx="798" cy="56" r="1.8"/><circle cx="918" cy="56" r="1.8"/><circle cx="1038" cy="56" r="1.8"/><circle cx="1128" cy="56" r="1.8"/>
+      </g>
+    </svg>
+
+    <div class="hero-cols">
+      <p class="hero-lede">Underscore is where things get made together. The mark is a line. The line holds weight.</p>
+      <div class="hero-side">
+        <p>We are a community of builders, operators, and experts — the Core — who put their hours, tools, and judgment under each other's work. No theater. No pitch nights. Work, and the people who carry it.</p>
+        <a class="btn" href="#core">Meet the crew</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ WHAT WE MAKE ============ -->
+<section class="make" id="make">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 class="display">What we make together</h2>
+      <span class="index mono">01 / WORKS</span>
+    </div>
+    <div class="slabs">
+      <article class="slab">
+        <span class="tag">Slab 01</span>
+        <h3 class="display">Companies that last</h3>
+        <p>Founders in the Core get their first ten customers, their first hire, and their hardest questions answered by people who have done it. Not advice. Help.</p>
+      </article>
+      <article class="slab">
+        <span class="tag">Slab 02</span>
+        <h3 class="display">Tools that travel</h3>
+        <p>What one member builds, every member can use. Playbooks, templates, code, suppliers, introductions. We pass tools down the line instead of selling them back to each other.</p>
+      </article>
+      <article class="slab">
+        <span class="tag">Slab 03</span>
+        <h3 class="display">People who stay</h3>
+        <p>The work changes. The crew doesn't. Members who joined in 2021 still answer the phone for members who joined last week. That's the whole structure.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ THE CORE — WORKS ROSTER ============ -->
+<section class="core" id="core">
+  <div class="wrap">
+    <p class="kicker">02 / The Core</p>
+    <h2 class="display">The works roster</h2>
+    <p class="credo">The Core is 1,200 builders, operators, and experts who give their time to each other. <strong>The Core gives first and asks later.</strong></p>
+
+    <div class="roster" role="table" aria-label="Core member roster">
+      <div class="roster-row roster-head" role="row">
+        <span role="columnheader">Name</span><span role="columnheader">Trade</span><span class="r-city" role="columnheader">City</span>
+      </div>
+      <div class="roster-row" role="row"><span class="r-name" role="cell">Maya Chen</span><span class="r-trade" role="cell">Founder</span><span class="r-city" role="cell">Oakland</span></div>
+      <div class="roster-row" role="row"><span class="r-name" role="cell">Sam Osei</span><span class="r-trade" role="cell">Engineer</span><span class="r-city" role="cell">Boston</span></div>
+      <div class="roster-row" role="row"><span class="r-name" role="cell">Ana Reyes</span><span class="r-trade" role="cell">Designer</span><span class="r-city" role="cell">Mexico City</span></div>
+      <div class="roster-row" role="row"><span class="r-name" role="cell">David Park</span><span class="r-trade" role="cell">Operator</span><span class="r-city" role="cell">Seoul</span></div>
+      <div class="roster-row" role="row"><span class="r-name" role="cell">Leila Haddad</span><span class="r-trade" role="cell">Researcher</span><span class="r-city" role="cell">Beirut</span></div>
+      <div class="roster-row" role="row"><span class="r-name" role="cell">Jonas Weber</span><span class="r-trade" role="cell">Builder</span><span class="r-city" role="cell">Berlin</span></div>
+      <div class="roster-row" role="row"><span class="r-name" role="cell">Priya Nair</span><span class="r-trade" role="cell">Product</span><span class="r-city" role="cell">Bangalore</span></div>
+      <div class="roster-row" role="row"><span class="r-name" role="cell">Tom Aiello</span><span class="r-trade" role="cell">Manufacturer</span><span class="r-city" role="cell">Detroit</span></div>
+      <p class="roster-foot">+ 1,192 more on the board · roster posted weekly</p>
+    </div>
+
+    <div class="hours">
+      <span class="big display">9,000 hours</span>
+      <span class="big-sub display">given, member to member.</span>
+      <div class="stat-row">
+        <div class="stat"><span class="n">1,200+</span><span class="l">Members on the line</span></div>
+        <div class="stat"><span class="n">40</span><span class="l">Cities, one crew</span></div>
+        <div class="stat"><span class="n">2021</span><span class="l">Founded, still standing</span></div>
+      </div>
+    </div>
+
+    <blockquote class="core-quote">
+      "I asked for an hour of help with my supply chain. Three members showed up, and one flew in. Nobody invoiced me."
+      <footer>— Tom Aiello, Manufacturer, Detroit</footer>
+    </blockquote>
+  </div>
+</section>
+
+<!-- ============ JOIN ============ -->
+<section class="join" id="join">
+  <div class="wrap">
+    <h2 class="display">Join the Core</h2>
+    <svg class="beam-under" viewBox="0 0 560 36" role="presentation" aria-hidden="true" preserveAspectRatio="none">
+      <rect x="0" y="0" width="560" height="36" fill="#1A1816"/>
+      <rect x="0" y="6" width="560" height="24" fill="#1A1816"/>
+      <g fill="#F5C518"><circle cx="40" cy="18" r="4"/><circle cx="120" cy="18" r="4"/><circle cx="200" cy="18" r="4"/><circle cx="280" cy="18" r="4"/><circle cx="360" cy="18" r="4"/><circle cx="440" cy="18" r="4"/><circle cx="520" cy="18" r="4"/></g>
+    </svg>
+    <p>We show up. We lend tools. We stay late. If that sounds like how you already work, you belong on the roster.</p>
+    <a class="btn" href="#join">Apply to join</a>
+    <p class="fine">Applications read by members, not machines · next intake July 2026</p>
+  </div>
+</section>
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="site">
+  <div class="wrap">
+    <div class="foot-grid">
+      <a class="logo" href="#top" aria-label="Underscore home">
+        <span class="mark" aria-hidden="true"></span>
+        <span>Underscore</span>
+      </a>
+      <nav class="foot-links" aria-label="Footer">
+        <a href="#make">What we make</a>
+        <a href="#core">Core</a>
+        <a href="#join">Join</a>
+        <a href="#top">Top</a>
+      </nav>
+    </div>
+    <div class="foot-fine">
+      <span>© 2026 Underscore. Built on a line.</span>
+      <span>EST. 2021 · 40 CITIES · CREW OF 1,200</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

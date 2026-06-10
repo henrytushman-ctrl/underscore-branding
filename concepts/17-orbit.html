@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — Nothing at the center but a line</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23FAF6EE'/%3E%3Crect x='5' y='23' width='22' height='5' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,300;1,9..144,400&family=Archivo:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --yellow:#F5C518;
+    --ink:#1A1816;
+    --cream:#FAF6EE;
+    --green:#1E3A2F;
+    --rule:rgba(26,24,22,.16);
+    --muted:rgba(26,24,22,.64);
+    --s1:.5rem; --s2:1rem; --s3:1.5rem; --s4:2.5rem; --s5:4rem; --s6:7rem;
+    --display:'Fraunces', Georgia, serif;
+    --body:'Archivo', Helvetica, Arial, sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  ::selection{background:var(--yellow);color:var(--ink)}
+  body{
+    background:var(--cream);
+    color:var(--ink);
+    font-family:var(--body);
+    font-size:1.0625rem;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1160px;margin:0 auto;padding:0 var(--s4)}
+
+  /* ---------- nav ---------- */
+  header.site{
+    border-bottom:1px solid var(--rule);
+    position:sticky;top:0;background:rgba(250,246,238,.92);backdrop-filter:blur(6px);z-index:10;
+  }
+  .nav{
+    display:flex;align-items:center;justify-content:space-between;gap:var(--s3);
+    padding:var(--s2) var(--s4);max-width:1160px;margin:0 auto;
+  }
+  .logo{
+    font-family:var(--display);
+    font-weight:500;
+    font-size:1.35rem;
+    letter-spacing:.01em;
+    text-decoration:none;color:var(--ink);
+    display:inline-flex;align-items:baseline;gap:.3rem;
+  }
+  .logo .bar{display:inline-block;width:1.1em;height:.22em;background:var(--yellow);transform:translateY(-.05em)}
+  .nav ul{display:flex;list-style:none;gap:var(--s3);align-items:center}
+  .nav a.link{
+    text-decoration:none;color:var(--ink);
+    font-size:.95rem;
+    border-bottom:2px solid transparent;padding-bottom:.1rem;
+    transition:border-color .18s ease;
+  }
+  .nav a.link:hover{border-bottom-color:var(--yellow)}
+  .btn{
+    display:inline-block;
+    font-family:var(--body);
+    font-weight:600;
+    font-size:.95rem;
+    letter-spacing:.02em;
+    text-decoration:none;
+    color:var(--cream);
+    background:var(--ink);
+    padding:.7rem 1.5rem;
+    border-radius:999px;
+    border:1px solid var(--ink);
+    transition:background .2s ease,color .2s ease;
+  }
+  .btn:hover{background:var(--yellow);color:var(--ink)}
+  .btn.light{background:var(--cream);color:var(--ink);border-color:var(--cream)}
+  .btn.light:hover{background:var(--yellow);border-color:var(--yellow)}
+
+  /* ---------- hero ---------- */
+  .hero{
+    display:grid;
+    grid-template-columns:5fr 6fr;
+    align-items:center;
+    gap:var(--s5);
+    padding:var(--s6) 0 var(--s5);
+  }
+  .eyebrow{
+    font-size:.78rem;
+    font-weight:600;
+    letter-spacing:.24em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:var(--s3);
+    display:flex;align-items:center;gap:.8rem;
+  }
+  .eyebrow::before{content:"";width:2em;height:3px;background:var(--yellow)}
+  .hero h1{
+    font-family:var(--display);
+    font-weight:400;
+    font-size:clamp(2.5rem, 5vw, 3.9rem);
+    line-height:1.08;
+    letter-spacing:-.01em;
+    margin-bottom:var(--s3);
+  }
+  .hero h1 em{font-style:italic;font-weight:300}
+  .hero .sub{
+    color:var(--muted);
+    max-width:30em;
+    margin-bottom:var(--s4);
+  }
+  .hero-actions{display:flex;gap:var(--s2);align-items:center;flex-wrap:wrap}
+  .hero-actions .quiet{
+    text-decoration:none;color:var(--ink);font-weight:500;font-size:.95rem;
+    border-bottom:2px solid var(--yellow);padding-bottom:.15rem;
+    transition:border-color .18s ease;
+  }
+  .hero-actions .quiet:hover{border-bottom-color:var(--ink)}
+
+  /* ---------- orbit figure ---------- */
+  .orbit-fig{position:relative}
+  .orbit-svg{width:100%;height:auto;display:block}
+  .ring{fill:none;stroke:rgba(26,24,22,.30);stroke-width:1}
+  .orbit{transform-box:view-box;transform-origin:50% 50%}
+  .o1{animation:spin 110s linear infinite}
+  .o2{animation:spin-rev 160s linear infinite}
+  .o3{animation:spin 220s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes spin-rev{to{transform:rotate(-360deg)}}
+  .orbit-svg:hover .orbit{animation-play-state:paused}
+  .node{fill:var(--ink);cursor:pointer;transition:fill .15s ease}
+  .node:hover{fill:var(--yellow);stroke:var(--ink);stroke-width:1.5}
+  .orbit-name{
+    position:absolute;left:50%;bottom:-.4rem;transform:translateX(-50%);
+    font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--muted);white-space:nowrap;
+    border-top:1px solid var(--rule);padding-top:.5rem;
+    min-width:18em;text-align:center;
+  }
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto}
+    .o1,.o2,.o3{animation:none}
+    *,*::before,*::after{transition-duration:.01ms !important;animation-duration:.01ms !important}
+  }
+
+  /* ---------- how it works ---------- */
+  .how{padding:var(--s6) 0}
+  .how .lede{
+    font-family:var(--display);
+    font-size:clamp(1.5rem, 2.6vw, 2.1rem);
+    font-weight:400;line-height:1.25;
+    max-width:24em;margin-bottom:var(--s5);
+  }
+  .principles{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s4)}
+  .principle{border-top:1px solid var(--ink);padding-top:var(--s3)}
+  .principle .num{
+    font-family:var(--display);
+    font-size:.95rem;font-weight:500;
+    letter-spacing:.18em;
+    color:var(--muted);
+    margin-bottom:var(--s2);
+    display:block;
+  }
+  .principle h3{
+    font-family:var(--display);
+    font-weight:500;font-size:1.45rem;line-height:1.2;
+    margin-bottom:var(--s2);
+  }
+  .principle p{color:var(--muted);font-size:1rem}
+  .principle .u{display:inline-block;width:1.4em;height:3px;background:var(--yellow);vertical-align:middle;margin-left:.4em}
+
+  /* ---------- green band : core voices ---------- */
+  .voices{
+    background:var(--green);
+    color:var(--cream);
+    padding:var(--s6) 0;
+  }
+  .voices ::selection{background:var(--yellow);color:var(--ink)}
+  .voices .eyebrow{color:rgba(250,246,238,.65)}
+  .voices-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--s5)}
+  .voice blockquote{
+    font-family:var(--display);
+    font-style:italic;
+    font-weight:300;
+    font-size:clamp(1.5rem, 2.6vw, 2.05rem);
+    line-height:1.3;
+  }
+  .voice blockquote .hl{box-shadow:inset 0 -2px 0 var(--yellow)}
+  .voice cite{
+    display:block;margin-top:var(--s3);
+    font-family:var(--body);font-style:normal;
+    font-size:.82rem;letter-spacing:.18em;text-transform:uppercase;
+    color:rgba(250,246,238,.7);
+  }
+  .voice cite::before{content:"";display:inline-block;width:1.6em;height:3px;background:var(--yellow);margin-right:.7em;vertical-align:middle}
+  .voices .stats{
+    margin-top:var(--s5);
+    border-top:1px solid rgba(250,246,238,.25);
+    padding-top:var(--s3);
+    display:flex;gap:var(--s4);flex-wrap:wrap;
+  }
+  .voices .stat b{
+    font-family:var(--display);font-weight:500;font-size:1.7rem;display:block;line-height:1.1;
+  }
+  .voices .stat span{font-size:.8rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(250,246,238,.65)}
+
+  /* ---------- core roster strip ---------- */
+  .roster{padding:var(--s6) 0}
+  .roster-list{
+    list-style:none;
+    display:grid;grid-template-columns:1fr 1fr;gap:0 var(--s5);
+    border-top:1px solid var(--ink);
+  }
+  .roster-list li{
+    display:flex;justify-content:space-between;gap:var(--s2);align-items:baseline;
+    padding:.85rem 0;
+    border-bottom:1px solid var(--rule);
+    transition:padding-left .18s ease;
+  }
+  .roster-list li:hover{padding-left:.6rem}
+  .roster-list b{font-family:var(--display);font-weight:500;font-size:1.15rem}
+  .roster-list span{color:var(--muted);font-size:.92rem;text-align:right}
+  .roster .more{
+    margin-top:var(--s3);color:var(--muted);font-size:.95rem;font-style:italic;font-family:var(--display);
+  }
+
+  /* ---------- join : condensing rings ---------- */
+  .join{padding:var(--s5) 0 var(--s6);text-align:center}
+  .join-fig{position:relative;width:min(560px,100%);margin:0 auto}
+  .join-fig svg{width:100%;height:auto;display:block}
+  .join-fig .ring{stroke:rgba(26,24,22,.35)}
+  .join-center{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--s2);
+  }
+  .join h2{
+    font-family:var(--display);font-weight:400;
+    font-size:clamp(1.7rem, 3.4vw, 2.5rem);line-height:1.15;
+    max-width:14em;
+  }
+  .join .fine{
+    margin-top:var(--s2);
+    font-size:.8rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);
+  }
+
+  /* ---------- footer ---------- */
+  footer{
+    border-top:1px solid var(--ink);
+    padding:var(--s4) 0 var(--s5);
+  }
+  .foot{
+    display:flex;justify-content:space-between;align-items:center;gap:var(--s3);flex-wrap:wrap;
+    font-size:.85rem;color:var(--muted);
+  }
+  .foot ul{display:flex;list-style:none;gap:var(--s3)}
+  .foot a{color:var(--ink);text-decoration:none;border-bottom:2px solid transparent;transition:border-color .18s ease}
+  .foot a:hover{border-bottom-color:var(--yellow)}
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 920px){
+    .hero{grid-template-columns:1fr;gap:var(--s4)}
+    .principles{grid-template-columns:1fr}
+    .voices-grid{grid-template-columns:1fr}
+  }
+  @media (max-width: 768px){
+    .wrap{padding:0 var(--s3)}
+    .nav{padding:var(--s2) var(--s3)}
+    .nav ul{gap:var(--s2)}
+    .nav .hide-sm{display:none}
+    .hero{padding:var(--s5) 0 var(--s4)}
+    .roster-list{grid-template-columns:1fr}
+    .join-center{position:static;margin-top:calc(-1 * var(--s4))}
+    .join-fig svg{opacity:.5}
+  }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="nav">
+    <a class="logo" href="#top">underscore<span class="bar" aria-hidden="true"></span></a>
+    <ul>
+      <li class="hide-sm"><a class="link" href="#how">How it works</a></li>
+      <li><a class="link" href="#core">Core</a></li>
+      <li class="hide-sm"><a class="link" href="#voices">Voices</a></li>
+      <li><a class="btn" href="#join">Join the Core</a></li>
+    </ul>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero wrap">
+    <div>
+      <div class="eyebrow">Underscore · est. 2021</div>
+      <h1>Nothing at the center but a line. <em>Everything around it, people.</em></h1>
+      <p class="sub">Underscore is a membership of builders, operators, and experts called the Core — 1,200 people in 40 cities who give their time to each other before anyone thinks to ask for it.</p>
+      <div class="hero-actions">
+        <a class="btn" href="#join">Join the Core</a>
+        <a class="quiet" href="#how">How the Core works</a>
+      </div>
+    </div>
+
+    <figure class="orbit-fig" aria-label="Concentric rings of Core members orbiting the underscore mark">
+      <svg class="orbit-svg" viewBox="0 0 700 700" role="img" aria-hidden="false">
+        <!-- rings -->
+        <circle class="ring" cx="350" cy="350" r="130"/>
+        <circle class="ring" cx="350" cy="350" r="205"/>
+        <circle class="ring" cx="350" cy="350" r="280"/>
+        <!-- the underscore at center -->
+        <rect x="302" y="342" width="96" height="16" fill="#F5C518"/>
+        <!-- inner orbit -->
+        <g class="orbit o1">
+          <g transform="rotate(20 350 350)"><circle class="node" cx="480" cy="350" r="7" data-name="Maya Chen — founder, Oakland"/></g>
+          <g transform="rotate(140 350 350)"><circle class="node" cx="480" cy="350" r="7" data-name="Sam Osei — engineer, Boston"/></g>
+          <g transform="rotate(255 350 350)"><circle class="node" cx="480" cy="350" r="7" data-name="Ana Reyes — designer, Mexico City"/></g>
+        </g>
+        <!-- middle orbit -->
+        <g class="orbit o2">
+          <g transform="rotate(75 350 350)"><circle class="node" cx="555" cy="350" r="7" data-name="David Park — operator, Seoul"/></g>
+          <g transform="rotate(185 350 350)"><circle class="node" cx="555" cy="350" r="7" data-name="Leila Haddad — researcher, Beirut"/></g>
+          <g transform="rotate(310 350 350)"><circle class="node" cx="555" cy="350" r="7" data-name="Jonas Weber — builder, Berlin"/></g>
+        </g>
+        <!-- outer orbit -->
+        <g class="orbit o3">
+          <g transform="rotate(10 350 350)"><circle class="node" cx="630" cy="350" r="7" data-name="Priya Nair — product, Bangalore"/></g>
+          <g transform="rotate(120 350 350)"><circle class="node" cx="630" cy="350" r="7" data-name="Tom Aiello — manufacturer, Detroit"/></g>
+          <g transform="rotate(230 350 350)"><circle class="node" cx="630" cy="350" r="7" data-name="Noor Aziz — engineer, Amman"/></g>
+        </g>
+      </svg>
+      <figcaption class="orbit-name" id="orbit-name">The Core · hover a point to meet a member</figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ HOW THE CORE WORKS ============ -->
+  <section class="how wrap" id="how">
+    <div class="eyebrow">How the Core works</div>
+    <p class="lede">There is no platform to learn and no ladder to climb. Three commitments, kept plainly, hold the whole thing together.</p>
+    <div class="principles">
+      <div class="principle">
+        <span class="num">01</span>
+        <h3>Give first<span class="u" aria-hidden="true"></span></h3>
+        <p>Every member offers something standing — an hour, a skill, an open door — before they ever make a request. The Core gives first and asks later.</p>
+      </div>
+      <div class="principle">
+        <span class="num">02</span>
+        <h3>Stay reachable<span class="u" aria-hidden="true"></span></h3>
+        <p>A member who writes to another member gets an answer. Not always yes — but always an answer, from a person, in plain language.</p>
+      </div>
+      <div class="principle">
+        <span class="num">03</span>
+        <h3>Keep no score<span class="u" aria-hidden="true"></span></h3>
+        <p>There are no credits, points, or tiers. 9,000 hours have been given since 2021, and nobody is owed a single one of them.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ VOICES (green band) ============ -->
+  <section class="voices" id="voices">
+    <div class="wrap">
+      <div class="eyebrow">Voices from the Core</div>
+      <div class="voices-grid">
+        <div class="voice">
+          <blockquote>"I asked for one introduction and received <span class="hl">a working group</span>. Nobody invoiced me. Nobody followed up for credit. That's when I understood the place."</blockquote>
+          <cite>Leila Haddad — researcher, Beirut</cite>
+        </div>
+        <div class="voice">
+          <blockquote>"Most networks are a stage. This one is <span class="hl">a workbench</span> — people leave their tools out for whoever comes next."</blockquote>
+          <cite>Tom Aiello — manufacturer, Detroit</cite>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat"><b>1,200+</b><span>members</span></div>
+        <div class="stat"><b>40</b><span>cities</span></div>
+        <div class="stat"><b>9,000</b><span>hours given</span></div>
+        <div class="stat"><b>2021</b><span>founded</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CORE ROSTER ============ -->
+  <section class="roster wrap" id="core">
+    <div class="eyebrow">The Core · a partial roll</div>
+    <ul class="roster-list">
+      <li><b>Maya Chen</b><span>founder · Oakland</span></li>
+      <li><b>Sam Osei</b><span>engineer · Boston</span></li>
+      <li><b>Ana Reyes</b><span>designer · Mexico City</span></li>
+      <li><b>David Park</b><span>operator · Seoul</span></li>
+      <li><b>Leila Haddad</b><span>researcher · Beirut</span></li>
+      <li><b>Jonas Weber</b><span>builder · Berlin</span></li>
+      <li><b>Priya Nair</b><span>product · Bangalore</span></li>
+      <li><b>Tom Aiello</b><span>manufacturer · Detroit</span></li>
+    </ul>
+    <p class="more">— and 1,192 others, in 40 cities, who would rather be useful than listed.</p>
+  </section>
+
+  <!-- ============ JOIN ============ -->
+  <section class="join wrap" id="join">
+    <div class="join-fig">
+      <svg viewBox="0 0 560 560" aria-hidden="true">
+        <circle class="ring" cx="280" cy="280" r="262"/>
+        <circle class="ring" cx="280" cy="280" r="216"/>
+        <circle class="ring" cx="280" cy="280" r="178"/>
+        <circle class="ring" cx="280" cy="280" r="148"/>
+        <circle class="ring" cx="280" cy="280" r="126"/>
+      </svg>
+      <div class="join-center">
+        <h2>The center holds room for one more line.</h2>
+        <a class="btn" href="#join">Join the Core</a>
+        <div class="fine">Applications read by members · admitted monthly</div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="logo" href="#top">underscore<span class="bar" aria-hidden="true"></span></a>
+    <ul>
+      <li><a href="#how">How it works</a></li>
+      <li><a href="#core">Core</a></li>
+      <li><a href="#voices">Voices</a></li>
+      <li><a href="#join">Join the Core</a></li>
+    </ul>
+    <span>© 2026 Underscore · founded 2021</span>
+  </div>
+</footer>
+
+<script>
+  (function(){
+    var label = document.getElementById('orbit-name');
+    var idle = 'The Core · hover a point to meet a member';
+    document.querySelectorAll('.node').forEach(function(n){
+      n.addEventListener('mouseenter', function(){ label.textContent = n.getAttribute('data-name'); });
+      n.addEventListener('mouseleave', function(){ label.textContent = idle; });
+      n.addEventListener('focus', function(){ label.textContent = n.getAttribute('data-name'); });
+    });
+  })();
+</script>
+
+</body>
+</html>

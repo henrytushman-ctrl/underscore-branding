@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — A letter from the Core</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23FAF6EE'/%3E%3Crect x='5' y='22' width='22' height='4' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --yellow:#F5C518;
+    --ink:#1A1816;
+    --cream:#FAF6EE;
+    --paper:#FFFEFA;
+    --ink-60:rgba(26,24,22,.62);
+    --ink-12:rgba(26,24,22,.12);
+    --s1:8px; --s2:16px; --s3:24px; --s4:40px; --s5:64px; --s6:104px;
+    --serif:'Newsreader', Georgia, serif;
+    --mono:'IBM Plex Mono', ui-monospace, monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *,*::before,*::after{animation:none!important;transition:none!important;}
+  }
+  ::selection{background:var(--yellow);color:var(--ink);}
+  body{
+    background:var(--cream);
+    color:var(--ink);
+    font-family:var(--serif);
+    font-size:20px;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  .smallcaps{
+    font-family:var(--mono);
+    font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--ink-60);
+  }
+  .u{
+    text-decoration:underline;
+    text-decoration-color:var(--yellow);
+    text-decoration-thickness:3px;
+    text-underline-offset:5px;
+  }
+
+  /* ---------- nav ---------- */
+  nav{
+    position:sticky;top:0;z-index:50;
+    background:var(--cream);
+    border-bottom:1px solid var(--ink-12);
+  }
+  .nav-inner{
+    max-width:1040px;margin:0 auto;padding:var(--s2) var(--s3);
+    display:flex;align-items:center;gap:var(--s4);
+  }
+  .logo{
+    display:flex;align-items:baseline;gap:9px;
+    text-decoration:none;color:var(--ink);
+    font-weight:600;font-size:21px;letter-spacing:-.01em;
+  }
+  .nav-links{display:flex;gap:var(--s3);margin-left:auto;align-items:center;}
+  .nav-links a{
+    font-family:var(--mono);font-size:13px;letter-spacing:.04em;
+    color:var(--ink-60);text-decoration:none;
+    border-bottom:2px solid transparent;padding-bottom:2px;
+    transition:color .15s, border-color .15s;
+  }
+  .nav-links a:hover{color:var(--ink);border-bottom-color:var(--yellow);}
+  .btn{
+    display:inline-block;
+    font-family:var(--mono);font-size:13px;font-weight:500;letter-spacing:.04em;
+    color:var(--ink);background:var(--yellow);
+    padding:10px 22px;text-decoration:none;
+    border:1px solid var(--ink);border-radius:2px;
+    transition:box-shadow .15s, transform .15s;
+  }
+  .btn:hover{box-shadow:4px 4px 0 var(--ink);transform:translate(-1px,-1px);}
+  .btn:active{box-shadow:1px 1px 0 var(--ink);transform:translate(0,0);}
+
+  /* ---------- the letter card ---------- */
+  main{padding:var(--s6) var(--s3);}
+  .letter{
+    max-width:780px;margin:0 auto;
+    background:var(--paper);
+    border:1px solid var(--ink-12);
+    box-shadow:0 2px 6px rgba(26,24,22,.05), 0 24px 64px rgba(26,24,22,.08);
+    padding:clamp(40px,8vw,104px) clamp(24px,9vw,112px);
+  }
+
+  /* letterhead */
+  .letterhead{margin-bottom:var(--s6);}
+  .letterhead .mark{
+    display:flex;align-items:baseline;justify-content:space-between;gap:var(--s2);
+  }
+  .wordmark{
+    font-size:30px;font-weight:600;letter-spacing:-.015em;
+    display:flex;align-items:baseline;gap:10px;
+  }
+  .letterhead .rule{
+    border:0;border-top:3px solid var(--yellow);
+    margin:var(--s3) 0 var(--s2);
+  }
+  .letterhead .dateline{
+    display:flex;justify-content:space-between;gap:var(--s2);
+  }
+
+  /* body */
+  .body-copy{max-width:60ch;}
+  .salutation{font-size:22px;margin-bottom:var(--s4);}
+  .body-copy p{margin-bottom:var(--s4);}
+  .body-copy p:last-of-type{margin-bottom:0;}
+
+  /* enumerated list */
+  .gives{
+    margin:var(--s5) 0 var(--s5) clamp(16px,5vw,56px);
+    max-width:52ch;
+    list-style:none;
+    counter-reset:gives;
+  }
+  .gives li{
+    counter-increment:gives;
+    position:relative;
+    padding-left:44px;
+    margin-bottom:var(--s3);
+  }
+  .gives li::before{
+    content:counter(gives) ".";
+    position:absolute;left:0;top:2px;
+    font-family:var(--mono);font-size:15px;color:var(--ink-60);
+  }
+  .gives li b{font-weight:600;}
+
+  /* closing */
+  .closing{margin-top:var(--s5);font-size:21px;}
+  .closing .dash{display:block;margin-top:var(--s1);font-style:italic;}
+
+  /* ---------- signatures ---------- */
+  .signatures{margin-top:var(--s6);}
+  .signatures .smallcaps{display:block;margin-bottom:var(--s4);}
+  .sig-grid{
+    display:grid;grid-template-columns:1fr 1fr;
+    column-gap:clamp(24px,6vw,72px);row-gap:var(--s5);
+    align-items:end;
+  }
+  .sig{transition:transform .2s;}
+  .sig:hover{transform:translateY(-2px);}
+  .sig .name{
+    font-style:italic;font-weight:500;
+    line-height:1.05;letter-spacing:-.01em;
+    display:inline-block;
+    border-bottom:1px solid var(--ink-12);
+    padding-bottom:6px;margin-bottom:8px;
+  }
+  .sig .role{
+    display:block;
+    font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--ink-60);
+  }
+  /* dignified variation: size + slant, no script fonts */
+  .sig:nth-child(1) .name{font-size:34px;transform:rotate(-.6deg);}
+  .sig:nth-child(2) .name{font-size:28px;transform:rotate(.4deg);font-weight:400;}
+  .sig:nth-child(3) .name{font-size:31px;transform:rotate(-.3deg);}
+  .sig:nth-child(4) .name{font-size:26px;transform:rotate(.7deg);font-weight:600;}
+  .sig:nth-child(5) .name{font-size:30px;transform:rotate(.2deg);font-weight:400;}
+  .sig:nth-child(6) .name{font-size:33px;transform:rotate(-.8deg);}
+  .sig:nth-child(7) .name{font-size:27px;transform:rotate(.5deg);font-weight:600;}
+  .sig:nth-child(8) .name{font-size:32px;transform:rotate(-.4deg);font-weight:400;}
+  .sig:nth-child(9) .name{font-size:28px;transform:rotate(.3deg);}
+  .sig:nth-child(10) .name{font-size:30px;transform:rotate(-.5deg);font-weight:500;}
+  .sig:nth-child(even){margin-top:var(--s3);}
+
+  .core-stats{
+    margin-top:var(--s6);
+    padding-top:var(--s3);
+    border-top:1px solid var(--ink);
+    display:flex;justify-content:space-between;gap:var(--s2);flex-wrap:wrap;
+  }
+  .core-stats .smallcaps{color:var(--ink);}
+
+  /* ---------- P.S. ---------- */
+  .ps{
+    margin-top:var(--s6);
+    padding-top:var(--s5);
+    border-top:1px solid var(--ink-12);
+  }
+  .ps p{font-size:21px;max-width:48ch;}
+  .ps p .psmark{font-family:var(--mono);font-size:16px;letter-spacing:.06em;margin-right:10px;}
+  .your-line{
+    margin-top:var(--s5);
+    max-width:420px;
+    border-bottom:5px solid var(--yellow);
+    height:64px;
+  }
+  .your-line-caption{
+    margin-top:var(--s1);
+    max-width:420px;
+    display:flex;justify-content:space-between;
+  }
+  .ps .btn{margin-top:var(--s4);font-size:14px;padding:13px 28px;}
+
+  /* ---------- footer ---------- */
+  footer.site{padding:0 var(--s3) var(--s6);}
+  .foot-inner{
+    max-width:780px;margin:0 auto;
+    display:flex;justify-content:space-between;align-items:baseline;gap:var(--s3);flex-wrap:wrap;
+  }
+  .foot-inner a{
+    color:var(--ink-60);text-decoration:none;
+    border-bottom:2px solid transparent;
+  }
+  .foot-inner a:hover{color:var(--ink);border-bottom-color:var(--yellow);}
+
+  /* ---------- responsive ---------- */
+  @media (max-width:768px){
+    body{font-size:18px;}
+    main{padding:var(--s4) var(--s2);}
+    .nav-links a:not(.btn){display:none;}
+    .letterhead{margin-bottom:var(--s5);}
+    .letterhead .dateline{flex-direction:column;gap:4px;}
+    .sig-grid{grid-template-columns:1fr;row-gap:var(--s4);}
+    .sig:nth-child(even){margin-top:0;}
+    .gives{margin-left:0;}
+    .core-stats{flex-direction:column;gap:var(--s1);}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="logo" href="#top" aria-label="Underscore home">
+      <svg width="24" height="17" viewBox="0 0 24 17" aria-hidden="true"><rect x="0" y="12" width="24" height="4" fill="#F5C518"/></svg>
+      Underscore
+    </a>
+    <div class="nav-links">
+      <a href="#letter">The Letter</a>
+      <a href="#core">Core</a>
+      <a href="#ps">Your line</a>
+      <a class="btn" href="#ps">Join the Core</a>
+    </div>
+  </div>
+</nav>
+
+<main id="top">
+  <article class="letter" id="letter">
+
+    <header class="letterhead">
+      <div class="mark">
+        <span class="wordmark">
+          <svg width="30" height="20" viewBox="0 0 30 20" aria-hidden="true"><rect x="0" y="14" width="30" height="5" fill="#F5C518"/></svg>
+          Underscore
+        </span>
+        <span class="smallcaps">From the desk of the Core</span>
+      </div>
+      <hr class="rule">
+      <div class="dateline">
+        <span class="smallcaps">Re: An hour of your time</span>
+        <span class="smallcaps">June 2026</span>
+      </div>
+    </header>
+
+    <div class="body-copy">
+      <p class="salutation">Dear builder,</p>
+
+      <p>You don't know us yet, so we'll keep this plain. Underscore is a network of people who make things — companies, machines, software, research — and who <span class="u">give their time to each other</span>. The members call this network the Core. There are about 1,200 of us, in 40 cities, and since 2021 we have given one another some <span class="u">nine thousand hours</span>.</p>
+
+      <p>Our name is the mark that joins words. We chose it because it does its work below the line — holding things together without asking to be noticed. That is, more or less, the job description of a good member.</p>
+
+      <p>We should tell you what membership actually means, because it is not a badge and it is not a feed. When you join, nobody asks you for anything up front. <span class="u">The Core gives first and asks later.</span> What members give looks like this:</p>
+    </div>
+
+    <ol class="gives">
+      <li><b>An hour a month,</b> to whoever asks first. Founders preparing for a raise, engineers stuck on a problem, operators staring at a hiring plan.</li>
+      <li><b>An honest read</b> — of the deck, the contract, the prototype, the difficult email. Honest meaning honest.</li>
+      <li><b>A name and a number,</b> when an introduction will do more good than an opinion.</li>
+      <li><b>A bed, a desk, or a workshop,</b> in forty cities, when the work takes you somewhere new.</li>
+    </ol>
+
+    <div class="body-copy">
+      <p>There is no leaderboard for any of this and no ledger of favors owed. It works because the people we admit are the kind who would do it anyway; we just put them in the same room. Five years on, we see no reason it should stop working.</p>
+
+      <p>If you build things, and you can give an hour, the rest of this letter is yours to finish.</p>
+
+      <p class="closing">With time to give,<span class="dash">— the Core</span></p>
+    </div>
+
+    <section class="signatures" id="core">
+      <span class="smallcaps">Signed, members of the Core — 1,200 strong, ten of whom fit on this page</span>
+      <div class="sig-grid">
+        <div class="sig"><span class="name">Maya Chen</span><span class="role">Founder · Oakland</span></div>
+        <div class="sig"><span class="name">Sam Osei</span><span class="role">Engineer · Boston</span></div>
+        <div class="sig"><span class="name">Ana Reyes</span><span class="role">Designer · Mexico City</span></div>
+        <div class="sig"><span class="name">David Park</span><span class="role">Operator · Seoul</span></div>
+        <div class="sig"><span class="name">Leila Haddad</span><span class="role">Researcher · Beirut</span></div>
+        <div class="sig"><span class="name">Jonas Weber</span><span class="role">Builder · Berlin</span></div>
+        <div class="sig"><span class="name">Priya Nair</span><span class="role">Product · Bangalore</span></div>
+        <div class="sig"><span class="name">Tom Aiello</span><span class="role">Manufacturer · Detroit</span></div>
+        <div class="sig"><span class="name">Grace Mwangi</span><span class="role">Operator · Nairobi</span></div>
+        <div class="sig"><span class="name">Marco Silva</span><span class="role">Engineer · Lisbon</span></div>
+      </div>
+
+      <div class="core-stats">
+        <span class="smallcaps">1,200+ members</span>
+        <span class="smallcaps">40 cities</span>
+        <span class="smallcaps">9,000 hours given</span>
+        <span class="smallcaps">Founded 2021</span>
+      </div>
+    </section>
+
+    <section class="ps" id="ps">
+      <p><span class="psmark">P.S.</span>There's a line below for you. We left it blank on purpose.</p>
+      <div class="your-line" aria-hidden="true"></div>
+      <div class="your-line-caption">
+        <span class="smallcaps">Your name</span>
+        <span class="smallcaps">In your own time</span>
+      </div>
+      <a class="btn" href="#ps">Join the Core</a>
+    </section>
+
+  </article>
+</main>
+
+<footer class="site">
+  <div class="foot-inner">
+    <span class="smallcaps" style="color:var(--ink);">underscore_</span>
+    <span class="smallcaps">A letter, sent annually. Answered whenever.</span>
+    <span class="smallcaps"><a href="#letter">The Letter</a> · <a href="#core">The Core</a> · <a href="#ps">Join</a></span>
+  </div>
+</footer>
+
+</body>
+</html>

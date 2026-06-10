@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — The Ledger</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23FAF6EE'/%3E%3Crect x='5' y='22' width='22' height='4' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --yellow:#F5C518;
+    --ink:#1A1816;
+    --cream:#FAF6EE;
+    --ink-60:rgba(26,24,22,.62);
+    --ink-35:rgba(26,24,22,.35);
+    --ink-12:rgba(26,24,22,.12);
+    --s1:8px; --s2:16px; --s3:24px; --s4:40px; --s5:64px; --s6:104px; --s7:160px;
+    --serif:'Source Serif 4', Georgia, serif;
+    --mono:'IBM Plex Mono', ui-monospace, monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *,*::before,*::after{animation:none!important;transition:none!important;}
+  }
+  ::selection{background:var(--yellow);color:var(--ink);}
+  body{
+    background:var(--cream);
+    color:var(--ink);
+    font-family:var(--serif);
+    font-size:18px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .num{font-family:var(--mono);font-variant-numeric:tabular-nums;}
+  .wrap{max-width:880px;margin:0 auto;padding:0 var(--s3);}
+
+  /* ---------- rules ---------- */
+  .rule{border:0;border-top:1px solid var(--ink);}
+  .rule-faint{border:0;border-top:1px solid var(--ink-12);}
+  .double-rule{border:0;height:6px;border-top:1px solid var(--ink);border-bottom:1px solid var(--ink);}
+  .double-rule.yellow{border-color:var(--yellow);border-top-width:2px;border-bottom-width:2px;height:8px;}
+
+  /* ---------- nav ---------- */
+  nav{
+    position:sticky;top:0;z-index:50;
+    background:var(--cream);
+    border-bottom:1px solid var(--ink);
+  }
+  .nav-inner{
+    max-width:880px;margin:0 auto;padding:var(--s2) var(--s3);
+    display:flex;align-items:center;gap:var(--s4);
+  }
+  .logo{
+    display:flex;align-items:baseline;gap:10px;
+    text-decoration:none;color:var(--ink);
+    font-weight:700;font-size:20px;letter-spacing:-.01em;
+  }
+  .logo svg{display:block;}
+  .nav-links{display:flex;gap:var(--s3);margin-left:auto;align-items:center;}
+  .nav-links a{
+    font-family:var(--mono);font-size:13px;letter-spacing:.04em;
+    color:var(--ink-60);text-decoration:none;
+    border-bottom:2px solid transparent;padding-bottom:2px;
+    transition:color .15s, border-color .15s;
+  }
+  .nav-links a:hover{color:var(--ink);border-bottom-color:var(--yellow);}
+  .btn{
+    display:inline-block;
+    font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.04em;
+    color:var(--ink);background:var(--yellow);
+    padding:10px 20px;text-decoration:none;
+    border:1px solid var(--ink);
+    transition:background .15s, box-shadow .15s, transform .15s;
+  }
+  .btn:hover{box-shadow:4px 4px 0 var(--ink);transform:translate(-1px,-1px);}
+  .btn:active{box-shadow:1px 1px 0 var(--ink);transform:translate(0,0);}
+
+  /* ---------- hero ---------- */
+  header.hero{padding:var(--s6) 0 var(--s5);}
+  .kicker{
+    font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--ink-60);
+    display:flex;justify-content:space-between;gap:var(--s2);
+    padding-bottom:var(--s2);
+  }
+  h1{
+    font-size:clamp(34px,5.5vw,56px);
+    font-weight:600;line-height:1.12;letter-spacing:-.015em;
+    max-width:18ch;
+    margin:var(--s4) 0 var(--s5);
+  }
+  .hero-figure{padding:var(--s4) 0 var(--s2);}
+  .hero-figure .label-row{
+    display:flex;justify-content:space-between;align-items:baseline;gap:var(--s2);
+    font-family:var(--mono);font-size:13px;color:var(--ink-60);letter-spacing:.04em;
+    margin-bottom:var(--s2);
+  }
+  .big-num{
+    font-family:var(--mono);font-weight:500;
+    font-variant-numeric:tabular-nums;
+    font-size:clamp(72px,16vw,176px);
+    line-height:1;letter-spacing:-.03em;
+    text-align:right;display:block;
+  }
+  .hero-figure .double-rule{margin-top:var(--s3);}
+  .hero-sub{
+    margin-top:var(--s3);
+    display:flex;justify-content:space-between;gap:var(--s2);flex-wrap:wrap;
+    font-size:16px;color:var(--ink-60);
+  }
+  .hero-sub em{font-style:italic;color:var(--ink);}
+
+  /* ---------- sections ---------- */
+  section{padding:var(--s6) 0;}
+  .sec-head{
+    display:flex;justify-content:space-between;align-items:baseline;gap:var(--s2);
+    border-top:1px solid var(--ink);
+    padding-top:var(--s2);margin-bottom:var(--s4);
+  }
+  .sec-head h2{font-size:24px;font-weight:700;letter-spacing:-.01em;}
+  .sec-head .sec-no{font-family:var(--mono);font-size:12px;letter-spacing:.18em;color:var(--ink-60);text-transform:uppercase;}
+  .lede{font-size:20px;line-height:1.55;max-width:54ch;color:var(--ink);margin-bottom:var(--s4);}
+  .lede .sup, p .sup{font-family:var(--mono);font-size:.62em;vertical-align:super;color:var(--ink-60);}
+
+  /* ---------- ledger rows ---------- */
+  .ledger{list-style:none;}
+  .li-row{
+    display:flex;align-items:baseline;gap:14px;
+    padding:14px 0;
+    border-bottom:1px solid var(--ink-12);
+    transition:background .15s;
+  }
+  .li-row:hover{background:rgba(245,197,24,.10);}
+  .li-label{font-size:18px;white-space:nowrap;}
+  .li-label .where{color:var(--ink-60);font-style:italic;}
+  .li-leader{
+    flex:1;min-width:24px;
+    border-bottom:2px dotted var(--ink-35);
+    transform:translateY(-5px);
+  }
+  .li-num{
+    font-family:var(--mono);font-variant-numeric:tabular-nums;
+    font-size:20px;font-weight:500;
+    min-width:6ch;text-align:right;
+  }
+  .li-row.total{
+    border-bottom:0;margin-top:var(--s3);padding-top:var(--s3);
+    border-top:1px solid var(--ink);
+  }
+  .li-row.total .li-label{font-weight:700;}
+  .li-row.total .li-num{font-size:28px;font-weight:600;color:var(--ink);}
+  .total-rule{margin-top:-2px;}
+  .zero-note{
+    font-family:var(--mono);font-size:13px;color:var(--ink-60);
+    margin-top:var(--s3);letter-spacing:.02em;
+  }
+  .zero-note b{color:var(--ink);}
+
+  /* ---------- balance sheet ---------- */
+  .bs-cols{display:grid;grid-template-columns:1fr 1fr;gap:var(--s5);}
+  .bs-col h3{
+    font-family:var(--mono);font-size:12px;font-weight:600;
+    letter-spacing:.18em;text-transform:uppercase;color:var(--ink-60);
+    padding-bottom:var(--s1);margin-bottom:var(--s2);
+    border-bottom:1px solid var(--ink);
+  }
+  .member-row{
+    display:flex;align-items:baseline;gap:12px;
+    padding:11px 0;border-bottom:1px solid var(--ink-12);
+    transition:background .15s;
+  }
+  .member-row:hover{background:rgba(245,197,24,.10);}
+  .member-row .name{font-weight:600;white-space:nowrap;}
+  .member-row .li-leader{transform:translateY(-4px);border-bottom-width:1px;border-bottom-style:dotted;}
+  .member-row .meta{
+    font-family:var(--mono);font-size:12.5px;color:var(--ink-60);
+    text-align:right;white-space:nowrap;letter-spacing:.01em;
+  }
+  .member-row.more .name{font-weight:400;font-style:italic;color:var(--ink-60);}
+  .liab-line{
+    padding:11px 0;border-bottom:1px solid var(--ink-12);
+    display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+  }
+  .liab-line .num{font-size:18px;font-weight:500;}
+  .bs-note{margin-top:var(--s4);font-size:20px;font-style:italic;}
+  .bs-note b{font-style:normal;border-bottom:3px solid var(--yellow);padding-bottom:1px;font-weight:600;}
+  .stat-strip{
+    margin-top:var(--s5);
+    display:grid;grid-template-columns:repeat(4,1fr);
+    border-top:1px solid var(--ink);border-bottom:1px solid var(--ink);
+  }
+  .stat{padding:var(--s3) var(--s2);border-right:1px solid var(--ink-12);}
+  .stat:last-child{border-right:0;}
+  .stat .v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:clamp(24px,3.4vw,36px);font-weight:500;display:block;}
+  .stat .k{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-60);}
+  blockquote{
+    margin-top:var(--s5);
+    font-size:24px;line-height:1.45;font-style:italic;max-width:30ch;
+  }
+  blockquote .hl{background:linear-gradient(transparent 62%, var(--yellow) 62%);font-style:italic;}
+  blockquote footer{
+    margin-top:var(--s2);font-style:normal;font-size:13px;
+    font-family:var(--mono);color:var(--ink-60);letter-spacing:.04em;
+  }
+
+  /* ---------- footnotes ---------- */
+  .footnotes{font-size:13.5px;line-height:1.7;color:var(--ink-60);max-width:62ch;}
+  .footnotes li{margin-bottom:var(--s2);list-style:none;display:flex;gap:10px;}
+  .footnotes .fn-no{font-family:var(--mono);flex:0 0 auto;color:var(--ink);}
+
+  /* ---------- CTA ---------- */
+  .cta{padding:var(--s7) 0;}
+  .cta-inner{max-width:640px;}
+  .cta h2{font-size:clamp(30px,4.5vw,44px);font-weight:600;letter-spacing:-.015em;line-height:1.15;}
+  .cta p{margin-top:var(--s3);font-size:19px;color:var(--ink-60);max-width:44ch;}
+  .sig-line{
+    margin-top:var(--s5);
+    border-bottom:4px solid var(--yellow);
+    height:72px;position:relative;
+  }
+  .sig-line .x{
+    position:absolute;left:0;bottom:8px;
+    font-family:var(--mono);font-size:13px;color:var(--ink-60);letter-spacing:.1em;
+  }
+  .sig-caption{
+    margin-top:var(--s1);
+    display:flex;justify-content:space-between;gap:var(--s2);
+    font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-60);
+  }
+  .cta .btn{margin-top:var(--s4);font-size:14px;padding:14px 28px;}
+
+  /* ---------- footer ---------- */
+  footer.site{
+    border-top:1px solid var(--ink);
+    padding:var(--s4) 0 var(--s5);
+  }
+  .foot-inner{
+    max-width:880px;margin:0 auto;padding:0 var(--s3);
+    display:flex;justify-content:space-between;align-items:baseline;gap:var(--s3);flex-wrap:wrap;
+    font-family:var(--mono);font-size:12px;color:var(--ink-60);letter-spacing:.04em;
+  }
+  .foot-inner a{color:var(--ink-60);text-decoration:none;border-bottom:2px solid transparent;}
+  .foot-inner a:hover{color:var(--ink);border-bottom-color:var(--yellow);}
+  .foot-mark{color:var(--ink);font-weight:600;}
+
+  /* ---------- responsive ---------- */
+  @media (max-width:768px){
+    .nav-links{gap:var(--s2);}
+    .nav-links a:not(.btn){display:none;}
+    header.hero{padding:var(--s5) 0 var(--s4);}
+    section{padding:var(--s5) 0;}
+    .kicker{flex-direction:column;gap:4px;}
+    .li-label{white-space:normal;font-size:16px;}
+    .bs-cols{grid-template-columns:1fr;gap:var(--s4);}
+    .stat-strip{grid-template-columns:1fr 1fr;}
+    .stat:nth-child(2){border-right:0;}
+    .stat:nth-child(-n+2){border-bottom:1px solid var(--ink-12);}
+    .hero-sub{flex-direction:column;}
+    .cta{padding:var(--s6) 0;}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="logo" href="#top" aria-label="Underscore home">
+      <svg width="26" height="18" viewBox="0 0 26 18" aria-hidden="true"><rect x="0" y="13" width="26" height="4" fill="#F5C518"/></svg>
+      Underscore
+    </a>
+    <div class="nav-links">
+      <a href="#ledger">Line items</a>
+      <a href="#core">Core</a>
+      <a href="#footnotes">Footnotes</a>
+      <a class="btn" href="#join">Join the Core</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <div class="kicker">
+      <span>Underscore — Annual Giving Report</span>
+      <span class="num">FY 2026 · No. 05</span>
+    </div>
+    <hr class="rule">
+    <h1>What the Core gave this&nbsp;year.</h1>
+
+    <div class="hero-figure">
+      <div class="label-row">
+        <span>HOURS GIVEN, MEMBER TO MEMBER<span style="color:var(--ink)">¹</span></span>
+        <span>AUDITED BY NO ONE. VOUCHED FOR BY EVERYONE.</span>
+      </div>
+      <span class="big-num" data-count="9000" data-suffix="">0</span>
+      <hr class="double-rule yellow">
+    </div>
+
+    <div class="hero-sub">
+      <span>This is the whole pitch. <em>We keep the books open because giving is the business.</em></span>
+      <span class="num" style="font-family:var(--mono);font-size:13px;">CARRIED FORWARD SINCE 2021</span>
+    </div>
+  </div>
+</header>
+
+<section id="ledger">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>The giving ledger</h2>
+      <span class="sec-no">Schedule A — Line items</span>
+    </div>
+    <p class="lede">Every entry below is a member doing something for another member, unprompted and unbilled. We counted what we could.<span class="sup">¹</span> The rest we rounded down.</p>
+
+    <ul class="ledger">
+      <li class="li-row"><span class="li-label">Introductions made</span><span class="li-leader"></span><span class="li-num" data-count="312">0</span></li>
+      <li class="li-row"><span class="li-label">Office hours held</span><span class="li-leader"></span><span class="li-num" data-count="540">0</span></li>
+      <li class="li-row"><span class="li-label">First reads of decks, contracts, prototypes</span><span class="li-leader"></span><span class="li-num" data-count="203">0</span></li>
+      <li class="li-row"><span class="li-label">Loans of equipment<span class="sup">³</span></span><span class="li-leader"></span><span class="li-num" data-count="87">0</span></li>
+      <li class="li-row"><span class="li-label">Beds and desks offered <span class="where">across 40 cities</span></span><span class="li-leader"></span><span class="li-num" data-count="118">0</span></li>
+      <li class="li-row"><span class="li-label">Calls answered after midnight</span><span class="li-leader"></span><span class="li-num" data-count="64">0</span></li>
+      <li class="li-row"><span class="li-label">Asks refused</span><span class="li-leader"></span><span class="li-num" data-count="0">0</span></li>
+      <li class="li-row total"><span class="li-label">Total hours given</span><span class="li-leader"></span><span class="li-num" data-count="9000">0</span></li>
+    </ul>
+    <hr class="double-rule total-rule">
+    <p class="zero-note">NOTE THE ZERO. <b>The Core gives first and asks later.</b> Refusal is not a line we use.</p>
+  </div>
+</section>
+
+<section id="core">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>The Core — balance sheet</h2>
+      <span class="sec-no">Schedule B — Members</span>
+    </div>
+    <p class="lede">The Core is Underscore's member network: builders, operators, and experts who give their time to each other. On this page they appear as assets. <b style="border-bottom:3px solid var(--yellow);font-weight:600;">Our only line item that matters.</b> We know how the metaphor sounds; we mean it plainly — they are what we hold, and everything else is footnotes.</p>
+
+    <div class="bs-cols">
+      <div class="bs-col">
+        <h3>Assets — members, partial listing</h3>
+        <div class="member-row"><span class="name">Maya Chen</span><span class="li-leader"></span><span class="meta">FOUNDER · OAKLAND</span></div>
+        <div class="member-row"><span class="name">Sam Osei</span><span class="li-leader"></span><span class="meta">ENGINEER · BOSTON</span></div>
+        <div class="member-row"><span class="name">Ana Reyes</span><span class="li-leader"></span><span class="meta">DESIGNER · MEXICO CITY</span></div>
+        <div class="member-row"><span class="name">David Park</span><span class="li-leader"></span><span class="meta">OPERATOR · SEOUL</span></div>
+        <div class="member-row"><span class="name">Leila Haddad</span><span class="li-leader"></span><span class="meta">RESEARCHER · BEIRUT</span></div>
+        <div class="member-row"><span class="name">Jonas Weber</span><span class="li-leader"></span><span class="meta">BUILDER · BERLIN</span></div>
+        <div class="member-row"><span class="name">Priya Nair</span><span class="li-leader"></span><span class="meta">PRODUCT · BANGALORE</span></div>
+        <div class="member-row"><span class="name">Tom Aiello</span><span class="li-leader"></span><span class="meta">MANUFACTURER · DETROIT</span></div>
+        <div class="member-row"><span class="name">Grace Mwangi</span><span class="li-leader"></span><span class="meta">OPERATOR · NAIROBI</span></div>
+        <div class="member-row"><span class="name">Marco Silva</span><span class="li-leader"></span><span class="meta">ENGINEER · LISBON</span></div>
+        <div class="member-row more"><span class="name">…and 1,190 more</span><span class="li-leader"></span><span class="meta">40 CITIES</span></div>
+      </div>
+      <div class="bs-col">
+        <h3>Liabilities</h3>
+        <div class="liab-line"><span>Debts between members</span><span class="num">0</span></div>
+        <div class="liab-line"><span>Favors kept on score</span><span class="num">0</span></div>
+        <div class="liab-line"><span>Strings attached</span><span class="num">0</span></div>
+        <p class="bs-note">The books balance over years, not quarters.<span class="sup">²</span></p>
+
+        <blockquote>
+          “I asked for an hour of advice. <span class="hl">I got forty hours of help.</span> Nobody invoiced anybody.”
+          <footer>— PRIYA NAIR, PRODUCT, BANGALORE</footer>
+        </blockquote>
+      </div>
+    </div>
+
+    <div class="stat-strip">
+      <div class="stat"><span class="v" data-count="1200" data-suffix="+">0</span><span class="k">Members</span></div>
+      <div class="stat"><span class="v" data-count="40">0</span><span class="k">Cities</span></div>
+      <div class="stat"><span class="v" data-count="9000">0</span><span class="k">Hours given</span></div>
+      <div class="stat"><span class="v num">2021</span><span class="k">Founded</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="footnotes">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Notes to the accounts</h2>
+      <span class="sec-no">In small type, as is traditional</span>
+    </div>
+    <ol class="footnotes">
+      <li><span class="fn-no">¹</span><span>Nobody tracked this perfectly. That's fine. The hours that went unrecorded were given anyway, which was the point.</span></li>
+      <li><span class="fn-no">²</span><span>The Core gives first and asks later. Sometimes much later. Sometimes never. The auditors would object; we don't employ any.</span></li>
+      <li><span class="fn-no">³</span><span>"Equipment" this year included one pickup truck, two oscilloscopes, a pasta extruder, and Tom's warehouse in Detroit for a long weekend.</span></li>
+      <li><span class="fn-no">⁴</span><span>Founded 2021. No revenue from members, ever. The figures above are denominated in time because that's the only currency everyone here has.</span></li>
+      <li><span class="fn-no">⁵</span><span>This report is published annually and read aloud, badly, at the winter gathering.</span></li>
+    </ol>
+  </div>
+</section>
+
+<section class="cta" id="join">
+  <div class="wrap">
+    <div class="cta-inner">
+      <div class="sec-head" style="margin-bottom:var(--s4);">
+        <h2 style="font-size:24px;">Closing entry</h2>
+        <span class="sec-no">FY 2027 opens now</span>
+      </div>
+      <h2>Sign below the line.</h2>
+      <p>Next year's ledger is empty. If you build things and you can give an hour, your name belongs in it.</p>
+      <div class="sig-line"><span class="x">×</span></div>
+      <div class="sig-caption"><span>Name</span><span>Date</span></div>
+      <a class="btn" href="#join">Join the Core</a>
+    </div>
+  </div>
+</section>
+
+<footer class="site">
+  <div class="foot-inner">
+    <span class="foot-mark">underscore_</span>
+    <span>The Ledger · FY 2026 · Prepared by the members, for the members</span>
+    <span><a href="#core">The Core</a> · <a href="#footnotes">Notes</a> · <a href="#join">Join</a></span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var els = document.querySelectorAll('[data-count]');
+  function fmt(n){ return n.toLocaleString('en-US'); }
+  function setFinal(el){
+    el.textContent = fmt(parseInt(el.dataset.count,10)) + (el.dataset.suffix || '');
+  }
+  if (reduced || !('IntersectionObserver' in window)) {
+    els.forEach(setFinal);
+    return;
+  }
+  function animate(el){
+    var target = parseInt(el.dataset.count,10);
+    var suffix = el.dataset.suffix || '';
+    if (target === 0) { el.textContent = '0' + suffix; return; }
+    var dur = 1100, start = null;
+    function step(ts){
+      if (!start) start = ts;
+      var p = Math.min((ts - start) / dur, 1);
+      var eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = fmt(Math.round(target * eased)) + (p === 1 ? suffix : '');
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if (e.isIntersecting) { animate(e.target); io.unobserve(e.target); }
+    });
+  }, { threshold: 0.4 });
+  els.forEach(function(el){ io.observe(el); });
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — The Directory of the Core</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23FAF6EE'/%3E%3Crect x='5' y='23' width='22' height='5' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --yellow:#F5C518;
+    --ink:#1A1816;
+    --cream:#FAF6EE;
+    --rule:rgba(26,24,22,.14);
+    --rule-strong:rgba(26,24,22,.85);
+    --muted:rgba(26,24,22,.6);
+    --s1:.5rem; --s2:1rem; --s3:1.5rem; --s4:2.5rem; --s5:4rem; --s6:6.5rem;
+    --sans:'Inter Tight', Helvetica, Arial, sans-serif;
+    --mono:'IBM Plex Mono', 'SF Mono', Menlo, monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{transition-duration:.01ms !important;animation-duration:.01ms !important}
+  }
+  ::selection{background:var(--yellow);color:var(--ink)}
+  body{
+    background:var(--cream);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:1rem;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1240px;margin:0 auto;padding:0 var(--s4)}
+
+  /* ---------- nav ---------- */
+  header.site{border-bottom:1px solid var(--rule-strong);background:var(--cream);position:sticky;top:0;z-index:20}
+  .nav{
+    max-width:1240px;margin:0 auto;
+    display:flex;align-items:center;justify-content:space-between;gap:var(--s3);
+    padding:.9rem var(--s4);
+  }
+  .logo{
+    font-weight:800;font-size:1.15rem;letter-spacing:-.01em;
+    text-decoration:none;color:var(--ink);
+    display:inline-flex;align-items:baseline;gap:.25rem;
+  }
+  .logo .bar{display:inline-block;width:1.05em;height:.24em;background:var(--yellow)}
+  .nav ul{display:flex;align-items:center;list-style:none;gap:var(--s3)}
+  .nav a.link{
+    font-size:.86rem;font-weight:500;letter-spacing:.04em;text-transform:uppercase;
+    color:var(--ink);text-decoration:none;
+    border-bottom:2px solid transparent;padding-bottom:.15rem;
+    transition:border-color .15s ease;
+  }
+  .nav a.link:hover{border-bottom-color:var(--yellow)}
+  .btn{
+    display:inline-block;
+    font-weight:600;font-size:.86rem;letter-spacing:.04em;text-transform:uppercase;
+    text-decoration:none;
+    background:var(--ink);color:var(--cream);
+    border:1px solid var(--ink);
+    padding:.55rem 1.2rem;
+    transition:background .15s ease,color .15s ease;
+  }
+  .btn:hover{background:var(--yellow);color:var(--ink)}
+  .btn.yellow{background:var(--yellow);color:var(--ink);border-color:var(--ink)}
+  .btn.yellow:hover{background:var(--ink);color:var(--cream)}
+
+  /* ---------- compact hero ---------- */
+  .hero{padding:var(--s5) 0 var(--s3)}
+  .hero h1{
+    font-weight:800;
+    font-size:clamp(2rem, 4.4vw, 3.4rem);
+    letter-spacing:-.025em;
+    line-height:1.05;
+    max-width:20em;
+  }
+  .hero h1 .mark{
+    display:inline-block;width:.9em;height:.13em;background:var(--yellow);vertical-align:baseline;margin:0 .08em;
+  }
+  .hero .sub{
+    margin-top:var(--s2);
+    color:var(--muted);
+    font-size:1.05rem;
+    max-width:42em;
+  }
+
+  /* ---------- stats strip ---------- */
+  .stats{
+    display:flex;align-items:center;gap:var(--s3);flex-wrap:wrap;
+    padding:var(--s3) 0;
+    border-top:1px solid var(--rule-strong);
+    border-bottom:1px solid var(--rule);
+    margin-top:var(--s4);
+    font-family:var(--mono);
+    font-size:.86rem;
+    letter-spacing:.02em;
+  }
+  .stats .sep{width:1.6em;height:4px;background:var(--yellow);flex:none}
+  .stats b{font-weight:500}
+
+  /* ---------- directory table ---------- */
+  .dir{padding:var(--s4) 0 var(--s5)}
+  .dir-head{
+    display:flex;justify-content:space-between;align-items:baseline;gap:var(--s3);flex-wrap:wrap;
+    margin-bottom:var(--s2);
+  }
+  .label{
+    font-size:.74rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+    display:flex;align-items:center;gap:.7rem;
+  }
+  .label::before{content:"";width:1.8em;height:3px;background:var(--yellow)}
+  .dir-head .hint{font-family:var(--mono);font-size:.78rem;color:var(--muted)}
+  .table-scroll{overflow-x:auto}
+  table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:760px;
+  }
+  thead th{
+    text-align:left;
+    font-size:.72rem;font-weight:700;
+    letter-spacing:.18em;text-transform:uppercase;
+    padding:.7rem .9rem .7rem 1.1rem;
+    border-top:2px solid var(--ink);
+    border-bottom:1px solid var(--ink);
+    white-space:nowrap;
+    user-select:none;
+  }
+  thead th.sortable{cursor:pointer;transition:background .15s ease}
+  thead th.sortable:hover{background:rgba(245,197,24,.25)}
+  thead th .arr{
+    display:inline-block;margin-left:.4em;font-size:.65rem;color:var(--muted);
+  }
+  thead th[data-dir="asc"] .arr::after{content:"▲";color:var(--ink)}
+  thead th[data-dir="desc"] .arr::after{content:"▼";color:var(--ink)}
+  thead th:not([data-dir]) .arr::after{content:"△"}
+  thead th:last-child .arr{display:none}
+  tbody td{
+    padding:.85rem .9rem .85rem 1.1rem;
+    border-bottom:1px solid var(--rule);
+    vertical-align:baseline;
+  }
+  tbody tr{
+    transition:background .12s ease, box-shadow .12s ease, transform .12s ease;
+  }
+  tbody tr:hover{
+    background:#fffcf2;
+    box-shadow:inset 7px 0 0 var(--yellow), 0 1px 0 rgba(26,24,22,.12);
+    transform:translateY(-1px);
+  }
+  td.name{font-weight:600;white-space:nowrap}
+  td.role, td.city{white-space:nowrap}
+  td.meta{font-family:var(--mono);font-size:.82rem;color:var(--muted);white-space:nowrap}
+  td.gives{font-size:.92rem;color:rgba(26,24,22,.78)}
+  tr.apply-row td{
+    border-bottom:2px solid var(--ink);
+    padding-top:1.1rem;padding-bottom:1.1rem;
+  }
+  tr.apply-row .ghost{font-family:var(--mono);color:rgba(26,24,22,.4);font-size:.9rem}
+  tr.apply-row:hover{background:#fffcf2;box-shadow:inset 7px 0 0 var(--yellow);transform:none}
+
+  /* ---------- what members give ---------- */
+  .gives-section{
+    border-top:1px solid var(--rule-strong);
+    padding:var(--s5) 0 var(--s6);
+  }
+  .gives-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:var(--s2) var(--s5);
+    margin-top:var(--s4);
+    max-width:62em;
+  }
+  .give{
+    display:flex;gap:var(--s2);align-items:baseline;
+    padding:.8rem 0;
+    border-bottom:1px solid var(--rule);
+  }
+  .give .tick{width:1.1em;height:3px;background:var(--yellow);flex:none;transform:translateY(-.3em)}
+  .give b{font-weight:600;white-space:nowrap}
+  .give span{color:var(--muted);font-size:.95rem}
+  .gives-section .fine{
+    margin-top:var(--s3);font-family:var(--mono);font-size:.8rem;color:var(--muted);
+  }
+
+  /* ---------- join band ---------- */
+  .join{
+    background:var(--ink);
+    color:var(--cream);
+    padding:var(--s6) 0;
+  }
+  .join ::selection{background:var(--yellow);color:var(--ink)}
+  .join .label{color:rgba(250,246,238,.7)}
+  .join h2{
+    font-weight:800;font-size:clamp(1.8rem, 3.8vw, 2.8rem);
+    letter-spacing:-.02em;line-height:1.1;
+    max-width:20em;margin:var(--s3) 0;
+  }
+  .join .row{
+    display:flex;justify-content:space-between;align-items:center;gap:var(--s3);flex-wrap:wrap;
+    border-top:1px solid rgba(250,246,238,.25);
+    border-bottom:1px solid rgba(250,246,238,.25);
+    padding:var(--s3) 0;
+  }
+  .join .row .ghost{font-family:var(--mono);color:rgba(250,246,238,.45);font-size:.95rem}
+  .join .fine{margin-top:var(--s3);font-family:var(--mono);font-size:.8rem;color:rgba(250,246,238,.55)}
+
+  /* ---------- footer ---------- */
+  footer{padding:var(--s4) 0 var(--s5);border-top:1px solid var(--rule-strong)}
+  .foot{
+    display:flex;justify-content:space-between;align-items:center;gap:var(--s3);flex-wrap:wrap;
+    font-size:.85rem;color:var(--muted);
+  }
+  .foot ul{display:flex;list-style:none;gap:var(--s3)}
+  .foot a{color:var(--ink);text-decoration:none;border-bottom:2px solid transparent;transition:border-color .15s ease}
+  .foot a:hover{border-bottom-color:var(--yellow)}
+  .foot .mono{font-family:var(--mono);font-size:.78rem}
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 768px){
+    .wrap{padding:0 var(--s3)}
+    .nav{padding:.8rem var(--s3)}
+    .nav .hide-sm{display:none}
+    .hero{padding:var(--s4) 0 var(--s2)}
+    .stats{gap:var(--s2);font-size:.78rem}
+    .gives-grid{grid-template-columns:1fr}
+    .join .row{flex-direction:column;align-items:flex-start}
+  }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="nav">
+    <a class="logo" href="#top">underscore<span class="bar" aria-hidden="true"></span></a>
+    <ul>
+      <li><a class="link" href="#directory">Core</a></li>
+      <li class="hide-sm"><a class="link" href="#gives">What members give</a></li>
+      <li class="hide-sm"><a class="link" href="#join">Membership</a></li>
+      <li><a class="btn" href="#join">Join the Core</a></li>
+    </ul>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero wrap">
+    <h1>Underscore is its members.<span class="mark" aria-hidden="true"></span> Here they are.</h1>
+    <p class="sub">The Core is our member network — builders, operators, and experts who give their time to each other. No stage, no gloss. Just the index, kept current.</p>
+
+    <div class="stats" role="list" aria-label="Core statistics">
+      <span role="listitem"><b>1,200+</b> members</span>
+      <span class="sep" aria-hidden="true"></span>
+      <span role="listitem"><b>40</b> cities</span>
+      <span class="sep" aria-hidden="true"></span>
+      <span role="listitem"><b>9,000</b> hours given</span>
+      <span class="sep" aria-hidden="true"></span>
+      <span role="listitem">founded <b>2021</b></span>
+    </div>
+  </section>
+
+  <!-- ============ DIRECTORY ============ -->
+  <section class="dir wrap" id="directory">
+    <div class="dir-head">
+      <span class="label">The Core — Directory</span>
+      <span class="hint">index 16 of 1,200 · click a column to sort</span>
+    </div>
+
+    <div class="table-scroll">
+      <table id="core-table">
+        <thead>
+          <tr>
+            <th class="sortable" data-col="0" data-type="text" data-dir="asc">Name<span class="arr"></span></th>
+            <th class="sortable" data-col="1" data-type="text">Role<span class="arr"></span></th>
+            <th class="sortable" data-col="2" data-type="text">City<span class="arr"></span></th>
+            <th class="sortable" data-col="3" data-type="num">Joined<span class="arr"></span></th>
+            <th>Gives<span class="arr"></span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="name">Ana Reyes</td><td class="role">designer</td><td class="city">Mexico City</td><td class="meta">2021</td><td class="gives">portfolio critique, open Fridays</td></tr>
+          <tr><td class="name">Aisha Bello</td><td class="role">product</td><td class="city">Lagos</td><td class="meta">2024</td><td class="gives">roadmap teardowns</td></tr>
+          <tr><td class="name">Carmen Silva</td><td class="role">founder</td><td class="city">Lisbon</td><td class="meta">2023</td><td class="gives">fundraising debriefs, honest ones</td></tr>
+          <tr><td class="name">David Park</td><td class="role">operator</td><td class="city">Seoul</td><td class="meta">2021</td><td class="gives">ops playbooks, midnight office hours</td></tr>
+          <tr><td class="name">Greta Lindqvist</td><td class="role">hardware</td><td class="city">Stockholm</td><td class="meta">2023</td><td class="gives">DFM review before you tool up</td></tr>
+          <tr><td class="name">Ingrid Holm</td><td class="role">researcher</td><td class="city">Oslo</td><td class="meta">2025</td><td class="gives">study design second opinions</td></tr>
+          <tr><td class="name">Jonas Weber</td><td class="role">builder</td><td class="city">Berlin</td><td class="meta">2021</td><td class="gives">workshop space and tools</td></tr>
+          <tr><td class="name">Kofi Mensah</td><td class="role">operator</td><td class="city">Accra</td><td class="meta">2024</td><td class="gives">logistics intros, West Africa</td></tr>
+          <tr><td class="name">Leila Haddad</td><td class="role">researcher</td><td class="city">Beirut</td><td class="meta">2022</td><td class="gives">careful reading of rough drafts</td></tr>
+          <tr><td class="name">Lucas Moreau</td><td class="role">builder</td><td class="city">Montréal</td><td class="meta">2025</td><td class="gives">prototyping weekends</td></tr>
+          <tr><td class="name">Maya Chen</td><td class="role">founder</td><td class="city">Oakland</td><td class="meta">2021</td><td class="gives">first-call advice for first-timers</td></tr>
+          <tr><td class="name">Noor Aziz</td><td class="role">engineer</td><td class="city">Amman</td><td class="meta">2024</td><td class="gives">code review, infra postmortems</td></tr>
+          <tr><td class="name">Omar Farouk</td><td class="role">designer</td><td class="city">Cairo</td><td class="meta">2023</td><td class="gives">brand systems audit</td></tr>
+          <tr><td class="name">Priya Nair</td><td class="role">product</td><td class="city">Bangalore</td><td class="meta">2022</td><td class="gives">hiring intros, PM mentorship</td></tr>
+          <tr><td class="name">Sam Osei</td><td class="role">engineer</td><td class="city">Boston</td><td class="meta">2021</td><td class="gives">weekly office hours, systems review</td></tr>
+          <tr><td class="name">Tom Aiello</td><td class="role">manufacturer</td><td class="city">Detroit</td><td class="meta">2022</td><td class="gives">intro to manufacturing, floor walks</td></tr>
+        </tbody>
+        <tfoot>
+          <tr class="apply-row">
+            <td class="ghost">your_name_here</td>
+            <td class="ghost">your_craft</td>
+            <td class="ghost">your_city</td>
+            <td class="ghost">2026</td>
+            <td><a class="btn yellow" href="#join">Apply</a></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ WHAT MEMBERS GIVE ============ -->
+  <section class="gives-section wrap" id="gives">
+    <span class="label">What members give</span>
+    <div class="gives-grid">
+      <div class="give"><span class="tick" aria-hidden="true"></span><div><b>Hours.</b> <span>Standing office hours, kept weekly, open to any member without a reason.</span></div></div>
+      <div class="give"><span class="tick" aria-hidden="true"></span><div><b>Introductions.</b> <span>Warm, specific, and made the same day they are promised.</span></div></div>
+      <div class="give"><span class="tick" aria-hidden="true"></span><div><b>Workspace.</b> <span>Shop floors, studios, and spare desks in 40 cities, doors held open.</span></div></div>
+      <div class="give"><span class="tick" aria-hidden="true"></span><div><b>Readings.</b> <span>Drafts, decks, and specs returned with margins full of careful notes.</span></div></div>
+      <div class="give"><span class="tick" aria-hidden="true"></span><div><b>Playbooks.</b> <span>The documents people usually guard — shared before they are requested.</span></div></div>
+      <div class="give"><span class="tick" aria-hidden="true"></span><div><b>Second opinions.</b> <span>On hires, prices, prototypes, and the decisions that keep members up at night.</span></div></div>
+    </div>
+    <p class="fine">9,000 hours logged since 2021. nobody keeps score; we just keep the index.</p>
+  </section>
+
+  <!-- ============ JOIN ============ -->
+  <section class="join" id="join">
+    <div class="wrap">
+      <span class="label">Membership</span>
+      <h2>The directory has one open row. The Core gives first and asks later — bring something to give.</h2>
+      <div class="row">
+        <span class="ghost">your_name_here · your_craft · your_city · 2026</span>
+        <a class="btn yellow" href="#join">Join the Core</a>
+      </div>
+      <p class="fine">applications read by members, not software · admitted monthly · membership is free</p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="logo" href="#top">underscore<span class="bar" aria-hidden="true"></span></a>
+    <ul>
+      <li><a href="#directory">Core</a></li>
+      <li><a href="#gives">What members give</a></li>
+      <li><a href="#join">Join the Core</a></li>
+    </ul>
+    <span class="mono">© 2026 underscore · est_2021 · 40_cities</span>
+  </div>
+</footer>
+
+<script>
+  (function(){
+    var table = document.getElementById('core-table');
+    var tbody = table.tBodies[0];
+    var headers = table.querySelectorAll('th.sortable');
+
+    function cellValue(row, col, type){
+      var t = row.cells[col].textContent.trim();
+      return type === 'num' ? parseFloat(t) || 0 : t.toLowerCase();
+    }
+
+    headers.forEach(function(th){
+      th.addEventListener('click', function(){
+        var col = parseInt(th.dataset.col, 10);
+        var type = th.dataset.type;
+        var dir = th.dataset.dir === 'asc' ? 'desc' : 'asc';
+        headers.forEach(function(h){ h.removeAttribute('data-dir'); });
+        th.dataset.dir = dir;
+
+        var rows = Array.prototype.slice.call(tbody.rows);
+        rows.sort(function(a, b){
+          var va = cellValue(a, col, type), vb = cellValue(b, col, type);
+          if (va < vb) return dir === 'asc' ? -1 : 1;
+          if (va > vb) return dir === 'asc' ? 1 : -1;
+          return 0;
+        });
+        rows.forEach(function(r){ tbody.appendChild(r); });
+      });
+    });
+  })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — The Council</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231C1A17'/%3E%3Crect x='5' y='23' width='22' height='4' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@1,8..60,400;1,8..60,500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --slate:#1C1A17;
+    --slate-2:#23201C;
+    --amber:#F5C518;
+    --amber-dim:#C9A411;
+    --cream:#FAF6EE;
+    --cream-dim:#B8B0A2;
+    --hairline:#3A362F;
+    --s1:8px; --s2:16px; --s3:24px; --s4:40px; --s5:64px; --s6:104px; --s7:160px;
+    --maxw:1120px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--slate);
+    color:var(--cream);
+    font-family:'Inter Tight',sans-serif;
+    font-size:17px;line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--amber);color:var(--slate);}
+  a{color:inherit;text-decoration:none;}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 var(--s4);}
+
+  /* ---------- nav ---------- */
+  nav{
+    position:sticky;top:0;z-index:50;
+    background:rgba(28,26,23,.9);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--hairline);
+  }
+  .nav-inner{
+    max-width:var(--maxw);margin:0 auto;padding:18px var(--s4);
+    display:flex;align-items:center;gap:var(--s4);
+  }
+  .logo{display:flex;align-items:baseline;gap:11px;font-weight:600;font-size:18px;letter-spacing:.01em;}
+  .logo .glyph{display:inline-block;width:28px;height:5px;background:var(--amber);transform:translateY(-3px);}
+  .nav-links{display:flex;gap:var(--s4);margin-left:auto;font-size:15px;color:var(--cream-dim);}
+  .nav-links a{transition:color .2s ease;padding:4px 0;}
+  .nav-links a:hover{color:var(--cream);}
+  .nav-links a.core-link{color:var(--amber);}
+  .nav-links a.core-link:hover{color:var(--cream);}
+  .btn{
+    display:inline-block;background:var(--amber);color:var(--slate);
+    font-weight:600;font-size:15px;padding:12px 26px;border:1px solid var(--amber);
+    transition:background .2s ease,color .2s ease,box-shadow .2s ease;
+  }
+  .btn:hover{background:transparent;color:var(--amber);box-shadow:0 0 24px rgba(245,197,24,.18);}
+  .btn-nav{padding:9px 20px;}
+  .btn-ghost{
+    background:transparent;color:var(--cream);border:1px solid var(--hairline);
+  }
+  .btn-ghost:hover{border-color:var(--amber);color:var(--amber);box-shadow:none;}
+
+  /* ---------- hero ---------- */
+  header.hero{padding:var(--s7) 0 var(--s6);text-align:left;}
+  .kicker{
+    font-size:13px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--cream-dim);margin-bottom:var(--s3);font-weight:500;
+  }
+  h1{
+    font-size:clamp(46px,7.2vw,92px);font-weight:600;line-height:1.03;
+    letter-spacing:-.03em;max-width:14ch;
+  }
+  .hero-bar{
+    width:min(420px,70%);height:8px;background:var(--amber);
+    margin-top:var(--s4);
+    box-shadow:0 0 22px rgba(245,197,24,.35);
+    animation:emberPulse 5.5s ease-in-out infinite;
+  }
+  @keyframes emberPulse{
+    0%,100%{box-shadow:0 0 18px rgba(245,197,24,.25);}
+    50%{box-shadow:0 0 42px rgba(245,197,24,.55);}
+  }
+  .hero-sub{
+    margin-top:var(--s4);max-width:54ch;font-size:19px;color:var(--cream-dim);
+  }
+  .hero-sub b{color:var(--cream);font-weight:500;}
+  .hero-actions{margin-top:var(--s4);display:flex;gap:var(--s2);flex-wrap:wrap;}
+
+  /* ---------- sections ---------- */
+  section{padding:var(--s6) 0;border-top:1px solid var(--hairline);}
+  .sec-label{
+    font-size:12.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--amber);
+    margin-bottom:var(--s2);font-weight:600;
+  }
+  h2{font-size:clamp(30px,3.8vw,46px);font-weight:600;letter-spacing:-.025em;line-height:1.1;}
+  .sec-intro{margin-top:var(--s2);max-width:52ch;color:var(--cream-dim);font-size:18px;}
+
+  /* what the core does — three columns */
+  .cols{
+    margin-top:var(--s5);
+    display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s4);
+  }
+  .col{
+    border-top:1px solid var(--hairline);padding-top:var(--s3);
+    transition:border-color .25s ease;
+  }
+  .col:hover{border-top-color:var(--amber);}
+  .col .index{
+    display:inline-block;font-size:13px;color:var(--amber);font-weight:600;
+    letter-spacing:.08em;margin-bottom:var(--s2);
+  }
+  .col h3{font-size:21px;font-weight:600;letter-spacing:-.01em;margin-bottom:10px;}
+  .col p{color:var(--cream-dim);font-size:16px;}
+
+  /* ---------- council table ---------- */
+  .table-figure{margin-top:var(--s5);}
+  .table-figure svg{width:100%;height:auto;display:block;overflow:visible;}
+  .seat-label{font-family:'Inter Tight',sans-serif;}
+  .table-caption{
+    margin-top:var(--s3);font-size:14px;color:var(--cream-dim);
+    display:flex;justify-content:space-between;gap:var(--s2);flex-wrap:wrap;
+  }
+  .table-caption .open-note{color:var(--amber);}
+  .stats-row{
+    margin-top:var(--s5);display:grid;grid-template-columns:repeat(4,1fr);
+    border-top:1px solid var(--hairline);
+  }
+  .stat{padding:var(--s3) var(--s2) 0 0;}
+  .stat b{display:block;font-size:clamp(28px,3vw,40px);font-weight:600;letter-spacing:-.02em;color:var(--cream);}
+  .stat span{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--cream-dim);}
+  .stat b em{font-style:normal;color:var(--amber);}
+
+  /* ---------- quote ---------- */
+  .quote-section{background:var(--slate-2);}
+  blockquote.big{
+    max-width:22ch;margin:0;
+    font-family:'Source Serif 4',serif;font-style:italic;font-weight:400;
+    font-size:clamp(28px,4.4vw,52px);line-height:1.25;letter-spacing:-.01em;
+  }
+  blockquote.big .hl{color:var(--amber);}
+  .attr{
+    margin-top:var(--s4);display:flex;align-items:center;gap:var(--s2);
+    font-size:15px;color:var(--cream-dim);
+  }
+  .attr .rule{width:56px;height:2px;background:var(--amber);}
+  .quote-pair{margin-top:var(--s5);display:grid;grid-template-columns:1fr 1fr;gap:var(--s4);}
+  .quote-small{
+    border-left:2px solid var(--hairline);padding-left:var(--s3);
+    font-family:'Source Serif 4',serif;font-style:italic;font-size:19px;line-height:1.5;
+    color:var(--cream-dim);transition:border-color .25s ease;
+  }
+  .quote-small:hover{border-left-color:var(--amber);}
+  .quote-small cite{
+    display:block;margin-top:var(--s2);font-family:'Inter Tight',sans-serif;
+    font-style:normal;font-size:13.5px;letter-spacing:.04em;color:var(--cream-dim);
+  }
+  .quote-small cite b{color:var(--cream);font-weight:500;}
+
+  /* ---------- CTA ---------- */
+  .cta{text-align:center;padding:var(--s7) 0;}
+  .cta h2{max-width:20ch;margin:0 auto;}
+  .cta p{margin:var(--s3) auto 0;max-width:46ch;color:var(--cream-dim);font-size:18px;}
+  .cta .btn{margin-top:var(--s4);font-size:16px;padding:15px 36px;}
+  .condense{margin:var(--s5) auto 0;width:100%;max-width:680px;}
+  .condense svg{width:100%;height:auto;display:block;}
+
+  /* ---------- footer ---------- */
+  footer{border-top:1px solid var(--hairline);padding:var(--s5) 0;}
+  .foot-inner{
+    max-width:var(--maxw);margin:0 auto;padding:0 var(--s4);
+    display:flex;align-items:flex-start;gap:var(--s4);flex-wrap:wrap;
+  }
+  .foot-brand{max-width:30ch;font-size:14.5px;color:var(--cream-dim);}
+  .foot-brand .glyph{display:block;width:56px;height:8px;background:var(--amber);margin-bottom:var(--s2);}
+  .foot-cols{margin-left:auto;display:flex;gap:var(--s5);font-size:14.5px;}
+  .foot-cols h4{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--cream-dim);margin-bottom:var(--s2);font-weight:600;}
+  .foot-cols a{display:block;padding:3px 0;color:var(--cream);transition:color .2s ease;}
+  .foot-cols a:hover{color:var(--amber);}
+  .foot-legal{width:100%;margin-top:var(--s4);padding-top:var(--s3);border-top:1px solid var(--hairline);
+    font-size:13px;color:var(--cream-dim);display:flex;justify-content:space-between;flex-wrap:wrap;gap:var(--s2);}
+
+  /* ---------- responsive ---------- */
+  @media (max-width:768px){
+    .wrap{padding:0 var(--s3);}
+    .nav-inner{padding:14px var(--s3);flex-wrap:wrap;gap:var(--s2);}
+    .nav-links{order:3;width:100%;gap:var(--s3);font-size:14px;}
+    header.hero{padding:var(--s5) 0;}
+    .cols{grid-template-columns:1fr;gap:var(--s3);}
+    .stats-row{grid-template-columns:repeat(2,1fr);gap:0 var(--s3);}
+    .quote-pair{grid-template-columns:1fr;}
+    .foot-cols{margin-left:0;flex-wrap:wrap;gap:var(--s4);}
+    .cta{padding:var(--s6) 0;}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto;}
+    *,*::before,*::after{transition:none !important;animation:none !important;}
+    .hero-bar{box-shadow:0 0 22px rgba(245,197,24,.35);}
+  }
+</style>
+</head>
+<body id="top">
+
+<nav>
+  <div class="nav-inner">
+    <a class="logo" href="#top"><span class="glyph"></span>Underscore</a>
+    <div class="nav-links">
+      <a href="#work">What we do</a>
+      <a class="core-link" href="#core">Core</a>
+      <a href="#voices">Voices</a>
+    </div>
+    <a class="btn btn-nav" href="#join">Join the Core</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="kicker">Underscore · The Council · Convened 2021</p>
+    <h1>Good company is infrastructure.</h1>
+    <div class="hero-bar" aria-hidden="true"></div>
+    <p class="hero-sub">Roads, power, water — and the people who will pick up when it matters. Underscore maintains the last one. A standing council of builders, operators, and experts called <b>the Core</b>, who give their time to each other as a matter of course.</p>
+    <div class="hero-actions">
+      <a class="btn" href="#join">Join the Core</a>
+      <a class="btn btn-ghost" href="#core">See who's at the table</a>
+    </div>
+  </div>
+</header>
+
+<section id="work">
+  <div class="wrap">
+    <p class="sec-label">01 — What the Core does</p>
+    <h2>Three duties. No ceremony.</h2>
+    <div class="cols">
+      <div class="col">
+        <span class="index">i.</span>
+        <h3>Answers, within the day</h3>
+        <p>A pricing question, a hiring doubt, a contract clause that smells wrong. You ask the Core. Someone who has lived it answers before the day ends. That's the standard, not the exception.</p>
+      </div>
+      <div class="col">
+        <span class="index">ii.</span>
+        <h3>Hours, given first</h3>
+        <p>Members commit real working hours to each other — reviews, intros, a week on a shop floor. Nine thousand hours and counting, none of them billed. The Core gives first and asks later.</p>
+      </div>
+      <div class="col">
+        <span class="index">iii.</span>
+        <h3>Company, kept</h3>
+        <p>Building is long and mostly quiet. The Core keeps a seat warm in forty cities — a standing table where your work is taken seriously and your name is known.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="core">
+  <div class="wrap">
+    <p class="sec-label">02 — The Council Table</p>
+    <h2>The Core, seated.</h2>
+    <p class="sec-intro">One long table. 1,200 chairs and growing. Here is a stretch of it — and the seat we keep open on principle.</p>
+
+    <figure class="table-figure" aria-label="An overhead diagram of a long table; member names seated on both sides; one open seat outlined">
+      <svg viewBox="0 0 1080 360" fill="none">
+        <!-- the table: one long amber underscore -->
+        <rect x="60" y="172" width="960" height="16" fill="#F5C518"/>
+        <rect x="60" y="172" width="960" height="16" fill="none" stroke="#C9A411" stroke-width="1"/>
+
+        <!-- seats: top side -->
+        <g class="seat-label" font-size="15" fill="#FAF6EE" text-anchor="middle">
+          <circle cx="150" cy="128" r="7" fill="#FAF6EE"/>
+          <text x="150" y="100" font-weight="600">Maya Chen</text>
+          <text x="150" y="120" font-size="12.5" fill="#B8B0A2">founder · Oakland</text>
+
+          <circle cx="330" cy="128" r="7" fill="#FAF6EE"/>
+          <text x="330" y="100" font-weight="600">Ana Reyes</text>
+          <text x="330" y="120" font-size="12.5" fill="#B8B0A2">designer · Mexico City</text>
+
+          <circle cx="510" cy="128" r="7" fill="#FAF6EE"/>
+          <text x="510" y="100" font-weight="600">Leila Haddad</text>
+          <text x="510" y="120" font-size="12.5" fill="#B8B0A2">researcher · Beirut</text>
+
+          <circle cx="690" cy="128" r="7" fill="#FAF6EE"/>
+          <text x="690" y="100" font-weight="600">Priya Nair</text>
+          <text x="690" y="120" font-size="12.5" fill="#B8B0A2">product · Bangalore</text>
+
+          <circle cx="870" cy="128" r="7" fill="#FAF6EE"/>
+          <text x="870" y="100" font-weight="600">Tom Aiello</text>
+          <text x="870" y="120" font-size="12.5" fill="#B8B0A2">manufacturer · Detroit</text>
+        </g>
+
+        <!-- seats: bottom side -->
+        <g class="seat-label" font-size="15" fill="#FAF6EE" text-anchor="middle">
+          <circle cx="240" cy="232" r="7" fill="#FAF6EE"/>
+          <text x="240" y="266" font-weight="600">Sam Osei</text>
+          <text x="240" y="286" font-size="12.5" fill="#B8B0A2">engineer · Boston</text>
+
+          <circle cx="420" cy="232" r="7" fill="#FAF6EE"/>
+          <text x="420" y="266" font-weight="600">David Park</text>
+          <text x="420" y="286" font-size="12.5" fill="#B8B0A2">operator · Seoul</text>
+
+          <circle cx="600" cy="232" r="7" fill="#FAF6EE"/>
+          <text x="600" y="266" font-weight="600">Jonas Weber</text>
+          <text x="600" y="286" font-size="12.5" fill="#B8B0A2">builder · Berlin</text>
+
+          <circle cx="780" cy="232" r="7" fill="#FAF6EE"/>
+          <text x="780" y="266" font-weight="600">Noor Rahimi</text>
+          <text x="780" y="286" font-size="12.5" fill="#B8B0A2">logistics · Nairobi</text>
+
+          <!-- the open seat -->
+          <circle cx="960" cy="232" r="7" fill="none" stroke="#F5C518" stroke-width="2" stroke-dasharray="3 3"/>
+          <text x="960" y="266" font-weight="600" fill="#F5C518">open seat</text>
+          <text x="960" y="286" font-size="12.5" fill="#B8B0A2">reserved for you</text>
+        </g>
+
+        <!-- table continues marks -->
+        <g stroke="#3A362F" stroke-width="2">
+          <line x1="24" y1="176" x2="44" y2="176"/><line x1="24" y1="184" x2="44" y2="184"/>
+          <line x1="1036" y1="176" x2="1056" y2="176"/><line x1="1036" y1="184" x2="1056" y2="184"/>
+        </g>
+      </svg>
+    </figure>
+    <div class="table-caption">
+      <span>Fig. 02 — A 900-millimetre stretch of a table that seats 1,200.</span>
+      <span class="open-note">The open seat is not decoration. It is policy.</span>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat"><b>1,200<em>+</em></b><span>members seated</span></div>
+      <div class="stat"><b>40</b><span>cities</span></div>
+      <div class="stat"><b>9,000</b><span>hours given</span></div>
+      <div class="stat"><b>2021</b><span>convened</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="quote-section" id="voices">
+  <div class="wrap">
+    <p class="sec-label">03 — From the table</p>
+    <blockquote class="big">"I arrived with a problem and no standing. I left with <span class="hl">four working sessions</span> and a supplier. Nobody asked what I could do for them."</blockquote>
+    <div class="attr">
+      <span class="rule" aria-hidden="true"></span>
+      <span>Jonas Weber — builder, Berlin. Member since 2023.</span>
+    </div>
+
+    <div class="quote-pair">
+      <blockquote class="quote-small">
+        "The Core gives first and asks later. It sounds like a slogan until you watch an operator in Seoul spend his Saturday on your warehouse problem."
+        <cite>— <b>Maya Chen</b>, founder, Oakland</cite>
+      </blockquote>
+      <blockquote class="quote-small">
+        "Every network I'd joined wanted my title before my question. This one wanted the question."
+        <cite>— <b>Leila Haddad</b>, researcher, Beirut</cite>
+      </blockquote>
+    </div>
+  </div>
+</section>
+
+<section class="cta" id="join">
+  <div class="wrap">
+    <p class="sec-label" style="text-align:center;">04 — The open seat</p>
+    <h2>Join the Core — take a seat.</h2>
+    <p>No dues. No gatekeeping. Bring time, not credentials. If you build things and you'll give an hour before you ask for one, the seat is yours.</p>
+    <a class="btn" href="#join">Join the Core</a>
+    <!-- the table bar condenses toward the button -->
+    <div class="condense" aria-hidden="true">
+      <svg viewBox="0 0 680 40" fill="none">
+        <rect x="0"   y="16" width="180" height="8"  fill="#F5C518" opacity=".25"/>
+        <rect x="200" y="14" width="130" height="12" fill="#F5C518" opacity=".5"/>
+        <rect x="350" y="12" width="90"  height="16" fill="#F5C518" opacity=".75"/>
+        <rect x="460" y="10" width="60"  height="20" fill="#F5C518"/>
+        <rect x="540" y="8"  width="36"  height="24" fill="#F5C518"/>
+        <rect x="596" y="6"  width="20"  height="28" fill="#F5C518"/>
+        <rect x="636" y="4"  width="10"  height="32" fill="#F5C518"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="foot-inner">
+    <div class="foot-brand">
+      <span class="glyph" aria-hidden="true"></span>
+      Underscore. A standing council of people who build, convened 2021. The table is long on purpose.
+    </div>
+    <div class="foot-cols">
+      <div>
+        <h4>Council</h4>
+        <a href="#work">What we do</a>
+        <a href="#voices">Voices</a>
+        <a href="#top">Charter</a>
+      </div>
+      <div>
+        <h4>Core</h4>
+        <a href="#core">The table</a>
+        <a href="#join">Join the Core</a>
+        <a href="#core">Hours ledger</a>
+      </div>
+      <div>
+        <h4>Reach us</h4>
+        <a href="mailto:chamber@underscore.org">chamber@underscore.org</a>
+        <a href="#top">Press</a>
+      </div>
+    </div>
+    <div class="foot-legal">
+      <span>© 2026 Underscore. The seat stays open.</span>
+      <span>_ council in session since 2021</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
