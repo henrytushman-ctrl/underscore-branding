@@ -59,6 +59,23 @@
     grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
     gap: 32px;
   }
+  .set-heading {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 40px 48px 28px;
+  }
+  .set-heading h2 {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .set-heading p {
+    margin-top: 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .set-heading .rule { height: 5px; width: 64px; background: var(--yellow); border-radius: 3px; margin-bottom: 14px; }
   .card {
     display: block;
     text-decoration: none;
@@ -139,7 +156,7 @@
 <body>
 <header>
   <div class="wordmark">underscore<span>_</span></div>
-  <p class="sub">15 website directions. Each one is a full standalone page — click any card to open it. Built around four traits:</p>
+  <p class="sub">30 website directions in two sets. Each one is a full standalone page — click any card to open it. Built around four traits:</p>
   <div class="traits">
     <span class="trait">pioneering</span>
     <span class="trait">connected</span>
@@ -148,7 +165,19 @@
   </div>
 </header>
 
+<div class="set-heading">
+  <div class="rule"></div>
+  <h2>Set 01 — first exploration</h2>
+  <p>15 directions across the full expressive range</p>
+</div>
 <div class="grid" id="grid"></div>
+
+<div class="set-heading">
+  <div class="rule"></div>
+  <h2>Set 02 — the Core</h2>
+  <p>15 more — lower sweetness, higher gravitas. Underscore's member community ("the Core") woven through every one.</p>
+</div>
+<div class="grid" id="grid2"></div>
 
 <footer>
   <div class="bar"></div>
@@ -173,21 +202,41 @@ const concepts = [
   { f: "14-night-garden.html",n: "The Night Garden", d: "Dark warm charcoal, fireflies, and pixel-art yellow plants growing block-by-block out of a glowing underscore. Tech meets life." },
   { f: "15-one-line.html",    n: "One Line", d: "The whole page narrated by a single continuous yellow line that draws as you scroll — blank, then bridge, then ground, then gift." },
 ];
-const grid = document.getElementById('grid');
-concepts.forEach((c, i) => {
-  const num = String(i + 1).padStart(2, '0');
-  const a = document.createElement('a');
-  a.className = 'card';
-  a.href = 'concepts/' + c.f;
-  a.innerHTML = `
-    <div class="preview"><iframe src="concepts/${c.f}" loading="lazy" scrolling="no" tabindex="-1"></iframe></div>
-    <div class="meta">
-      <div class="num">${num} / 15</div>
-      <div class="name">${c.n}${c.flag ? `<span class="flag">${c.flag}</span>` : ''}</div>
-      <div class="desc">${c.d}</div>
-    </div>`;
-  grid.appendChild(a);
-});
+const concepts2 = [
+  { f: "16-broadsheet.html",  n: "The Broadsheet", d: "Journal-of-record front page — masthead, column rules, and the Core listed like the society pages with a yellow fact box." },
+  { f: "17-orbit.html",       n: "The Orbit", d: "Concentric rings of Core members slowly orbiting a single yellow underscore. Guild gravitas, forest-green band, serif quotes." },
+  { f: "18-directory.html",   n: "The Directory", d: "The community IS the interface: a sortable member index — name, role, city, what they give — ending in an empty row for you." },
+  { f: "19-foundry.html",     n: "The Foundry", d: "Industrial black-and-yellow: the underscore as a structural I-beam, the Core as a works roster. 'We show up. We lend tools. We stay late.'" },
+  { f: "20-atlas.html",       n: "The Atlas", d: "Dot-matrix world map — 40 cities joined by low yellow arcs that echo the underscore. 'Put your city on the line.'" },
+  { f: "21-portraits.html",   n: "The Portraits", d: "Exhibition-catalog duotone portrait wall of Core members with museum labels — and one empty frame reserved for you." },
+  { f: "22-ledger.html",      n: "The Ledger", d: "Radical transparency as generosity: an annual report of what the Core gave — dotted leaders, count-up figures, honest footnotes." },
+  { f: "23-letter.html",      n: "The Letter", d: "The whole page is one formal letter from the Core, closing with member signatures and an empty line for yours." },
+  { f: "24-posters.html",     n: "The Poster Wall", d: "Full-screen modernist poster series — the Core's names set as typographic texture, snap-scrolled, museum restraint." },
+  { f: "25-expedition.html",  n: "Field Notes", d: "Serious expedition journal: contour lines, dated logs, the Core as a formal manifest. 'No one summits alone.'" },
+  { f: "26-council.html",     n: "The Council", d: "Dark warm chamber: the Core seated along one long yellow table, one seat open. 'Bring time, not credentials.'" },
+  { f: "27-specimen.html",    n: "The Specimen", d: "The underscore anatomized as a type specimen — values as font weights, the Core credited as the foundry. 'Add your weight.'" },
+  { f: "28-timeline.html",    n: "Since Day One", d: "One continuous yellow timeline from 2021 through now and into a dotted future — the Core flowing along it. 'The next entry is yours.'" },
+  { f: "29-signal.html",      n: "The Signal", d: "A frequency, not a feed: pulses traveling a yellow line, the Core as glowing callsigns. 'No algorithm. Just people on the same line.'" },
+  { f: "30-commons.html",     n: "The Commons", d: "Civic stone permanence: the underscore as a lintel, the Core as an engraved donor wall — 'These 1,200 hold the line.'" },
+];
+function render(list, el, offset) {
+  list.forEach((c, i) => {
+    const num = String(offset + i + 1).padStart(2, '0');
+    const a = document.createElement('a');
+    a.className = 'card';
+    a.href = 'concepts/' + c.f;
+    a.innerHTML = `
+      <div class="preview"><iframe src="concepts/${c.f}" loading="lazy" scrolling="no" tabindex="-1"></iframe></div>
+      <div class="meta">
+        <div class="num">${num} / 30</div>
+        <div class="name">${c.n}${c.flag ? `<span class="flag">${c.flag}</span>` : ''}</div>
+        <div class="desc">${c.d}</div>
+      </div>`;
+    el.appendChild(a);
+  });
+}
+render(concepts, document.getElementById('grid'), 0);
+render(concepts2, document.getElementById('grid2'), 15);
 </script>
 </body>
 </html>
