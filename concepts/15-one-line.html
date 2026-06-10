@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — One Line</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='12' y='68' width='76' height='16' rx='5' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --yellow:#F5C518;
+    --yellow-2:#FFD43B;
+    --ink:#1A1816;
+    --cream:#FAF6EE;
+    --muted:#6E675C;
+    --s1:8px; --s2:16px; --s3:24px; --s4:40px; --s5:64px; --s6:104px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--cream);color:var(--ink);
+    font-family:'Space Grotesk',sans-serif;
+    font-size:17px;line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  ::selection{background:var(--yellow);color:var(--ink);}
+  a{color:inherit;}
+
+  /* ---------- nav ---------- */
+  nav{
+    position:fixed;top:0;left:0;right:0;z-index:80;
+    background:rgba(250,246,238,.85);backdrop-filter:blur(8px);
+  }
+  .nav-inner{
+    max-width:1200px;margin:0 auto;padding:18px var(--s4);
+    display:flex;align-items:center;gap:var(--s4);
+  }
+  .logo{display:flex;align-items:baseline;gap:8px;text-decoration:none;font-weight:700;font-size:18px;letter-spacing:-0.01em;}
+  .logo .mark{width:26px;height:7px;border-radius:2px;background:var(--yellow);transition:width .25s ease;}
+  .logo:hover .mark{width:38px;}
+  .nav-links{margin-left:auto;display:flex;gap:var(--s3);align-items:center;}
+  .nav-links a{
+    text-decoration:none;font-size:14px;font-weight:500;color:var(--muted);
+    transition:color .15s ease;
+  }
+  .nav-links a:hover{color:var(--ink);}
+  .btn{
+    display:inline-block;text-decoration:none;
+    background:var(--ink);color:var(--cream);
+    font-weight:500;font-size:14px;
+    padding:10px 22px;border-radius:100px;
+    transition:background .2s ease, transform .2s ease, box-shadow .2s ease;
+  }
+  .btn:hover{background:#000;transform:translateY(-2px);box-shadow:0 8px 20px rgba(26,24,22,.18);}
+
+  /* ---------- the line ---------- */
+  section{position:relative;}
+  .lineart{
+    position:absolute;inset:0;width:100%;height:100%;
+    pointer-events:none;z-index:1;display:block;overflow:visible;
+  }
+  .lineart path{
+    fill:none;stroke:var(--yellow);stroke-width:4px;
+    stroke-linecap:round;stroke-linejoin:round;
+  }
+  .copy{position:absolute;z-index:2;left:0;right:0;text-align:center;padding:0 var(--s3);}
+  h1,h2{font-weight:700;letter-spacing:-0.03em;line-height:1.05;}
+  h1{font-size:clamp(42px,6.2vw,78px);}
+  h2{font-size:clamp(32px,4.6vw,58px);}
+  .sub{color:var(--muted);font-size:clamp(15px,1.4vw,18px);max-width:44ch;margin:var(--s3) auto 0;}
+  .fade{opacity:0;transform:translateY(18px);transition:opacity .9s ease, transform .9s ease;}
+  .fade.in{opacity:1;transform:none;}
+
+  /* ---------- hero ---------- */
+  .hero{height:100vh;min-height:640px;}
+  .hero .wordmark{
+    position:absolute;top:13.5%;left:0;right:0;text-align:center;
+    font-weight:700;font-size:clamp(20px,2vw,26px);letter-spacing:0.02em;z-index:2;
+  }
+  .hero .copy{top:36%;}
+  .hero .hint{
+    position:absolute;bottom:32px;left:0;right:0;text-align:center;
+    font-size:13px;color:var(--muted);letter-spacing:0.18em;text-transform:uppercase;z-index:2;
+    animation:hintbob 2.6s ease-in-out infinite;
+  }
+  @keyframes hintbob{0%,100%{transform:translateY(0);}50%{transform:translateY(6px);}}
+
+  /* ---------- connect ---------- */
+  .connect{height:100vh;min-height:680px;}
+  .connect .copy{top:14%;}
+  .col{
+    position:absolute;width:26%;z-index:2;font-size:clamp(14px,1.3vw,17px);
+    color:var(--ink);
+  }
+  .col strong{display:block;font-size:1.1em;margin-bottom:6px;letter-spacing:-0.01em;}
+  .col .u{background:linear-gradient(transparent 70%, var(--yellow-2) 70%);padding:0 2px;}
+  .col--left{left:7%;top:38%;text-align:right;}
+  .col--right{right:7%;top:38%;text-align:left;}
+
+  /* ---------- carry ---------- */
+  .carry{height:100vh;min-height:680px;}
+  .carry .copy{top:16%;}
+  .walker{
+    position:absolute;left:55%;top:58%;transform:translateY(-100%);
+    width:46px;height:auto;z-index:2;
+  }
+  .walker svg{display:block;width:100%;height:auto;}
+  .walker{animation:stroll 9s ease-in-out infinite alternate;}
+  @keyframes stroll{0%{left:30%;}100%{left:64%;}}
+
+  /* ---------- give ---------- */
+  .give{height:100vh;min-height:680px;}
+  .give .copy{top:10%;}
+  .give .after{position:absolute;top:74%;left:0;right:0;text-align:center;z-index:2;}
+  .give .after p{color:var(--muted);max-width:40ch;margin:0 auto;font-size:clamp(14px,1.3vw,17px);}
+
+  /* ---------- branch ---------- */
+  .branch{height:90vh;min-height:620px;}
+  .branch .copy{top:9%;}
+  .branch .after{position:absolute;top:80%;left:0;right:0;text-align:center;z-index:2;color:var(--muted);font-size:clamp(14px,1.3vw,17px);}
+
+  /* ---------- end / footer ---------- */
+  .end{height:100vh;min-height:700px;background:var(--cream);}
+  .end .copy{top:16%;}
+  .finalbar{
+    position:absolute;left:12%;right:12%;top:54%;height:24px;border-radius:8px;
+    background:var(--yellow);z-index:2;
+    opacity:0;transform:scaleX(.2);transform-origin:center;
+    transition:opacity .8s ease, transform .9s cubic-bezier(.2,.7,.2,1);
+  }
+  .finalbar.set{opacity:1;transform:scaleX(1);box-shadow:0 10px 36px rgba(245,197,24,.45);}
+  .end .cta{
+    position:absolute;left:0;right:0;top:54%;text-align:center;z-index:3;
+    transform:translateY(-38%);
+  }
+  .end .cta .btn{
+    font-size:16px;padding:16px 36px;
+    box-shadow:0 10px 28px rgba(26,24,22,.22);
+  }
+  .footmeta{
+    position:absolute;left:0;right:0;bottom:0;z-index:2;
+    padding:var(--s4);
+    display:flex;justify-content:space-between;align-items:baseline;gap:var(--s3);flex-wrap:wrap;
+    max-width:1200px;margin:0 auto;
+  }
+  .footmeta .links{display:flex;gap:var(--s3);flex-wrap:wrap;}
+  .footmeta a{text-decoration:none;font-size:14px;color:var(--muted);transition:color .15s ease;}
+  .footmeta a:hover{color:var(--ink);}
+  .footmeta .fine{font-size:13px;color:var(--muted);}
+
+  @media (max-width:768px){
+    .nav-inner{padding:14px var(--s3);}
+    .nav-links a:not(.btn){display:none;}
+    .hero,.connect,.carry,.give,.end{min-height:560px;}
+    .branch{min-height:480px;}
+    .col{width:34%;}
+    .col--left{left:4%;}
+    .col--right{right:4%;}
+    .walker{width:34px;}
+    .finalbar{left:8%;right:8%;height:18px;}
+    .footmeta{padding:var(--s3);}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="logo" href="#top">underscore<span class="mark" aria-hidden="true"></span></a>
+    <div class="nav-links">
+      <a href="#connect">the idea</a>
+      <a href="#carry">the line</a>
+      <a href="#end">hello</a>
+      <a class="btn" href="#end">Start a line</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ============ 1 · BLANK ============ -->
+<section class="hero" id="top">
+  <div class="wordmark">underscore</div>
+  <svg class="lineart" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+    <path class="seg" vector-effect="non-scaling-stroke"
+      d="M 42 21.5 L 58 21.5
+         C 68 21.5, 73 28, 68 35
+         C 60 45, 32 42, 28 52
+         L 72 52
+         C 84 52, 87 64, 79 73
+         C 66 87, 50 86, 50 100"/>
+  </svg>
+  <div class="copy">
+    <h1 class="fade">It starts as a blank.</h1>
+    <p class="sub fade">A cursor. A held breath. The line before the first word. Underscore begins where nothing has happened yet — on purpose.</p>
+  </div>
+  <div class="hint">scroll · the line follows</div>
+</section>
+
+<!-- ============ 2 · CONNECT ============ -->
+<section class="connect" id="connect">
+  <svg class="lineart" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+    <path class="seg" vector-effect="non-scaling-stroke"
+      d="M 50 0
+         C 50 16, 25 20, 25 38
+         C 25 48, 25 56, 30 56
+         L 70 56
+         C 78 56, 80 68, 72 78
+         C 63 89, 50 88, 50 100"/>
+  </svg>
+  <div class="copy">
+    <h2 class="fade">Then it connects.</h2>
+  </div>
+  <div class="col col--left fade">
+    <strong>words<span class="u">_</span>become<span class="u">_</span>phrases</strong>
+    Ideas hold hands when nobody's looking. We just make it official.
+  </div>
+  <div class="col col--right fade">
+    <strong>strangers<span class="u">_</span>become<span class="u">_</span>collaborators</strong>
+    The gap between you and them was never as wide as it looked.
+  </div>
+</section>
+
+<!-- ============ 3 · CARRY ============ -->
+<section class="carry" id="carry">
+  <svg class="lineart" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+    <path class="seg" vector-effect="non-scaling-stroke"
+      d="M 50 0
+         C 50 16, 16 20, 13 38
+         C 11 48, 11 58, 18 58
+         L 86 58
+         C 94 58, 94 70, 86 79
+         C 72 92, 50 87, 50 100"/>
+  </svg>
+  <div class="copy">
+    <h2 class="fade">Then it carries.</h2>
+    <p class="sub fade">Good ground is invisible until you need it. We're the line you can stand on — and we don't move.</p>
+  </div>
+  <div class="walker" aria-hidden="true">
+    <svg viewBox="0 0 46 92">
+      <g fill="none" stroke="#1A1816" stroke-width="4" stroke-linecap="round">
+        <circle cx="23" cy="14" r="9" fill="#FAF6EE"/>
+        <path d="M23 24 L23 56"/>
+        <path d="M23 32 L10 44 M23 32 L36 42"/>
+        <path d="M23 56 L12 88 M23 56 L34 88"/>
+      </g>
+    </svg>
+  </div>
+</section>
+
+<!-- ============ 4 · GIVE ============ -->
+<section class="give" id="give">
+  <svg class="lineart" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+    <path class="seg" vector-effect="non-scaling-stroke"
+      d="M 50 0
+         C 50 12, 50 20, 50 31
+         C 53 23, 62 23, 63.5 31.5
+         C 65 41, 56 48, 50 56
+         C 44 48, 35 41, 36.5 31.5
+         C 38 23, 47 23, 50 31
+         C 50 40, 50 48, 50 56
+         L 50 100"/>
+  </svg>
+  <div class="copy">
+    <h2 class="fade">Then it gives.</h2>
+  </div>
+  <div class="after fade">
+    <p>Generosity isn't a feature here. It's the shape of the route — it always loops back to someone.</p>
+  </div>
+</section>
+
+<!-- ============ 5 · BRANCH ============ -->
+<section class="branch" id="branch">
+  <svg class="lineart" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+    <path class="seg" vector-effect="non-scaling-stroke"
+      d="M 50 0 C 50 8, 50 14, 50 22
+         C 38 32, 27 40, 27 50
+         C 27 60, 38 68, 50 78"/>
+    <path class="seg" vector-effect="non-scaling-stroke"
+      d="M 50 22 C 50 40, 50 60, 50 78"/>
+    <path class="seg" vector-effect="non-scaling-stroke"
+      d="M 50 22 C 62 32, 73 40, 73 50
+         C 73 60, 62 68, 50 78"/>
+    <path class="seg" vector-effect="non-scaling-stroke"
+      d="M 50 78 C 50 86, 50 93, 50 100"/>
+  </svg>
+  <div class="copy">
+    <h2 class="fade">Then it branches —</h2>
+  </div>
+  <div class="after fade">and finds itself again. They always do.</div>
+</section>
+
+<!-- ============ 6 · END / FOOTER ============ -->
+<section class="end" id="end">
+  <svg class="lineart" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+    <path class="seg" id="finalSeg" vector-effect="non-scaling-stroke"
+      d="M 50 0
+         C 50 16, 50 24, 50 32
+         C 50 44, 16 42, 13 55.5
+         L 87 55.5"/>
+  </svg>
+  <div class="copy">
+    <h2 class="fade">It never really ends.</h2>
+    <p class="sub fade">The line you started up there? You're standing on it now. Leave it better than blank.</p>
+  </div>
+  <div class="finalbar" id="finalBar" aria-hidden="true"></div>
+  <div class="cta">
+    <a class="btn" href="mailto:hello@underscore.example">Start a line</a>
+  </div>
+  <footer class="footmeta">
+    <a class="logo" href="#top">underscore<span class="mark" aria-hidden="true"></span></a>
+    <div class="links">
+      <a href="#connect">the idea</a>
+      <a href="#carry">the line</a>
+      <a href="mailto:hello@underscore.example">hello</a>
+    </div>
+    <span class="fine">© 2026 Underscore. One line, drawn slowly.</span>
+  </footer>
+</section>
+
+<script>
+(function(){
+  /* ---- scroll-linked line drawing across all segments, in order ---- */
+  var paths = Array.prototype.slice.call(document.querySelectorAll('path.seg'));
+  var total = 0;
+  paths.forEach(function(p){
+    var L = p.getTotalLength();
+    p._len = L;
+    total += L;
+    p.style.strokeDasharray = L + ' ' + L;
+    p.style.strokeDashoffset = L;
+  });
+
+  var finalBar = document.getElementById('finalBar');
+  var ticking = false;
+
+  function draw(){
+    ticking = false;
+    var doc = document.documentElement;
+    var max = doc.scrollHeight - window.innerHeight;
+    var raw = max > 0 ? (window.scrollY || doc.scrollTop) / max : 1;
+    // keep the wordmark underscore visible at load; finish slightly early
+    var p = Math.min(1, 0.055 + raw * 1.0);
+    var budget = p * total;
+    for(var i=0;i<paths.length;i++){
+      var L = paths[i]._len;
+      var d = Math.max(0, Math.min(L, budget));
+      paths[i].style.strokeDashoffset = L - d;
+      budget -= d;
+    }
+    if(raw > 0.965){ finalBar.classList.add('set'); }
+  }
+  window.addEventListener('scroll', function(){
+    if(!ticking){ ticking = true; requestAnimationFrame(draw); }
+  }, {passive:true});
+  window.addEventListener('resize', function(){
+    // re-measure isn't needed (user units), just redraw
+    if(!ticking){ ticking = true; requestAnimationFrame(draw); }
+  });
+  draw();
+
+  /* ---- gentle copy reveals ---- */
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
+    });
+  }, {threshold:.35});
+  document.querySelectorAll('.fade').forEach(function(el){ io.observe(el); });
+})();
+</script>
+</body>
+</html>

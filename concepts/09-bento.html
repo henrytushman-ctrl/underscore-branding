@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — Pull up a chair</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23F5C518'/%3E%3Crect x='20' y='66' width='60' height='14' rx='7' fill='%231A1816'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --yellow:#F5C518;
+    --yellow-bright:#FFD43B;
+    --ink:#1A1816;
+    --cream:#FAF6EE;
+    --tile:#FFFDF7;
+    --border:#E8DFCC;
+    --muted:#7A7264;
+    --gap:22px;
+    --radius:22px;
+    --s1:.5rem; --s2:1rem; --s3:1.75rem; --s4:3rem; --s5:5rem; --s6:8rem;
+    --shadow:0 1px 2px rgba(26,24,22,.04), 0 6px 18px rgba(26,24,22,.05);
+    --shadow-lift:0 2px 4px rgba(26,24,22,.06), 0 14px 30px rgba(26,24,22,.10);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  ::selection{background:var(--yellow);color:var(--ink)}
+  body{
+    font-family:'Plus Jakarta Sans',sans-serif;
+    background:var(--cream);color:var(--ink);
+    line-height:1.55;-webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;text-decoration:none}
+  .container{max-width:1160px;margin:0 auto;padding:0 var(--s3)}
+  .eyebrow{
+    font-size:.75rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--muted);
+  }
+
+  /* ---------- nav ---------- */
+  nav{
+    position:sticky;top:0;z-index:60;
+    background:rgba(250,246,238,.9);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--border);
+  }
+  .nav-inner{
+    max-width:1160px;margin:0 auto;padding:.9rem var(--s3);
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .logo{display:flex;align-items:center;gap:.6rem;font-weight:800;font-size:1.1rem}
+  .logo .mark{
+    width:34px;height:34px;border-radius:10px;background:var(--yellow);
+    display:grid;place-items:center;
+  }
+  .logo .mark span{
+    display:block;width:18px;height:5px;border-radius:3px;background:var(--ink);
+    margin-top:12px;
+  }
+  .nav-links{display:flex;gap:var(--s3);align-items:center}
+  .nav-links a{font-size:.9rem;font-weight:600;position:relative;padding-bottom:3px}
+  .nav-links a:not(.nav-cta)::after{
+    content:"";position:absolute;left:0;bottom:0;height:4px;width:0;
+    border-radius:2px;background:var(--yellow);transition:width .25s ease;
+  }
+  .nav-links a:not(.nav-cta):hover::after{width:100%}
+  .nav-cta{
+    background:var(--ink);color:var(--cream);
+    border-radius:999px;padding:.55rem 1.3rem;font-weight:700;font-size:.88rem;
+    transition:background .2s ease,color .2s ease,transform .2s ease;
+  }
+  .nav-cta:hover{background:var(--yellow);color:var(--ink);transform:translateY(-1px)}
+
+  /* ---------- hero ---------- */
+  header.hero{padding:var(--s5) 0 var(--s4);text-align:center}
+  .hero h1{
+    font-size:clamp(2.8rem,6.5vw,4.8rem);
+    font-weight:800;letter-spacing:-.03em;line-height:1.05;
+  }
+  .hero .table-edge{
+    width:clamp(7rem,18vw,12rem);height:16px;border-radius:8px;
+    background:var(--yellow);margin:1.4rem auto 0;
+  }
+  .hero p{
+    margin:var(--s3) auto 0;max-width:48ch;
+    font-size:clamp(1rem,1.5vw,1.2rem);color:#4d463c;
+  }
+  .hero .actions{margin-top:var(--s3);display:flex;gap:var(--s2);justify-content:center;flex-wrap:wrap}
+  .btn{
+    display:inline-block;font-weight:700;font-size:.95rem;
+    background:var(--ink);color:var(--cream);
+    border-radius:999px;padding:.85rem 1.8rem;
+    transition:background .2s ease,color .2s ease,transform .2s ease,box-shadow .2s ease;
+  }
+  .btn:hover{background:var(--yellow);color:var(--ink);transform:translateY(-2px);box-shadow:var(--shadow-lift)}
+  .btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+  .btn.ghost:hover{background:var(--yellow);border-color:var(--ink)}
+
+  /* ---------- bento grid ---------- */
+  section.table{padding:var(--s3) 0 var(--s5)}
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    grid-auto-rows:minmax(150px,auto);
+    gap:var(--gap);
+  }
+  .tile{
+    position:relative;
+    background:var(--tile);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:1.6rem;
+    box-shadow:var(--shadow);
+    display:flex;flex-direction:column;justify-content:space-between;gap:var(--s2);
+    transition:transform .25s ease,box-shadow .25s ease;
+  }
+  .tile:hover{transform:translateY(-5px);box-shadow:var(--shadow-lift)}
+  .tile h3{font-size:1.15rem;font-weight:800;letter-spacing:-.01em}
+  .tile p{font-size:.92rem;color:#4d463c}
+  .tile .eyebrow{margin-bottom:.4rem}
+
+  /* explicit placement so the bridges always know their neighbors */
+  .t-quote{grid-column:1/3;grid-row:1/3}
+  .t-glyph{grid-column:3/4;grid-row:1/3}
+  .t-stat{grid-column:4/5;grid-row:1/3}
+  .t-avatars{grid-column:1/3;grid-row:3/5}
+  .t-black{grid-column:3/4;grid-row:3/4}
+  .t-free{grid-column:3/4;grid-row:4/5}
+  .t-event{grid-column:4/5;grid-row:3/5}
+  .t-join{grid-column:1/5;grid-row:5/6}
+
+  /* the bridges — yellow underscores spanning the gaps between tiles */
+  .bridge{
+    position:absolute;background:var(--yellow);border-radius:8px;z-index:2;
+    transition:background .25s ease,transform .25s ease;
+  }
+  .bridge.h{width:calc(var(--gap) + 26px);height:15px;right:calc(-1 * var(--gap) - 13px)}
+  .bridge.v{height:calc(var(--gap) + 26px);width:15px;bottom:calc(-1 * var(--gap) - 13px)}
+  .tile:hover .bridge{background:var(--yellow-bright);transform:scale(1.06)}
+
+  .t-quote blockquote{
+    font-size:clamp(1.25rem,2.4vw,1.7rem);font-weight:600;line-height:1.35;letter-spacing:-.01em;
+  }
+  .t-quote cite{font-style:normal;font-size:.85rem;color:var(--muted);font-weight:600}
+
+  .t-glyph{
+    background:var(--yellow);border-color:var(--yellow);
+    align-items:center;justify-content:center;
+  }
+  .t-glyph svg{width:75%;height:auto}
+  .t-glyph .cap{font-size:.8rem;font-weight:700;text-align:center}
+
+  .t-stat .big{
+    font-size:clamp(2.2rem,4vw,3.2rem);font-weight:800;letter-spacing:-.03em;line-height:1;
+  }
+
+  .t-black,.t-black p{background:var(--ink);color:var(--cream)}
+  .t-black{border-color:var(--ink)}
+  .t-black p{background:none;color:#CFC8BA}
+  .t-black .joined{font-weight:800;font-size:1.2rem;letter-spacing:-.01em}
+  .t-black .joined em{font-style:normal;color:var(--yellow)}
+
+  .t-avatars .net{width:100%;height:auto;margin-top:auto}
+
+  .t-event .when{
+    display:inline-block;align-self:flex-start;
+    background:var(--cream);border:1px solid var(--border);border-radius:999px;
+    font-size:.75rem;font-weight:700;padding:.3rem .8rem;
+  }
+
+  .t-free{background:#FFF8E3;border-color:#F0E2B0}
+
+  .t-join{
+    flex-direction:row;align-items:center;justify-content:space-between;flex-wrap:wrap;
+    background:var(--tile);
+  }
+  .t-join h3{font-size:clamp(1.2rem,2.4vw,1.7rem)}
+
+  /* ---------- how it works ---------- */
+  section.how{
+    padding:var(--s5) 0 var(--s6);
+  }
+  .how-head{text-align:center;margin-bottom:var(--s4)}
+  .how-head h2{font-size:clamp(1.9rem,3.6vw,2.8rem);font-weight:800;letter-spacing:-.02em}
+  .how-head p{color:var(--muted);margin-top:.6rem;font-weight:500}
+  .steps{
+    position:relative;
+    display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s4);
+  }
+  /* the one continuous underscore running beneath all three steps */
+  .steps::before{
+    content:"";position:absolute;left:24px;right:24px;top:17px;
+    height:14px;border-radius:7px;background:var(--yellow);
+  }
+  .step{position:relative;padding-top:0}
+  .step .dot{
+    position:relative;z-index:1;
+    width:48px;height:48px;border-radius:50%;
+    background:var(--ink);color:var(--cream);
+    display:grid;place-items:center;font-weight:800;font-size:1.05rem;
+    border:4px solid var(--cream);
+    margin-bottom:var(--s2);
+    transition:transform .2s ease,background .2s ease;
+  }
+  .step:hover .dot{transform:scale(1.12);background:#000}
+  .step h3{font-size:1.25rem;font-weight:800;letter-spacing:-.01em;margin-bottom:.4rem}
+  .step p{font-size:.95rem;color:#4d463c;max-width:30ch}
+
+  /* ---------- footer ---------- */
+  footer{
+    background:var(--ink);color:var(--cream);
+    border-radius:var(--radius) var(--radius) 0 0;
+    padding:var(--s5) 0 var(--s4);
+  }
+  .foot-inner{
+    max-width:1160px;margin:0 auto;padding:0 var(--s3);
+    display:flex;justify-content:space-between;align-items:flex-start;gap:var(--s3);flex-wrap:wrap;
+  }
+  .foot-brand{max-width:34ch}
+  .foot-brand .logo .mark span{background:var(--ink)}
+  .foot-brand p{margin-top:var(--s2);font-size:.9rem;color:#CFC8BA}
+  .foot-links{display:flex;gap:var(--s4);flex-wrap:wrap}
+  .foot-links div{display:flex;flex-direction:column;gap:.6rem}
+  .foot-links .eyebrow{color:#9b9183}
+  .foot-links a{font-size:.9rem;font-weight:600;width:fit-content;position:relative;padding-bottom:2px}
+  .foot-links a::after{
+    content:"";position:absolute;left:0;bottom:0;height:3px;width:0;
+    border-radius:2px;background:var(--yellow);transition:width .25s ease;
+  }
+  .foot-links a:hover::after{width:100%}
+  .foot-base{
+    max-width:1160px;margin:var(--s4) auto 0;padding:var(--s3) var(--s3) 0;
+    border-top:1px solid #38332C;
+    display:flex;justify-content:space-between;gap:var(--s2);flex-wrap:wrap;
+    font-size:.8rem;color:#9b9183;
+  }
+
+  /* ---------- mobile ---------- */
+  @media (max-width:768px){
+    .nav-links a:not(.nav-cta){display:none}
+    .grid{grid-template-columns:1fr;grid-auto-rows:auto}
+    .t-quote,.t-glyph,.t-stat,.t-avatars,.t-black,.t-free,.t-event,.t-join{
+      grid-column:auto;grid-row:auto;
+    }
+    .t-glyph{min-height:200px}
+    .bridge.h{display:none}
+    /* horizontal bridges become vertical ones between stacked tiles */
+    .bridge-mobile{
+      position:absolute;left:50%;transform:translateX(-50%);
+      bottom:calc(-1 * var(--gap) - 13px);
+      width:15px;height:calc(var(--gap) + 26px);
+      border-radius:8px;background:var(--yellow);z-index:2;
+    }
+    .steps{grid-template-columns:1fr;gap:var(--s3);padding-left:0}
+    .steps::before{
+      left:17px;right:auto;top:24px;bottom:24px;
+      width:14px;height:auto;
+    }
+    .step{display:grid;grid-template-columns:48px 1fr;gap:var(--s2);align-items:start}
+    .step .dot{margin-bottom:0}
+    .step h3{grid-column:2}
+    .step p{grid-column:2}
+    .step .dot{grid-row:1/3}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="logo" href="#top"><span class="mark"><span></span></span>underscore</a>
+    <div class="nav-links">
+      <a href="#table">The table</a>
+      <a href="#how">How it works</a>
+      <a href="#join">Stories</a>
+      <a class="nav-cta" href="#join">Pull up a chair</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero container" id="top">
+  <h1>Pull up a chair.</h1>
+  <div class="table-edge" aria-hidden="true"></div>
+  <p>Underscore is a community for people who'd rather pass the bread than fight for it. Everyone's invited, everything's shared, and nobody eats alone.</p>
+  <div class="actions">
+    <a class="btn" href="#join">Join the table</a>
+    <a class="btn ghost" href="#how">How it works</a>
+  </div>
+</header>
+
+<section class="table container" id="table">
+  <div class="grid">
+
+    <div class="tile t-quote">
+      <span class="eyebrow">From the table</span>
+      <blockquote>"I came for the events. I stayed because someone remembered my name."</blockquote>
+      <cite>— Dana, member since spring</cite>
+      <span class="bridge h" style="top:46%" aria-hidden="true"></span>
+      <span class="bridge v" style="left:38%" aria-hidden="true"></span>
+      <span class="bridge-mobile" aria-hidden="true"></span>
+    </div>
+
+    <div class="tile t-glyph">
+      <svg viewBox="0 0 200 60" aria-hidden="true">
+        <rect x="6" y="18" width="188" height="36" rx="10" fill="#1A1816"/>
+      </svg>
+      <span class="cap">the mark that holds a seat for you</span>
+      <span class="bridge h" style="top:58%" aria-hidden="true"></span>
+      <span class="bridge-mobile" aria-hidden="true"></span>
+    </div>
+
+    <div class="tile t-stat">
+      <span class="eyebrow">Neighbors</span>
+      <div>
+        <div class="big">12,481</div>
+        <p>and counting — slowly, on purpose. We grow like sourdough, not like a graph.</p>
+      </div>
+      <span class="bridge v" style="left:44%" aria-hidden="true"></span>
+      <span class="bridge-mobile" aria-hidden="true"></span>
+    </div>
+
+    <div class="tile t-avatars">
+      <span class="eyebrow">Who's here</span>
+      <h3>Strangers, briefly.</h3>
+      <p>Bakers, coders, retirees, night owls. The lines between the dots are the whole point.</p>
+      <svg class="net" viewBox="0 0 360 110" aria-hidden="true">
+        <path d="M40 70 C 80 30, 130 30, 165 55" stroke="#F5C518" stroke-width="6" fill="none" stroke-linecap="round"/>
+        <path d="M165 55 C 200 80, 240 85, 285 45" stroke="#F5C518" stroke-width="6" fill="none" stroke-linecap="round"/>
+        <path d="M100 85 C 140 95, 190 95, 230 78" stroke="#E8DFCC" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <circle cx="40" cy="70" r="14" fill="#1A1816"/>
+        <circle cx="165" cy="55" r="17" fill="#F5C518" stroke="#1A1816" stroke-width="3"/>
+        <circle cx="100" cy="85" r="12" fill="#CFC8BA"/>
+        <circle cx="230" cy="78" r="13" fill="#1A1816"/>
+        <circle cx="285" cy="45" r="15" fill="#FFD43B" stroke="#1A1816" stroke-width="3"/>
+        <circle cx="330" cy="72" r="11" fill="#CFC8BA"/>
+      </svg>
+      <span class="bridge h" style="top:34%" aria-hidden="true"></span>
+      <span class="bridge-mobile" aria-hidden="true"></span>
+    </div>
+
+    <div class="tile t-black">
+      <span class="joined">words<em>_</em>become<em>_</em>bridges</span>
+      <p>The underscore joins words the way a table joins people: simply, and without asking for credit.</p>
+      <span class="bridge-mobile" aria-hidden="true"></span>
+    </div>
+
+    <div class="tile t-free">
+      <span class="eyebrow">Always</span>
+      <h3>Free, always.</h3>
+      <p>No tiers. No paywall. Generosity isn't a premium feature here.</p>
+      <span class="bridge h" style="top:52%" aria-hidden="true"></span>
+      <span class="bridge-mobile" aria-hidden="true"></span>
+    </div>
+
+    <div class="tile t-event">
+      <span class="when">Thursday · 6pm</span>
+      <div>
+        <h3>Soup Night</h3>
+        <p>Bring a spoon. Or don't — we have extras. We always have extras.</p>
+      </div>
+      <p style="font-weight:700;color:var(--ink)">RSVP with one word: "soup" →</p>
+      <span class="bridge v" style="left:46%" aria-hidden="true"></span>
+      <span class="bridge-mobile" aria-hidden="true"></span>
+    </div>
+
+    <div class="tile t-join" id="join">
+      <div>
+        <h3>There's a seat with your name on it.</h3>
+        <p>Well — there will be, once you tell us your name.</p>
+      </div>
+      <a class="btn" href="mailto:hello@underscore.community?subject=Pulling%20up%20a%20chair">Say hi, we'll scoot over</a>
+    </div>
+
+  </div>
+</section>
+
+<section class="how container" id="how">
+  <div class="how-head">
+    <h2>How it works</h2>
+    <p>Three steps, one line under all of them.</p>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="dot">1</div>
+      <h3>Show up</h3>
+      <p>Online or in person, loud or quiet. Lurking is a perfectly honorable way to arrive.</p>
+    </div>
+    <div class="step">
+      <div class="dot">2</div>
+      <h3>Share something</h3>
+      <p>A skill, a question, a pot of soup. Whatever you've got is exactly enough.</p>
+    </div>
+    <div class="step">
+      <div class="dot">3</div>
+      <h3>Stay connected</h3>
+      <p>The line under these steps doesn't end — it just keeps going to the next person.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="foot-inner">
+    <div class="foot-brand">
+      <a class="logo" href="#top"><span class="mark"><span></span></span>underscore</a>
+      <p>A common table for uncommonly kind people. Built low to the ground, like the mark itself.</p>
+    </div>
+    <div class="foot-links">
+      <div>
+        <span class="eyebrow">Community</span>
+        <a href="#table">The table</a>
+        <a href="#how">How it works</a>
+        <a href="#join">Join</a>
+      </div>
+      <div>
+        <span class="eyebrow">Say hi</span>
+        <a href="mailto:hello@underscore.community">hello@underscore.community</a>
+        <a href="#join">Host an event</a>
+        <a href="#join">Newsletter</a>
+      </div>
+    </div>
+  </div>
+  <div class="foot-base">
+    <span>© 2026 Underscore. Free, always.</span>
+    <span>Made with extra chairs.</span>
+  </div>
+</footer>
+
+</body>
+</html>

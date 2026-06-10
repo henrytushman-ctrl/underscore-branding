@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>underscore_ — no gloss. just good.</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='12' y='68' width='76' height='16' rx='8' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Gochi+Hand&family=Work+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --yellow:#F5C518;
+    --yellow-bright:#FFD43B;
+    --ink:#1A1816;
+    --cream:#FAF6EE;
+    --cream-deep:#F3EDDF;
+    --paper:#FFFDF7;
+    --s1:8px; --s2:16px; --s3:24px; --s4:40px; --s5:64px; --s6:104px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  ::selection{background:var(--yellow-bright);color:var(--ink);}
+  body{
+    font-family:'Work Sans',sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    line-height:1.6;
+    font-size:17px;
+    overflow-x:hidden;
+  }
+  .marker{font-family:'Caveat',cursive;}
+  .scrawl{font-family:'Gochi Hand',cursive;}
+  a{color:inherit;}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 var(--s3);}
+
+  /* highlighter swipe */
+  .hl{
+    position:relative;
+    white-space:nowrap;
+    background:linear-gradient(100deg, rgba(255,212,59,0) 0.8%, rgba(255,212,59,.95) 3%, rgba(255,212,59,.85) 96%, rgba(255,212,59,0) 99%);
+    padding:0 .18em;
+    border-radius:2px;
+    box-decoration-break:clone;
+  }
+  .hl-soft{
+    background:linear-gradient(96deg, rgba(255,212,59,0) 1%, rgba(255,212,59,.55) 4%, rgba(255,212,59,.5) 95%, rgba(255,212,59,0) 99%);
+    padding:0 .15em;
+  }
+
+  /* tape strips */
+  .tape{
+    position:absolute;
+    width:96px;height:28px;
+    background:rgba(245,197,24,.45);
+    box-shadow:0 1px 3px rgba(26,24,22,.12);
+    border-left:2px dotted rgba(250,246,238,.7);
+    border-right:2px dotted rgba(250,246,238,.7);
+    pointer-events:none;
+  }
+
+  /* ---------- NAV ---------- */
+  nav{
+    display:flex;align-items:center;justify-content:space-between;
+    max-width:1080px;margin:0 auto;
+    padding:var(--s3) var(--s3);
+  }
+  .logo{
+    text-decoration:none;
+    font-family:'Caveat',cursive;
+    font-weight:700;
+    font-size:2rem;
+    position:relative;
+    display:inline-block;
+    line-height:1;
+  }
+  .logo svg{position:absolute;left:-4px;bottom:-10px;width:calc(100% + 8px);height:16px;overflow:visible;}
+  .nav-links{display:flex;align-items:center;gap:var(--s4);list-style:none;}
+  .nav-links a{
+    text-decoration:none;
+    font-weight:500;
+    font-size:.95rem;
+    position:relative;
+  }
+  .nav-links a:not(.cta)::after{
+    content:"";
+    position:absolute;left:0;bottom:-5px;
+    width:100%;height:3px;
+    background:var(--yellow);
+    border-radius:3px 8px 4px 9px;
+    transform:scaleX(0) rotate(-1deg);
+    transform-origin:left;
+    transition:transform .2s ease;
+  }
+  .nav-links a:not(.cta):hover::after{transform:scaleX(1) rotate(-1deg);}
+  .cta{
+    font-family:'Caveat',cursive;
+    font-weight:700;
+    font-size:1.25rem;
+    background:var(--ink);
+    color:var(--cream);
+    padding:8px 22px 10px;
+    border-radius:14px 18px 13px 19px / 19px 13px 18px 14px;
+    transform:rotate(-1deg);
+    transition:transform .2s ease, background .2s ease;
+  }
+  .cta:hover{transform:rotate(1deg) scale(1.04);background:#2c2925;}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    position:relative;
+    padding:var(--s6) 0 calc(var(--s6) + 30px);
+    text-align:center;
+  }
+  .hero h1{
+    font-family:'Caveat',cursive;
+    font-weight:700;
+    font-size:clamp(3.2rem, 8.5vw, 6.2rem);
+    line-height:1.05;
+    transform:rotate(-1.2deg);
+    margin-bottom:var(--s4);
+  }
+  .hero p.lede{
+    max-width:540px;
+    margin:0 auto var(--s5);
+    font-size:1.15rem;
+    color:#3d3a35;
+  }
+  .hero-card{
+    position:relative;
+    display:inline-block;
+    background:var(--paper);
+    border:2px solid var(--ink);
+    border-radius:6px 10px 5px 11px;
+    padding:var(--s4) var(--s5);
+    transform:rotate(.8deg);
+    box-shadow:4px 5px 0 rgba(26,24,22,.12);
+    max-width:520px;
+  }
+  .hero-card .tape{top:-14px;left:50%;transform:translateX(-50%) rotate(-3deg);}
+  .hero-card p{font-size:1.05rem;}
+  .hero-card .scrawl{display:block;margin-top:var(--s2);font-size:1.3rem;transform:rotate(-1deg);}
+  .doodle{position:absolute;pointer-events:none;}
+  .doodle-arrow{top:42%;right:6%;width:120px;transform:rotate(12deg);}
+  .doodle-asterisk-1{top:14%;left:8%;width:54px;transform:rotate(-8deg);}
+  .doodle-asterisk-2{bottom:18%;right:14%;width:36px;transform:rotate(20deg);}
+  .coffee-ring{top:6%;right:18%;width:150px;opacity:.5;}
+  .hero-note{
+    position:absolute;
+    right:8%;top:55%;
+    font-family:'Gochi Hand',cursive;
+    font-size:1.1rem;
+    transform:rotate(6deg);
+    color:#5a554d;
+    max-width:130px;
+    line-height:1.3;
+  }
+
+  /* torn edge divider */
+  .torn{display:block;width:100%;height:34px;margin-bottom:-1px;}
+
+  /* ---------- BELIEFS ---------- */
+  .beliefs{
+    background:var(--cream-deep);
+    padding:var(--s5) 0 var(--s6);
+  }
+  .section-kicker{
+    font-family:'Gochi Hand',cursive;
+    font-size:1.15rem;
+    color:#6b6457;
+    transform:rotate(-1deg);
+    display:inline-block;
+    margin-bottom:var(--s1);
+  }
+  .beliefs h2, .board h2, .join h2{
+    font-family:'Caveat',cursive;
+    font-weight:700;
+    font-size:clamp(2.4rem, 5vw, 3.6rem);
+    line-height:1.1;
+    margin-bottom:var(--s5);
+    transform:rotate(-.6deg);
+  }
+  .belief-list{list-style:none;max-width:640px;}
+  .belief-list li{
+    display:flex;
+    gap:var(--s3);
+    align-items:flex-start;
+    margin-bottom:var(--s4);
+  }
+  .belief-num{
+    flex:none;
+    width:52px;height:52px;
+    display:grid;place-items:center;
+    font-family:'Caveat',cursive;
+    font-weight:700;
+    font-size:1.7rem;
+  }
+  .belief-num svg{position:absolute;width:52px;height:52px;}
+  .belief-num{position:relative;}
+  .belief-num span{position:relative;z-index:1;}
+  .belief-list h3{
+    font-family:'Caveat',cursive;
+    font-weight:600;
+    font-size:1.7rem;
+    line-height:1.1;
+    margin-bottom:4px;
+  }
+  .belief-list p{color:#3d3a35;font-size:1rem;max-width:480px;}
+
+  /* ---------- CORKBOARD ---------- */
+  .board{padding:var(--s6) 0;position:relative;}
+  .board-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:var(--s4);
+    margin-top:var(--s2);
+  }
+  .note{
+    position:relative;
+    background:var(--paper);
+    border:2px solid var(--ink);
+    padding:var(--s4) var(--s3) var(--s3);
+    border-radius:4px 9px 5px 10px;
+    box-shadow:3px 4px 0 rgba(26,24,22,.1);
+    transition:transform .25s ease, box-shadow .25s ease;
+  }
+  .note:nth-child(1){transform:rotate(-1.4deg);}
+  .note:nth-child(2){transform:rotate(1deg);margin-top:var(--s3);}
+  .note:nth-child(3){transform:rotate(-.7deg);}
+  .note:nth-child(4){transform:rotate(1.3deg);}
+  .note:nth-child(5){transform:rotate(-1deg);margin-top:calc(var(--s2) * -1);}
+  .note:nth-child(6){transform:rotate(.8deg);margin-top:var(--s2);}
+  .note:hover{transform:rotate(0deg) translateY(-4px);box-shadow:5px 8px 0 rgba(26,24,22,.14);}
+  .pin{
+    position:absolute;top:-11px;left:50%;
+    width:22px;height:22px;
+    transform:translateX(-50%);
+  }
+  .note h3{
+    font-family:'Caveat',cursive;
+    font-weight:700;
+    font-size:1.55rem;
+    margin-bottom:var(--s1);
+    line-height:1.1;
+  }
+  .note p{font-size:.95rem;color:#3d3a35;}
+  .note .tape{width:70px;height:22px;top:-10px;right:-18px;transform:rotate(38deg);}
+
+  /* ---------- JOIN / CTA ---------- */
+  .join{
+    background:var(--cream-deep);
+    padding:var(--s5) 0 var(--s6);
+    text-align:center;
+    position:relative;
+  }
+  .join p{max-width:480px;margin:0 auto var(--s5);color:#3d3a35;font-size:1.1rem;}
+  .wobble-btn{
+    display:inline-block;
+    font-family:'Caveat',cursive;
+    font-weight:700;
+    font-size:1.9rem;
+    color:var(--ink);
+    text-decoration:none;
+    background:var(--yellow);
+    padding:16px 52px 20px;
+    border:3px solid var(--ink);
+    border-radius:24px 35px 22px 38px / 36px 22px 38px 24px;
+    box-shadow:5px 6px 0 var(--ink);
+    transition:box-shadow .15s ease, transform .15s ease;
+    position:relative;
+  }
+  .wobble-btn:hover{
+    animation:wiggle .45s ease-in-out infinite;
+    box-shadow:2px 3px 0 var(--ink);
+    transform:translate(3px,3px);
+    background:var(--yellow-bright);
+  }
+  @keyframes wiggle{
+    0%,100%{border-radius:24px 35px 22px 38px / 36px 22px 38px 24px;}
+    50%{border-radius:38px 22px 36px 24px / 22px 38px 24px 35px;}
+  }
+  .join .small-scrawl{
+    display:block;
+    margin-top:var(--s3);
+    font-family:'Gochi Hand',cursive;
+    color:#6b6457;
+    font-size:1.05rem;
+    transform:rotate(-1deg);
+  }
+  .join .doodle-arrow-down{width:54px;margin:0 auto var(--s2);display:block;}
+
+  /* ---------- FOOTER ---------- */
+  footer{
+    padding:var(--s5) 0;
+    text-align:center;
+  }
+  footer .foot-mark{
+    font-family:'Caveat',cursive;
+    font-weight:700;
+    font-size:1.6rem;
+    display:inline-block;
+    position:relative;
+    margin-bottom:var(--s2);
+  }
+  footer .foot-mark svg{position:absolute;left:-2px;bottom:-8px;width:calc(100% + 4px);height:12px;overflow:visible;}
+  footer p{font-size:.9rem;color:#6b6457;}
+  footer .foot-links{margin:var(--s2) 0;display:flex;justify-content:center;gap:var(--s3);list-style:none;}
+  footer .foot-links a{text-decoration:none;font-size:.9rem;border-bottom:2px solid transparent;}
+  footer .foot-links a:hover{border-bottom:2px solid var(--yellow);}
+
+  /* ---------- MOBILE ---------- */
+  @media (max-width:768px){
+    .nav-links{gap:var(--s2);}
+    .nav-links li:not(:last-child){display:none;}
+    .hero{padding:var(--s5) 0;}
+    .doodle-arrow,.hero-note,.coffee-ring{display:none;}
+    .board-grid{grid-template-columns:1fr;}
+    .note:nth-child(n){margin-top:0;}
+    .hero-card{padding:var(--s4) var(--s3);}
+    .belief-list li{gap:var(--s2);}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<nav>
+  <a class="logo" href="#top">underscore
+    <svg viewBox="0 0 120 14" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M2 8 C 20 3, 38 12, 58 7 S 100 4, 118 8" fill="none" stroke="#F5C518" stroke-width="6" stroke-linecap="round"/>
+    </svg>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#believe">stuff we believe</a></li>
+    <li><a href="#board">the board</a></li>
+    <li><a href="#join">say hi</a></li>
+    <li><a class="cta" href="#join">join in</a></li>
+  </ul>
+</nav>
+
+<!-- ============ HERO ============ -->
+<header class="hero" id="top">
+  <!-- coffee ring -->
+  <svg class="doodle coffee-ring" viewBox="0 0 150 150" aria-hidden="true">
+    <circle cx="75" cy="75" r="58" fill="none" stroke="#b59a6a" stroke-width="7" opacity=".25" stroke-dasharray="240 50 90 30"/>
+    <circle cx="77" cy="73" r="52" fill="none" stroke="#b59a6a" stroke-width="3" opacity=".18" stroke-dasharray="180 40"/>
+  </svg>
+  <!-- asterisk doodles -->
+  <svg class="doodle doodle-asterisk-1" viewBox="0 0 54 54" aria-hidden="true">
+    <g stroke="#F5C518" stroke-width="5" stroke-linecap="round">
+      <path d="M27 6 L27 48"/><path d="M8 16 L46 38"/><path d="M46 16 L8 38"/>
+    </g>
+  </svg>
+  <svg class="doodle doodle-asterisk-2" viewBox="0 0 54 54" aria-hidden="true">
+    <g stroke="#1A1816" stroke-width="5" stroke-linecap="round">
+      <path d="M27 6 L27 48"/><path d="M8 16 L46 38"/><path d="M46 16 L8 38"/>
+    </g>
+  </svg>
+  <!-- hand-drawn arrow pointing at hero card -->
+  <svg class="doodle doodle-arrow" viewBox="0 0 120 80" aria-hidden="true">
+    <path d="M112 8 C 80 30, 50 28, 18 58" fill="none" stroke="#1A1816" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M34 50 L16 60 L30 68" fill="none" stroke="#1A1816" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <p class="hero-note">we made this ourselves. it shows. good.</p>
+
+  <div class="wrap">
+    <h1>no gloss.<br><span class="hl">just good.</span></h1>
+    <p class="lede">underscore is where people start things together. no pitch decks, no posturing — just a <span class="hl-soft">blank line</span> and the folks willing to fill it with you.</p>
+
+    <div class="hero-card">
+      <span class="tape"></span>
+      <p>the underscore is the space before the first word. it's the cursor blinking, waiting for somebody brave enough to type. that somebody is probably you. <strong>we'll hold the line steady.</strong></p>
+      <span class="scrawl">— everyone at underscore_</span>
+    </div>
+  </div>
+</header>
+
+<!-- torn divider into beliefs -->
+<svg class="torn" viewBox="0 0 1440 34" preserveAspectRatio="none" aria-hidden="true">
+  <path d="M0 34 L0 16 L48 22 L96 10 L160 20 L224 8 L290 18 L355 11 L420 21 L488 9 L560 19 L630 12 L700 22 L770 10 L845 18 L915 9 L990 20 L1060 12 L1135 21 L1205 10 L1280 19 L1355 11 L1440 18 L1440 34 Z" fill="#F3EDDF"/>
+</svg>
+
+<!-- ============ SECTION 2: BELIEFS ============ -->
+<section class="beliefs" id="believe">
+  <div class="wrap">
+    <span class="section-kicker">scribbled down at 2am, still true at noon</span>
+    <h2>stuff we believe<span style="color:#F5C518">.</span></h2>
+    <ol class="belief-list">
+      <li>
+        <span class="belief-num">
+          <svg viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="22" fill="none" stroke="#F5C518" stroke-width="4" stroke-dasharray="120 20" transform="rotate(-30 26 26)"/></svg>
+          <span>1</span>
+        </span>
+        <div>
+          <h3>starting is the whole trick</h3>
+          <p>most good things die as drafts. we exist so yours doesn't. type the first word — we'll be the line underneath it.</p>
+        </div>
+      </li>
+      <li>
+        <span class="belief-num">
+          <svg viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="22" fill="none" stroke="#1A1816" stroke-width="4" stroke-dasharray="115 25" transform="rotate(40 26 26)"/></svg>
+          <span>2</span>
+        </span>
+        <div>
+          <h3>words_work_better_joined</h3>
+          <p>an underscore connects things that were never supposed to touch. so do we. strangers become collaborators here weirdly fast.</p>
+        </div>
+      </li>
+      <li>
+        <span class="belief-num">
+          <svg viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="22" fill="none" stroke="#F5C518" stroke-width="4" stroke-dasharray="125 15" transform="rotate(100 26 26)"/></svg>
+          <span>3</span>
+        </span>
+        <div>
+          <h3>give more than you take</h3>
+          <p>whitespace is generosity. so is answering a stranger's question at midnight. the ledger doesn't need to balance — it needs to tilt toward giving.</p>
+        </div>
+      </li>
+      <li>
+        <span class="belief-num">
+          <svg viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="22" fill="none" stroke="#1A1816" stroke-width="4" stroke-dasharray="110 30" transform="rotate(-80 26 26)"/></svg>
+          <span>4</span>
+        </span>
+        <div>
+          <h3>plain words, honestly meant</h3>
+          <p>we will never "leverage synergies." we will help you move your couch. metaphorically. okay, sometimes literally.</p>
+        </div>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<!-- torn divider out of beliefs -->
+<svg class="torn" viewBox="0 0 1440 34" preserveAspectRatio="none" aria-hidden="true" style="transform:scaleY(-1);background:#FAF6EE;">
+  <path d="M0 34 L0 16 L52 23 L104 9 L168 19 L232 8 L300 18 L368 11 L436 22 L504 9 L572 19 L640 12 L708 21 L776 10 L850 18 L920 9 L995 20 L1065 12 L1140 21 L1210 10 L1285 19 L1360 11 L1440 18 L1440 34 Z" fill="#F3EDDF"/>
+</svg>
+
+<!-- ============ SECTION 3: CORKBOARD ============ -->
+<section class="board" id="board">
+  <div class="wrap">
+    <span class="section-kicker">pinned up by actual humans</span>
+    <h2>the community board<span style="color:#F5C518">.</span></h2>
+    <div class="board-grid">
+      <article class="note">
+        <svg class="pin" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="8" fill="#F5C518" stroke="#1A1816" stroke-width="2.5"/></svg>
+        <h3>tuesday writing circle</h3>
+        <p>six of us, one shared doc, zero judgement. bring a sentence you're scared of. leave with a paragraph you're proud of.</p>
+      </article>
+      <article class="note">
+        <svg class="pin" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="8" fill="#1A1816" stroke="#1A1816" stroke-width="2.5"/></svg>
+        <span class="tape"></span>
+        <h3>ship-it saturdays</h3>
+        <p>everyone launches something tiny before lunch. a poem, a webpage, a sourdough. tiny counts. tiny is the point.</p>
+      </article>
+      <article class="note">
+        <svg class="pin" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="8" fill="#F5C518" stroke="#1A1816" stroke-width="2.5"/></svg>
+        <h3>looking for: a co-plotter</h3>
+        <p>marta has half a board game and full enthusiasm. she needs someone who owns dice and opinions. that's it. that's the ad.</p>
+      </article>
+      <article class="note">
+        <svg class="pin" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="8" fill="#1A1816" stroke="#1A1816" stroke-width="2.5"/></svg>
+        <h3>the answer hour</h3>
+        <p>thursdays, the old hands sit in a channel and answer anything. no question too small. especially the small ones.</p>
+      </article>
+      <article class="note">
+        <svg class="pin" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="8" fill="#F5C518" stroke="#1A1816" stroke-width="2.5"/></svg>
+        <span class="tape" style="left:-16px;right:auto;transform:rotate(-35deg);"></span>
+        <h3>first-word fund</h3>
+        <p>a small pot of money for anyone starting their first anything. no application form. just tell us what you'll begin.</p>
+      </article>
+      <article class="note">
+        <svg class="pin" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="8" fill="#1A1816" stroke="#1A1816" stroke-width="2.5"/></svg>
+        <h3>show &amp; tell, all-ages</h3>
+        <p>last friday a retired electrician taught us circuit bending and a nine-year-old taught us patience. fair trade.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- torn divider into join -->
+<svg class="torn" viewBox="0 0 1440 34" preserveAspectRatio="none" aria-hidden="true">
+  <path d="M0 34 L0 14 L56 22 L112 10 L176 20 L240 8 L308 18 L376 11 L444 21 L512 9 L580 19 L648 12 L716 22 L784 10 L858 18 L928 9 L1003 20 L1073 12 L1148 21 L1218 10 L1293 19 L1368 11 L1440 18 L1440 34 Z" fill="#F3EDDF"/>
+</svg>
+
+<!-- ============ SECTION 4: CTA ============ -->
+<section class="join" id="join">
+  <div class="wrap">
+    <span class="section-kicker">the part where you join</span>
+    <h2>your line is waiting<span style="color:#F5C518">.</span></h2>
+    <p>no fee, no form longer than your name, no "onboarding journey." you show up, we make room. that's the whole machine.</p>
+    <svg class="doodle-arrow-down" viewBox="0 0 54 70" aria-hidden="true">
+      <path d="M27 4 C 22 24, 32 40, 27 56" fill="none" stroke="#1A1816" stroke-width="3.5" stroke-linecap="round"/>
+      <path d="M16 48 L27 64 L38 48" fill="none" stroke="#1A1816" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <a class="wobble-btn" href="#top">count me in_</a>
+    <span class="small-scrawl">(takes about 40 seconds. we timed it.)</span>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="wrap">
+    <span class="foot-mark">underscore
+      <svg viewBox="0 0 120 14" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M2 8 C 25 4, 45 11, 65 7 S 100 5, 118 8" fill="none" stroke="#F5C518" stroke-width="5" stroke-linecap="round"/>
+      </svg>
+    </span>
+    <ul class="foot-links">
+      <li><a href="#believe">beliefs</a></li>
+      <li><a href="#board">board</a></li>
+      <li><a href="#join">join</a></li>
+      <li><a href="mailto:hello@underscore.example">hello@</a></li>
+    </ul>
+    <p>made with a marker and good intentions. © underscore, this year and hopefully many more.</p>
+  </div>
+</footer>
+
+</body>
+</html>

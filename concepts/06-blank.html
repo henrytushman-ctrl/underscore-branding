@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — We believe in ____.</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23FAF6EE'/%3E%3Crect x='12' y='45' width='40' height='7' rx='3' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Karla:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --yellow:#F5C518;
+    --yellow-bright:#FFD43B;
+    --ink:#1A1816;
+    --cream:#FAF6EE;
+    --soft:#6b6457;
+    --faint:#b5ac9c;
+    --serif:'Lora',Georgia,serif;
+    --sans:'Karla',system-ui,sans-serif;
+    --s1:.5rem; --s2:1rem; --s3:1.75rem; --s4:3rem; --s5:5rem; --s6:8rem;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  ::selection{background:var(--yellow);color:var(--ink)}
+  body{
+    font-family:var(--sans);
+    color:var(--ink);
+    font-size:1.0625rem;line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+    background-color:var(--cream);
+    /* good stationery: two soft washes of light + the faintest laid-paper ribbing */
+    background-image:
+      radial-gradient(1100px 700px at 12% -5%, rgba(255,255,255,.65), transparent 60%),
+      radial-gradient(900px 700px at 95% 12%, rgba(245,197,24,.07), transparent 55%),
+      repeating-linear-gradient(0deg, rgba(26,24,22,.016) 0 1px, transparent 1px 4px);
+    background-attachment:fixed;
+  }
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 var(--s3)}
+
+  /* ---------- nav ---------- */
+  nav{padding:var(--s3) 0}
+  .nav-in{display:flex;align-items:center;justify-content:space-between}
+  .logo{font-family:var(--serif);font-weight:700;font-size:1.3rem;display:flex;align-items:baseline}
+  .logo i{font-style:normal;display:inline-block;width:.85em;height:.13em;background:var(--yellow);margin-left:.14em;border-radius:2px;transition:width .3s ease}
+  .logo:hover i{width:1.5em}
+  .navlinks{display:flex;align-items:center;gap:var(--s3);font-size:.95rem;font-weight:500}
+  .navlinks a:not(.btn){border-bottom:2px solid transparent;padding-bottom:.15em;transition:border-color .25s ease}
+  .navlinks a:not(.btn):hover{border-color:var(--yellow)}
+  .btn{
+    font-family:var(--sans);font-weight:700;font-size:.95rem;
+    background:var(--ink);color:var(--cream);
+    padding:.7em 1.5em;border-radius:999px;border:none;cursor:pointer;
+    transition:background .25s ease,transform .2s ease;
+    display:inline-block;
+  }
+  .btn:hover{background:var(--yellow);color:var(--ink);transform:translateY(-2px)}
+
+  /* ---------- hero ---------- */
+  .hero{padding:var(--s6) 0 var(--s5);text-align:center}
+  .hero .kicker{
+    font-size:.78rem;font-weight:700;letter-spacing:.24em;text-transform:uppercase;
+    color:var(--faint);margin-bottom:var(--s3);
+  }
+  .hero h1{
+    font-family:var(--serif);font-weight:600;
+    font-size:clamp(2.4rem,6.4vw,4.8rem);
+    line-height:1.25;letter-spacing:-.015em;
+  }
+  .slot{
+    display:inline-block;position:relative;
+    border-bottom:.09em solid var(--yellow);
+    min-width:2.5em;text-align:center;
+    transition:width .45s cubic-bezier(.4,0,.2,1);
+    vertical-align:bottom;
+    padding:0 .12em;
+    white-space:nowrap;
+  }
+  .slot-word{
+    display:inline-block;color:var(--ink);font-style:italic;
+    transition:opacity .3s ease,transform .3s ease;
+  }
+  .slot-word.out{opacity:0;transform:translateY(.35em)}
+  .caret{
+    display:inline-block;width:.5em;height:.075em;background:var(--ink);
+    margin-left:.15em;vertical-align:baseline;border-radius:1px;
+    animation:blink 1.05s steps(1) infinite;
+  }
+  @keyframes blink{50%{opacity:0}}
+  .hero .sub{
+    max-width:33em;margin:var(--s3) auto 0;
+    color:var(--soft);font-size:1.2rem;
+  }
+  .hero .actions{margin-top:var(--s4)}
+  .hero .hint{font-size:.85rem;color:var(--faint);margin-top:var(--s2)}
+
+  /* ---------- letter ---------- */
+  .letter-sect{padding:var(--s5) 0}
+  .letter{
+    max-width:680px;margin:0 auto;
+    background:rgba(255,255,255,.55);
+    border:1px solid rgba(26,24,22,.08);
+    border-radius:4px;
+    box-shadow:0 2px 0 rgba(26,24,22,.05), 0 24px 60px -30px rgba(26,24,22,.22);
+    padding:var(--s4) var(--s4) var(--s4);
+    font-family:var(--serif);
+    font-size:clamp(1.15rem,2.2vw,1.45rem);
+    line-height:2.1;
+  }
+  .letter .date{font-size:.85rem;font-family:var(--sans);color:var(--faint);letter-spacing:.12em;text-transform:uppercase;margin-bottom:var(--s3)}
+  .blank{
+    display:inline-block;min-width:5.5em;text-align:center;
+    border-bottom:3px solid var(--yellow);
+    color:var(--soft);font-style:italic;
+    padding:0 .25em;line-height:1.3;
+  }
+  .blank.empty{color:transparent;user-select:none}
+  .letter input{
+    font-family:var(--serif);font-style:italic;font-size:inherit;
+    color:var(--ink);
+    background:transparent;border:none;outline:none;
+    border-bottom:3px solid var(--yellow);
+    min-width:7em;width:9em;max-width:100%;
+    text-align:center;padding:0 .25em;line-height:1.3;
+    caret-color:var(--yellow);
+    transition:border-color .25s ease;
+  }
+  .letter input:focus{border-color:var(--yellow-bright);background:rgba(245,197,24,.07)}
+  .letter input::placeholder{color:var(--faint);font-style:italic}
+  .letter .sig{margin-top:var(--s3)}
+  .letter-note{
+    text-align:center;color:var(--faint);font-size:.88rem;
+    margin-top:var(--s2);font-style:italic;
+  }
+
+  /* ---------- blanks we've helped fill ---------- */
+  .filled-sect{padding:var(--s5) 0}
+  .sect-head{text-align:center;margin-bottom:var(--s4)}
+  .sect-head .kicker{
+    font-size:.78rem;font-weight:700;letter-spacing:.24em;text-transform:uppercase;
+    color:var(--faint);margin-bottom:var(--s2);
+  }
+  .sect-head h2{
+    font-family:var(--serif);font-weight:600;
+    font-size:clamp(1.8rem,4vw,2.8rem);letter-spacing:-.01em;
+  }
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s3)}
+  .card{
+    background:rgba(255,255,255,.6);
+    border:1px solid rgba(26,24,22,.08);
+    border-radius:4px;
+    padding:var(--s3);
+    display:flex;flex-direction:column;gap:var(--s2);
+    transition:transform .3s ease,box-shadow .3s ease;
+  }
+  .card:hover{transform:translateY(-5px);box-shadow:0 20px 40px -24px rgba(26,24,22,.3)}
+  .card blockquote{
+    font-family:var(--serif);font-size:1.18rem;line-height:1.8;
+  }
+  .card .key{
+    font-style:italic;font-weight:600;
+    box-shadow:inset 0 -.32em 0 var(--yellow);
+    padding:0 .1em;
+  }
+  .card figcaption{font-size:.9rem;color:var(--soft);margin-top:auto}
+  .card figcaption strong{color:var(--ink)}
+
+  /* ---------- CTA ---------- */
+  .cta-sect{padding:var(--s5) 0 var(--s6);text-align:center}
+  .cta-sect h2{
+    font-family:var(--serif);font-weight:600;
+    font-size:clamp(2rem,5.6vw,4rem);line-height:1.3;letter-spacing:-.01em;
+  }
+  .cta-sect .echo{
+    display:inline-block;min-width:3.2em;
+    border-bottom:.1em solid var(--yellow);
+    font-style:italic;padding:0 .15em;
+  }
+  .cta-sect .echo:empty::after{content:"\00a0"}
+  .cta-sect p{color:var(--soft);max-width:30em;margin:var(--s3) auto var(--s4);font-size:1.15rem}
+  .cta-sect .btn{font-size:1.05rem;padding:.85em 2.2em}
+
+  /* ---------- footer ---------- */
+  footer{
+    border-top:1px solid rgba(26,24,22,.1);
+    padding:var(--s4) 0;
+  }
+  .foot-in{
+    display:flex;justify-content:space-between;align-items:baseline;
+    gap:var(--s3);flex-wrap:wrap;font-size:.9rem;color:var(--soft);
+  }
+  .foot-in .fl{display:flex;gap:var(--s3);flex-wrap:wrap}
+  .foot-in a{border-bottom:2px solid transparent;transition:border-color .2s ease}
+  .foot-in a:hover{border-color:var(--yellow);color:var(--ink)}
+  .foot-blank{
+    display:inline-block;width:2.4em;height:.55em;
+    border-bottom:3px solid var(--yellow);vertical-align:baseline;
+  }
+
+  /* ---------- mobile ---------- */
+  @media (max-width:768px){
+    .navlinks a:not(.btn){display:none}
+    .hero{padding:var(--s5) 0 var(--s4)}
+    .letter{padding:var(--s3)}
+    .cards{grid-template-columns:1fr}
+    .cta-sect h2{padding:0 .25em}
+  }
+</style>
+</head>
+<body id="top">
+
+<nav class="wrap">
+  <div class="nav-in">
+    <a class="logo" href="#top">Underscore<i></i></a>
+    <div class="navlinks">
+      <a href="#letter">The letter</a>
+      <a href="#filled">Blanks we've filled</a>
+      <a href="#start">Start</a>
+      <a class="btn" href="#start">Fill one in</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <p class="kicker">Underscore — the blank is for you</p>
+  <h1 class="wrap">
+    We believe in <span class="slot"><span class="slot-word" id="slotWord">beginnings</span></span><span class="caret" aria-hidden="true"></span>
+  </h1>
+  <p class="sub wrap">
+    An underscore isn't missing anything. It's a space held open on purpose —
+    for a name, a plan, a person we haven't met yet. Probably you.
+  </p>
+  <div class="actions">
+    <a class="btn" href="#letter">Pick up the pen</a>
+  </div>
+  <p class="hint">(The blank keeps changing its mind. So did we, until you showed up.)</p>
+</header>
+
+<section class="letter-sect" id="letter">
+  <div class="wrap">
+    <div class="letter">
+      <p class="date">A short letter, mostly written</p>
+      <p>
+        Dear <span class="blank">neighbor</span>,
+      </p>
+      <p>
+        We saved you a seat. Bring the idea you keep almost starting —
+        the <span class="blank">bakery</span>, the <span class="blank">book club</span>,
+        the thing you only mention after the second coffee.
+        We'll bring the room, the folding chairs, and a suspicious amount of encouragement.
+      </p>
+      <p>
+        No experience required. No pitch deck, ever. Just show up as
+        <span class="blank">yourself</span> — that part isn't optional.
+      </p>
+      <p class="sig">
+        Warmly,<br>
+        Underscore
+      </p>
+      <p class="sig">
+        Sign your name: <input id="nameInput" type="text" placeholder="___________" autocomplete="off" aria-label="Sign your name">
+      </p>
+    </div>
+    <p class="letter-note">Yes, that line really takes ink. Try it.</p>
+  </div>
+</section>
+
+<section class="filled-sect" id="filled">
+  <div class="wrap">
+    <div class="sect-head">
+      <p class="kicker">Proof, gently</p>
+      <h2>Blanks we've helped fill</h2>
+    </div>
+    <div class="cards">
+      <figure class="card">
+        <blockquote>
+          “I had a recipe and a folding table. Now I have a
+          <span class="key">bakery</span> and a line out the door on Saturdays.”
+        </blockquote>
+        <figcaption><strong>Maya</strong> — filled in her blank in 2024</figcaption>
+      </figure>
+      <figure class="card">
+        <blockquote>
+          “I moved here knowing nobody. Underscore introduced me to three
+          <span class="key">neighbors</span> and one of them is now my co-founder.”
+        </blockquote>
+        <figcaption><strong>Sam</strong> — filled in his blank in 2025</figcaption>
+      </figure>
+      <figure class="card">
+        <blockquote>
+          “Everyone said it was too late to start over. Turns out the blank
+          doesn't check your <span class="key">age</span>.”
+        </blockquote>
+        <figcaption><strong>Ana</strong> — filled in her blank at 61</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section class="cta-sect" id="start">
+  <div class="wrap">
+    <h2>Your next chapter: <span class="echo" id="echo">&nbsp;</span></h2>
+    <p>
+      You don't need the whole story. You need one honest word
+      and somewhere kind to put it. We hold the line; you fill it.
+    </p>
+    <a class="btn" href="mailto:hello@underscore.community">Start writing</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-in">
+    <span>© 2026 Underscore. Sincerely, <span class="foot-blank" aria-hidden="true"></span></span>
+    <div class="fl">
+      <a href="#letter">The letter</a>
+      <a href="#filled">Blanks we've filled</a>
+      <a href="mailto:hello@underscore.community">hello@underscore.community</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  // --- hero blank: cycle words with a measured-width swap ---
+  var words = ['beginnings','neighbors','second chances','asking first','you'];
+  var slot = document.querySelector('.slot');
+  var wordEl = document.getElementById('slotWord');
+  var idx = 0;
+
+  // hidden measurer so the slot can animate to each word's true width
+  var meas = document.createElement('span');
+  meas.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;font:inherit;font-style:italic;padding:0 .12em;';
+  slot.parentNode.appendChild(meas);
+
+  function setWidth(text){
+    meas.textContent = text;
+    slot.style.width = meas.offsetWidth + 'px';
+  }
+
+  setWidth(words[0]);
+
+  function next(){
+    idx = (idx + 1) % words.length;
+    wordEl.classList.add('out');
+    setWidth(words[idx]);
+    setTimeout(function(){
+      wordEl.textContent = words[idx];
+      wordEl.classList.remove('out');
+    }, 320);
+  }
+  setInterval(next, 2600);
+  window.addEventListener('resize', function(){ setWidth(wordEl.textContent); });
+
+  // --- generous echo: whatever you sign in the letter shows up in your next chapter ---
+  var input = document.getElementById('nameInput');
+  var echo = document.getElementById('echo');
+  input.addEventListener('input', function(){
+    echo.textContent = input.value.trim() ? input.value.trim() : ' ';
+  });
+})();
+</script>
+
+</body>
+</html>

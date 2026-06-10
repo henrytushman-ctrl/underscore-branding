@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore_ — Every horizon is just an underscore.</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232A1E3E'/%3E%3Ccircle cx='32' cy='40' r='12' fill='%23F5C518'/%3E%3Crect x='10' y='42' width='44' height='8' rx='4' fill='%23120E1D'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Archivo:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --dusk: #2A1E3E;
+    --dusk-deep: #1B1430;
+    --night: #171231;
+    --dawn: #F6DD9C;
+    --dawn-pale: #FBEFD0;
+    --cream: #FCF7EC;
+    --ink: #14110E;
+    --ink-soft: #4E463C;
+    --yellow: #F5C518;
+    --yellow-glow: #FFD43B;
+    --s1: 0.5rem; --s2: 1rem; --s3: 1.5rem; --s4: 2.5rem;
+    --s5: 4rem;  --s6: 7rem;  --s7: 11rem;
+    --max: 1140px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  ::selection { background: var(--yellow); color: var(--ink); }
+  body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  a { color: inherit; }
+  .wrap { max-width: var(--max); margin: 0 auto; padding: 0 var(--s4); }
+  .label {
+    display: block;
+    font-family: 'Archivo', sans-serif;
+    font-size: 0.78rem; font-weight: 500;
+    letter-spacing: 0.34em; text-transform: uppercase;
+  }
+
+  /* ---------- NAV (sits over the dusk sky) ---------- */
+  nav {
+    position: absolute; top: 0; left: 0; right: 0; z-index: 20;
+  }
+  .nav-inner {
+    max-width: var(--max); margin: 0 auto; padding: 1.3rem var(--s4);
+    display: flex; align-items: center; justify-content: space-between; gap: var(--s3);
+  }
+  .logo {
+    display: flex; align-items: baseline; gap: 0.15rem;
+    text-decoration: none; color: var(--dawn-pale);
+    font-weight: 700; font-size: 1.25rem; letter-spacing: -0.01em;
+  }
+  .logo .mark { color: var(--yellow); font-weight: 700; }
+  .nav-links { display: flex; align-items: center; gap: var(--s4); list-style: none; }
+  .nav-links a {
+    text-decoration: none; font-size: 0.92rem; font-weight: 500;
+    color: rgba(251,239,208,0.78);
+    position: relative; padding-bottom: 3px;
+    transition: color .2s ease;
+  }
+  .nav-links a::after {
+    content: ""; position: absolute; left: 0; bottom: 0; height: 2px; width: 0;
+    background: var(--yellow); transition: width .25s ease;
+  }
+  .nav-links a:hover { color: var(--dawn-pale); }
+  .nav-links a:hover::after { width: 100%; }
+  .btn {
+    display: inline-block; text-decoration: none; font-weight: 600; font-size: 0.95rem;
+    background: var(--yellow); color: var(--ink);
+    padding: 0.7rem 1.5rem; border-radius: 6px;
+    border: 2px solid var(--yellow);
+    transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(245,197,24,0.4); background: var(--yellow-glow); border-color: var(--yellow-glow); }
+  .btn-dark {
+    background: var(--ink); color: var(--cream); border-color: var(--ink);
+  }
+  .btn-dark:hover { box-shadow: 0 8px 24px rgba(20,17,14,0.3); background: #2A2520; border-color: #2A2520; }
+  .btn-big { font-size: 1.08rem; padding: 0.95rem 2.1rem; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    background: linear-gradient(180deg,
+      var(--dusk-deep) 0%, var(--dusk) 26%,
+      #5C3A56 50%, #C47B5A 68%,
+      #ECB95E 80%, var(--dawn) 88%, var(--dawn-pale) 100%);
+    overflow: hidden;
+    display: flex; flex-direction: column; justify-content: flex-end;
+  }
+  .hero-copy {
+    position: relative; z-index: 5;
+    text-align: center;
+    margin: auto auto 0;
+    padding: calc(var(--s7) + 2rem) var(--s4) var(--s5);
+    max-width: 860px;
+  }
+  .hero-copy .label { color: rgba(251,239,208,0.7); margin-bottom: var(--s3); }
+  .hero h1 {
+    font-size: clamp(2.6rem, 6.8vw, 5.2rem);
+    font-weight: 600; line-height: 1.04; letter-spacing: -0.03em;
+    color: var(--dawn-pale);
+    margin-bottom: var(--s3);
+  }
+  .hero h1 em { font-style: normal; color: var(--yellow); }
+  .hero p.lede {
+    color: rgba(251,239,208,0.82);
+    font-size: clamp(1.05rem, 1.9vw, 1.3rem);
+    max-width: 32em; margin: 0 auto var(--s4);
+  }
+  .hero-ctas { display: flex; gap: var(--s2); justify-content: center; flex-wrap: wrap; }
+  .btn-outline {
+    background: transparent; color: var(--dawn-pale); border: 2px solid rgba(251,239,208,0.45);
+  }
+  .btn-outline:hover { background: rgba(251,239,208,0.1); border-color: var(--dawn-pale); box-shadow: none; }
+
+  /* the sun */
+  .sun {
+    position: absolute; z-index: 1;
+    left: 50%; bottom: 7vh;
+    width: clamp(180px, 26vw, 340px); height: clamp(180px, 26vw, 340px);
+    margin-left: calc(clamp(180px, 26vw, 340px) / -2);
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 34%, var(--yellow-glow), var(--yellow) 62%, #E8A912 100%);
+    box-shadow:
+      0 0 60px 18px rgba(255,212,59,0.45),
+      0 0 160px 60px rgba(245,197,24,0.22);
+    animation: sunrise 4.5s cubic-bezier(0.22, 0.8, 0.3, 1) forwards;
+  }
+  @keyframes sunrise {
+    0%   { transform: translateY(110%); }
+    100% { transform: translateY(34%); }
+  }
+  /* the horizon = the underscore */
+  .horizon-bar {
+    position: relative; z-index: 4;
+    height: 22px;
+    margin: 0 6vw;
+    border-radius: 11px;
+    background: var(--ink);
+    box-shadow: 0 -2px 24px rgba(20,17,14,0.35);
+  }
+  .hero-ground {
+    position: relative; z-index: 3;
+    height: 9vh; min-height: 56px;
+    background: linear-gradient(180deg, var(--dawn-pale), var(--cream));
+    margin-top: -2px;
+  }
+  /* birds */
+  .birds { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+  .bird {
+    position: absolute;
+    animation: fly linear infinite;
+  }
+  .bird svg { display: block; }
+  .bird:nth-child(1) { top: 22%; animation-duration: 38s; }
+  .bird:nth-child(2) { top: 30%; animation-duration: 47s; animation-delay: -18s; }
+  .bird:nth-child(3) { top: 17%; animation-duration: 55s; animation-delay: -32s; }
+  @keyframes fly {
+    0%   { transform: translateX(-8vw)  translateY(0); }
+    25%  { transform: translateX(24vw)  translateY(-14px); }
+    50%  { transform: translateX(56vw)  translateY(6px); }
+    75%  { transform: translateX(82vw)  translateY(-10px); }
+    100% { transform: translateX(110vw) translateY(0); }
+  }
+  .bird-flap path {
+    animation: flap 0.9s ease-in-out infinite alternate;
+    transform-box: fill-box; transform-origin: 50% 100%;
+  }
+  @keyframes flap { from { transform: scaleY(1); } to { transform: scaleY(0.55); } }
+
+  /* ---------- JOURNEY ---------- */
+  .journey { padding: var(--s7) 0; position: relative; background: var(--cream); }
+  .journey .label { color: var(--ink-soft); text-align: center; margin-bottom: var(--s2); }
+  .journey h2 {
+    text-align: center; font-size: clamp(2rem, 4.4vw, 3.2rem);
+    font-weight: 600; letter-spacing: -0.025em; line-height: 1.1;
+    margin-bottom: var(--s2);
+  }
+  .journey .sub { text-align: center; color: var(--ink-soft); max-width: 36em; margin: 0 auto var(--s6); }
+  .journey-strip { position: relative; }
+  .journey-line {
+    position: absolute; left: -10vw; right: -10vw; top: 50%;
+    height: 8px; border-radius: 4px;
+    background: var(--ink);
+    transform: translateY(-50%) scaleX(0);
+    transform-origin: left center;
+    transition: transform 1.6s cubic-bezier(0.6, 0, 0.2, 1);
+    z-index: 1;
+  }
+  .journey-strip.drawn .journey-line { transform: translateY(-50%) scaleX(1); }
+  .milestones {
+    position: relative; z-index: 2;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s4);
+  }
+  .milestone {
+    background: #fff;
+    border: 1.5px solid rgba(20,17,14,0.12);
+    border-radius: 16px;
+    padding: var(--s4);
+    transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+  }
+  .milestone:hover { transform: translateY(-6px); box-shadow: 0 20px 44px rgba(20,17,14,0.1); border-color: var(--yellow); }
+  .milestone .label { color: #A07908; margin-bottom: var(--s2); }
+  .milestone h3 { font-size: 1.45rem; font-weight: 600; letter-spacing: -0.02em; margin-bottom: var(--s1); }
+  .milestone p { color: var(--ink-soft); font-size: 0.99rem; }
+  .milestone .tick {
+    display: block; width: 44px; height: 7px; border-radius: 4px;
+    background: var(--yellow); margin-bottom: var(--s3);
+  }
+
+  /* ---------- NIGHT QUOTE ---------- */
+  .night {
+    position: relative;
+    background: linear-gradient(180deg, var(--night) 0%, #221A45 100%);
+    color: var(--dawn-pale);
+    padding: var(--s7) 0;
+    overflow: hidden;
+  }
+  .star {
+    position: absolute; border-radius: 50%; background: #FBEFD0;
+    animation: twinkle ease-in-out infinite alternate;
+  }
+  @keyframes twinkle { from { opacity: 0.25; } to { opacity: 0.95; } }
+  .night-inner { position: relative; z-index: 2; text-align: center; max-width: 800px; margin: 0 auto; padding: 0 var(--s4); }
+  .night blockquote {
+    font-size: clamp(1.5rem, 3.6vw, 2.5rem);
+    font-weight: 500; line-height: 1.35; letter-spacing: -0.02em;
+  }
+  .night .glow-bar {
+    display: block; width: 180px; height: 10px; border-radius: 5px;
+    background: var(--yellow);
+    margin: var(--s4) auto 0;
+    box-shadow: 0 0 24px 6px rgba(245,197,24,0.55), 0 0 70px 22px rgba(245,197,24,0.2);
+    animation: pulseglow 4s ease-in-out infinite alternate;
+  }
+  @keyframes pulseglow {
+    from { box-shadow: 0 0 18px 4px rgba(245,197,24,0.45), 0 0 50px 16px rgba(245,197,24,0.15); }
+    to   { box-shadow: 0 0 30px 9px rgba(245,197,24,0.65), 0 0 90px 30px rgba(245,197,24,0.28); }
+  }
+  .night cite {
+    display: block; margin-top: var(--s3); font-style: normal;
+    font-size: 0.88rem; letter-spacing: 0.3em; text-transform: uppercase;
+    color: rgba(251,239,208,0.55);
+  }
+  .night ::selection { background: var(--yellow); color: var(--night); }
+
+  /* ---------- DAYBREAK CTA ---------- */
+  .daybreak {
+    position: relative;
+    background: var(--cream);
+    padding: var(--s7) 0 0;
+    text-align: center;
+    overflow: hidden;
+  }
+  .daybreak .label { color: var(--ink-soft); margin-bottom: var(--s2); }
+  .daybreak h2 {
+    font-size: clamp(2.2rem, 5vw, 3.8rem); font-weight: 600;
+    letter-spacing: -0.03em; line-height: 1.06;
+    max-width: 18em; margin: 0 auto var(--s3);
+  }
+  .daybreak p { color: var(--ink-soft); max-width: 30em; margin: 0 auto var(--s5); }
+  .daybreak-stage { position: relative; padding-bottom: var(--s6); }
+  .half-sun {
+    position: absolute; left: 50%; bottom: 0;
+    width: 380px; height: 190px;
+    margin-left: -190px;
+    border-radius: 190px 190px 0 0;
+    background: radial-gradient(circle at 50% 100%, var(--yellow-glow), var(--yellow) 70%);
+    box-shadow: 0 -10px 50px rgba(245,197,24,0.4);
+    z-index: 1;
+  }
+  .daybreak-stage .btn { position: relative; z-index: 2; margin-bottom: var(--s4); }
+  .daybreak-line {
+    position: relative; z-index: 3;
+    height: 16px; background: var(--ink);
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    background: var(--ink); color: var(--cream);
+    padding: var(--s5) 0 var(--s4);
+  }
+  .foot-inner {
+    max-width: var(--max); margin: 0 auto; padding: 0 var(--s4);
+    display: flex; justify-content: space-between; gap: var(--s4); flex-wrap: wrap;
+  }
+  .foot-brand .logo { color: var(--cream); font-size: 1.35rem; }
+  .foot-brand p { margin-top: var(--s1); color: rgba(252,247,236,0.55); font-size: 0.95rem; max-width: 22em; }
+  .foot-links { display: flex; gap: var(--s6); flex-wrap: wrap; }
+  .foot-links .label { color: rgba(252,247,236,0.45); margin-bottom: var(--s2); }
+  .foot-links ul { list-style: none; }
+  .foot-links li { margin-bottom: 0.5rem; }
+  .foot-links a { text-decoration: none; color: rgba(252,247,236,0.85); font-size: 0.95rem; transition: color .2s; }
+  .foot-links a:hover { color: var(--yellow); }
+  .foot-bottom {
+    max-width: var(--max); margin: var(--s5) auto 0; padding: var(--s3) var(--s4) 0;
+    border-top: 1px solid rgba(252,247,236,0.14);
+    display: flex; justify-content: space-between; gap: var(--s2); flex-wrap: wrap;
+    font-size: 0.84rem; color: rgba(252,247,236,0.45);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sun { animation: none; transform: translateY(34%); }
+    .journey-line { transition: none; }
+    .bird, .bird-flap path, .star, .glow-bar { animation: none !important; }
+  }
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .milestones { grid-template-columns: 1fr; }
+    .journey-line { left: 50%; right: auto; top: 0; bottom: 0; width: 8px; height: auto; transform: translateX(-50%) scaleY(0); transform-origin: top center; }
+    .journey-strip.drawn .journey-line { transform: translateX(-50%) scaleY(1); }
+    .half-sun { width: 280px; height: 140px; margin-left: -140px; border-radius: 140px 140px 0 0; }
+    .journey, .night { padding: var(--s6) 0; }
+    .daybreak { padding-top: var(--s6); }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero" id="top">
+  <nav>
+    <div class="nav-inner">
+      <a class="logo" href="#top">underscore<span class="mark">_</span></a>
+      <ul class="nav-links">
+        <li><a href="#journey">Where we're headed</a></li>
+        <li><a href="#night">Why we go</a></li>
+        <li><a href="#daybreak">Daybreak</a></li>
+      </ul>
+      <a class="btn" href="#daybreak">Meet us at the line</a>
+    </div>
+  </nav>
+
+  <div class="birds" aria-hidden="true">
+    <span class="bird"><svg class="bird-flap" width="26" height="12" viewBox="0 0 26 12"><path d="M1,10 C6,2 11,2 13,7 C15,2 20,2 25,10" stroke="#1B1430" stroke-width="2" fill="none" stroke-linecap="round"/></svg></span>
+    <span class="bird"><svg class="bird-flap" width="18" height="9" viewBox="0 0 26 12"><path d="M1,10 C6,2 11,2 13,7 C15,2 20,2 25,10" stroke="#1B1430" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg></span>
+    <span class="bird"><svg class="bird-flap" width="14" height="7" viewBox="0 0 26 12"><path d="M1,10 C6,2 11,2 13,7 C15,2 20,2 25,10" stroke="#2A1E3E" stroke-width="2.6" fill="none" stroke-linecap="round"/></svg></span>
+  </div>
+
+  <div class="hero-copy">
+    <span class="label">Underscore — first light, every day</span>
+    <h1>Every horizon is just an <em>underscore</em>.</h1>
+    <p class="lede">A low, quiet line with the whole sky above it. That's where we work: the edge of what's written, right before the next word. Come stand at the line with us.</p>
+    <div class="hero-ctas">
+      <a class="btn btn-big" href="#journey">See where we're headed</a>
+      <a class="btn btn-outline btn-big" href="#night">Why we go</a>
+    </div>
+  </div>
+
+  <div class="sun" aria-hidden="true"></div>
+  <div class="horizon-bar" aria-hidden="true"></div>
+  <div class="hero-ground" aria-hidden="true"></div>
+</header>
+
+<section class="journey" id="journey">
+  <div class="wrap">
+    <span class="label">Where we're headed</span>
+    <h2>One line, three sunrises out.</h2>
+    <p class="sub">We don't do five-year plans — the frontier laughs at those. We do the next clear stretch of line, walked plainly, in order.</p>
+
+    <div class="journey-strip" id="journey-strip">
+      <div class="journey-line" aria-hidden="true"></div>
+      <div class="milestones">
+        <div class="milestone">
+          <span class="tick" aria-hidden="true"></span>
+          <span class="label">First light</span>
+          <h3>Open the ground</h3>
+          <p>Make starting feel like standing in a field at dawn, not filling in a tax form. One blank, one warm welcome, zero jargon.</p>
+        </div>
+        <div class="milestone">
+          <span class="tick" aria-hidden="true"></span>
+          <span class="label">Mid-morning</span>
+          <h3>Join the words</h3>
+          <p>The underscore connects things_that_belong_together. We're building the places where your people find each other the same way.</p>
+        </div>
+        <div class="milestone">
+          <span class="tick" aria-hidden="true"></span>
+          <span class="label">The long line</span>
+          <h3>Keep the horizon honest</h3>
+          <p>Stay plain-spoken at any size. If we ever say "synergy" without laughing, you're entitled to a refund and an apology.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="night" id="night">
+  <div class="night-inner">
+    <blockquote>
+      &ldquo;We went looking for the edge of the map. It turned out to be a line &mdash; low, quiet, and waiting for someone to write on it.&rdquo;
+    </blockquote>
+    <span class="glow-bar" aria-hidden="true"></span>
+    <cite>Field note, night one</cite>
+  </div>
+</section>
+
+<section class="daybreak" id="daybreak">
+  <div class="wrap">
+    <span class="label">Daybreak</span>
+    <h2>The sun comes up on whatever you started.</h2>
+    <p>That's the deal it's always offered. Start something today — small counts, unfinished counts, scared counts — and tomorrow's light is already on your side.</p>
+  </div>
+  <div class="daybreak-stage">
+    <div class="half-sun" aria-hidden="true"></div>
+    <a class="btn btn-dark btn-big" href="#top">Meet us at the line</a>
+  </div>
+  <div class="daybreak-line" aria-hidden="true"></div>
+</section>
+
+<footer>
+  <div class="foot-inner">
+    <div class="foot-brand">
+      <a class="logo" href="#top">underscore<span class="mark">_</span></a>
+      <p>The space before the words. Pioneers welcome; pretension isn't.</p>
+    </div>
+    <div class="foot-links">
+      <div>
+        <span class="label">Explore</span>
+        <ul>
+          <li><a href="#journey">Where we're headed</a></li>
+          <li><a href="#night">Why we go</a></li>
+          <li><a href="#daybreak">Daybreak</a></li>
+        </ul>
+      </div>
+      <div>
+        <span class="label">Reach us</span>
+        <ul>
+          <li><a href="mailto:hello@underscore.example">hello@underscore.example</a></li>
+          <li><a href="#">Field notes</a></li>
+          <li><a href="#">The line, weekly</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <span>© 2026 Underscore. Drawn at first light.</span>
+    <span>underscore_ what matters.</span>
+  </div>
+</footer>
+
+<script>
+  // Scatter twinkling stars across the night band.
+  (function () {
+    var night = document.querySelector('.night');
+    var count = 70;
+    for (var i = 0; i < count; i++) {
+      var s = document.createElement('span');
+      s.className = 'star';
+      var size = (Math.random() * 2.2 + 0.8).toFixed(1);
+      s.style.width = size + 'px';
+      s.style.height = size + 'px';
+      s.style.left = (Math.random() * 100).toFixed(2) + '%';
+      s.style.top = (Math.random() * 100).toFixed(2) + '%';
+      s.style.animationDuration = (1.6 + Math.random() * 3.4).toFixed(2) + 's';
+      s.style.animationDelay = (-Math.random() * 4).toFixed(2) + 's';
+      night.appendChild(s);
+    }
+  })();
+
+  // Draw the journey line when it scrolls into view.
+  (function () {
+    var strip = document.getElementById('journey-strip');
+    if (!('IntersectionObserver' in window)) { strip.classList.add('drawn'); return; }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { strip.classList.add('drawn'); io.disconnect(); }
+      });
+    }, { threshold: 0.3 });
+    io.observe(strip);
+  })();
+</script>
+
+</body>
+</html>

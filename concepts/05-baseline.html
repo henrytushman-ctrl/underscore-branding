@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — Everything Rests on the Line</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23FAF6EE'/%3E%3Crect x='10' y='46' width='44' height='8' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --yellow:#F5C518;
+    --ink:#1A1816;
+    --cream:#FAF6EE;
+    --soft:#5b554b;
+    --rule:rgba(26,24,22,.055);
+    --grid:5.5rem;               /* the baseline grid unit */
+    --hero-size:clamp(2.4rem,6.8vw,5.4rem);
+    --sans:'Archivo',system-ui,sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  ::selection{background:var(--yellow);color:var(--ink)}
+  body{
+    font-family:var(--sans);
+    background-color:var(--cream);
+    /* the manuscript grid: faint ruled lines across the entire page */
+    background-image:repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(var(--grid) - 1px),
+      var(--rule) calc(var(--grid) - 1px),
+      var(--rule) var(--grid)
+    );
+    color:var(--ink);
+    font-size:1.0625rem;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1160px;margin:0 auto;padding-left:2rem;padding-right:2rem}
+
+  /* ---------- nav ---------- */
+  nav{padding:1.6rem 0}
+  .nav-in{display:flex;align-items:center;justify-content:space-between}
+  .logo{font-weight:800;letter-spacing:-.02em;font-size:1.2rem;display:flex;align-items:baseline}
+  .logo i{font-style:normal;display:inline-block;width:.9em;height:.14em;background:var(--yellow);margin-left:.12em;transition:width .3s ease}
+  .logo:hover i{width:1.6em}
+  .navlinks{display:flex;align-items:center;gap:2.4rem;font-size:.92rem;font-weight:500}
+  .navlinks a{position:relative;padding-bottom:.25em;border-bottom:2px solid transparent;transition:border-color .25s ease}
+  .navlinks a:hover{border-color:var(--ink)}
+  .btn{
+    background:var(--yellow);color:var(--ink);font-weight:700;font-size:.92rem;
+    padding:.75em 1.5em;border:2px solid var(--ink);
+    box-shadow:0 3px 0 var(--ink);
+    transition:transform .15s ease,box-shadow .15s ease;
+    display:inline-block;cursor:pointer;font-family:var(--sans);
+  }
+  .btn:hover{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+
+  /* ---------- hero ---------- */
+  .hero{padding-top:calc(var(--grid)*1.5)}
+  .hero .kicker{
+    font-size:.78rem;font-weight:600;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--soft);margin-bottom:calc(var(--grid)*.5);
+  }
+  .hero h1{
+    font-size:var(--hero-size);
+    font-weight:800;letter-spacing:-.035em;line-height:1.12;
+    max-width:14em;
+  }
+  .hero h1 em{font-style:normal;border-bottom:none}
+  /* THE line: full-bleed, sits at the baseline of the hero's last line */
+  .hero-line{
+    height:6px;background:var(--yellow);width:100%;
+    margin-top:calc(var(--hero-size) * -0.14);  /* descenders cross the line */
+    position:relative;z-index:-1;
+  }
+  .hero-after{
+    display:flex;gap:3rem;align-items:flex-start;justify-content:space-between;
+    padding-top:calc(var(--grid)*.6);padding-bottom:calc(var(--grid)*1.4);
+    flex-wrap:wrap;
+  }
+  .hero-after p{max-width:30em;color:var(--soft);font-size:1.15rem}
+  .hero-after p strong{color:var(--ink);font-weight:600}
+
+  /* ---------- section titles resting on a rule ---------- */
+  .sect-title-row{border-bottom:3px solid var(--yellow)}
+  .sect-title{
+    font-size:clamp(1.5rem,3.4vw,2.4rem);
+    font-weight:700;letter-spacing:-.025em;line-height:1;
+    display:inline-block;
+    transform:translateY(.08em); /* let descenders touch the rule */
+    padding-bottom:0;
+  }
+  .sect-kicker{
+    font-size:.74rem;font-weight:600;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--soft);display:block;margin-bottom:1rem;
+  }
+
+  /* ---------- section 2: buildings on the street ---------- */
+  .street-sect{padding-top:calc(var(--grid)*1)}
+  .street{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:3rem;
+    border-bottom:4px solid var(--yellow);
+    margin-top:calc(var(--grid)*.8);
+  }
+  .building{display:flex;flex-direction:column}
+  .building h3{font-size:1.3rem;font-weight:700;letter-spacing:-.02em;margin-bottom:.6rem}
+  .building p{color:var(--soft);font-size:.98rem;max-width:24em;margin-bottom:1.6rem}
+  .building .shape{margin-top:auto;display:block;width:100%}
+  .building .shape svg{display:block;width:100%;height:auto;transition:transform .35s ease}
+  .building:hover .shape svg{transform:translateY(-8px)}
+  .street-note{
+    color:var(--soft);font-size:.88rem;padding-top:1rem;
+    padding-bottom:calc(var(--grid)*1.2);font-style:italic;
+  }
+
+  /* ---------- section 3: the ledger band ---------- */
+  .band-sect{padding-bottom:calc(var(--grid)*1.2)}
+  .band{
+    display:grid;grid-template-columns:repeat(4,1fr);
+    margin-top:calc(var(--grid)*.8);
+  }
+  .band .lbl{
+    grid-row:1;align-self:end;
+    font-size:.8rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--soft);padding:0 .5rem .55rem 0;
+  }
+  .band .mid{grid-row:2;grid-column:1/-1;height:3px;background:var(--yellow)}
+  .band .num{
+    grid-row:3;
+    font-size:clamp(2.2rem,5.5vw,4.2rem);
+    font-weight:800;letter-spacing:-.03em;line-height:1.05;
+    padding:.35rem .5rem 0 0;
+    transition:transform .25s ease;
+  }
+  .band .num:hover{transform:translateY(4px)}
+  .band .num small{display:block;font-size:.85rem;font-weight:500;letter-spacing:0;color:var(--soft);margin-top:.4rem;max-width:14em}
+
+  /* ---------- section 4: CTA on the final line ---------- */
+  .cta-sect{padding-top:calc(var(--grid)*1.2);text-align:center}
+  .cta-sect h2{
+    font-size:clamp(1.9rem,4.6vw,3.4rem);
+    font-weight:800;letter-spacing:-.03em;line-height:1.15;
+    max-width:18em;margin:0 auto;
+  }
+  .cta-sect .sub{color:var(--soft);max-width:32em;margin:1.4rem auto 0;font-size:1.1rem}
+  .cta-line-row{
+    position:relative;margin-top:calc(var(--grid)*1.1);
+    height:6px;background:var(--yellow);width:100%;
+  }
+  .cta-line-row .btn{
+    position:absolute;left:50%;bottom:6px;transform:translateX(-50%);
+    font-size:1.05rem;padding:.95em 2.2em;white-space:nowrap;
+  }
+  .cta-line-row .btn:hover{transform:translateX(-50%) translateY(2px)}
+  .cta-foot-space{height:calc(var(--grid)*1.6)}
+
+  /* ---------- footer: one final thick underscore ---------- */
+  footer{padding-top:calc(var(--grid)*.4)}
+  .foot-row{
+    display:flex;justify-content:space-between;align-items:baseline;gap:2rem;
+    flex-wrap:wrap;font-size:.88rem;color:var(--soft);
+    padding-bottom:1.2rem;
+  }
+  .foot-row .fl{display:flex;gap:1.8rem;flex-wrap:wrap}
+  .foot-row a{border-bottom:2px solid transparent;transition:border-color .2s ease}
+  .foot-row a:hover{border-color:var(--ink);color:var(--ink)}
+  .foot-bar{height:22px;background:var(--yellow);width:100%}
+
+  /* ---------- mobile ---------- */
+  @media (max-width:768px){
+    :root{--grid:4rem}
+    .wrap{padding-left:1.25rem;padding-right:1.25rem}
+    .navlinks a:not(.btn){display:none}
+    .hero{padding-top:var(--grid)}
+    .street{grid-template-columns:1fr;gap:0;border-bottom:none}
+    .building{border-bottom:4px solid var(--yellow);padding-top:2.2rem}
+    .building:first-child{padding-top:0}
+    .building .shape svg{max-height:120px}
+    .band{grid-template-columns:repeat(2,1fr);row-gap:0}
+    .band .lbl:nth-child(n+3){grid-row:4;padding-top:2rem}
+    .band .mid2{grid-row:5;grid-column:1/-1;height:3px;background:var(--yellow)}
+    .band .num:nth-child(n+8){grid-row:6}
+    .cta-line-row .btn{white-space:normal;width:max-content;max-width:90vw}
+  }
+  @media (min-width:769px){
+    .band .mid2{display:none}
+  }
+</style>
+</head>
+<body id="top">
+
+<nav class="wrap">
+  <div class="nav-in">
+    <a class="logo" href="#top">Underscore<i></i></a>
+    <div class="navlinks">
+      <a href="#holdup">What we hold up</a>
+      <a href="#ledger">The ledger</a>
+      <a href="#start">Start</a>
+      <a class="btn" href="#start">Get on the line</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="kicker">Underscore — quiet structural work since day one</p>
+    <h1>A good foundation is invisible.<br>Ours is a line.</h1>
+  </div>
+  <div class="hero-line" aria-hidden="true"></div>
+  <div class="wrap hero-after">
+    <p>
+      Underscore builds the things communities stand on — rooms, tools, small grants,
+      patient introductions. <strong>You'll never notice us holding anything up.</strong>
+      That's the compliment we're after.
+    </p>
+    <a class="btn" href="#holdup">See what's standing</a>
+  </div>
+</header>
+
+<section class="street-sect" id="holdup">
+  <div class="wrap">
+    <span class="sect-kicker">Section 01</span>
+  </div>
+  <div class="sect-title-row"><div class="wrap"><h2 class="sect-title">What we hold up</h2></div></div>
+  <div class="wrap">
+    <div class="street">
+      <div class="building">
+        <h3>Places</h3>
+        <p>A hall, a workshop, a long table. Free to book, hard to break, swept every Sunday. Bring your thing; we'll keep the roof on.</p>
+        <span class="shape" aria-hidden="true">
+          <svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
+            <rect x="30" y="30" width="140" height="120" fill="#1A1816"/>
+            <rect x="50" y="50" width="24" height="24" fill="#FAF6EE"/>
+            <rect x="88" y="50" width="24" height="24" fill="#FAF6EE"/>
+            <rect x="126" y="50" width="24" height="24" fill="#FAF6EE"/>
+            <rect x="88" y="100" width="24" height="50" fill="#FAF6EE"/>
+          </svg>
+        </span>
+      </div>
+      <div class="building">
+        <h3>Programs</h3>
+        <p>Twelve weeks, ten neighbors, one craft. Welding, bookkeeping, bread. Taught by someone two streets over who's been doing it for thirty years.</p>
+        <span class="shape" aria-hidden="true">
+          <svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="100,10 180,70 20,70" fill="#1A1816"/>
+            <rect x="40" y="70" width="120" height="80" fill="#1A1816"/>
+            <rect x="88" y="105" width="24" height="45" fill="#FAF6EE"/>
+            <rect x="55" y="85" width="18" height="18" fill="#FAF6EE"/>
+            <rect x="127" y="85" width="18" height="18" fill="#FAF6EE"/>
+          </svg>
+        </span>
+      </div>
+      <div class="building">
+        <h3>People</h3>
+        <p>Small grants with short forms. If you're fixing something on your block, we'd rather fund it this month than admire it next year.</p>
+        <span class="shape" aria-hidden="true">
+          <svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
+            <path d="M30,150 L30,70 A70,70 0 0 1 170,70 L170,150 Z" fill="#1A1816"/>
+            <path d="M78,150 L78,108 A22,22 0 0 1 122,108 L122,150 Z" fill="#FAF6EE"/>
+          </svg>
+        </span>
+      </div>
+    </div>
+    <p class="street-note">Everything above rests on the same line. So does everything below. It's a system, not a coincidence.</p>
+  </div>
+</section>
+
+<section class="band-sect" id="ledger">
+  <div class="wrap">
+    <span class="sect-kicker">Section 02</span>
+  </div>
+  <div class="sect-title-row"><div class="wrap"><h2 class="sect-title">The ledger, kept honestly</h2></div></div>
+  <div class="wrap">
+    <div class="band">
+      <span class="lbl">Neighborhoods</span>
+      <span class="lbl">People introduced</span>
+      <span class="lbl">Buzzwords used</span>
+      <span class="lbl">Lines, total</span>
+      <div class="mid" aria-hidden="true"></div>
+      <span class="num">12<small>and we know the names of the streets</small></span>
+      <span class="num">4,816<small>each one on purpose</small></span>
+      <span class="num">0<small>we counted twice</small></span>
+      <div class="mid2" aria-hidden="true"></div>
+      <span class="num">1<small>this one. it carries everything</small></span>
+    </div>
+  </div>
+</section>
+
+<section class="cta-sect" id="start">
+  <div class="wrap">
+    <h2>Stand on something solid.</h2>
+    <p class="sub">
+      Tell us what you're building and where it keeps sagging.
+      We'll bring the level, the line, and the coffee.
+    </p>
+  </div>
+  <div class="cta-line-row">
+    <a class="btn" href="mailto:hello@underscore.studio">Start on the line</a>
+  </div>
+  <div class="cta-foot-space" aria-hidden="true"></div>
+</section>
+
+<footer>
+  <div class="wrap foot-row">
+    <span><strong style="color:var(--ink)">Underscore</strong> — everything rests on the line.</span>
+    <div class="fl">
+      <a href="#holdup">What we hold up</a>
+      <a href="#ledger">The ledger</a>
+      <a href="mailto:hello@underscore.studio">hello@underscore.studio</a>
+      <span>© 2026</span>
+    </div>
+  </div>
+  <div class="foot-bar" aria-hidden="true"></div>
+</footer>
+
+</body>
+</html>

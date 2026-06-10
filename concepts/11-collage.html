@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>underscore_ — paper &amp; tape</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='12' y='68' width='76' height='16' rx='8' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,560;0,9..144,640;1,9..144,400&family=Courier+Prime:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --yellow:#F5C518;
+    --yellow-bright:#FFD43B;
+    --ink:#1A1816;
+    --cream:#FAF6EE;
+    --kraft:#D9C7A7;
+    --kraft-deep:#C9B58F;
+    --sky:#BFD8E6;
+    --paper:#FFFDF6;
+    --s1:8px; --s2:16px; --s3:24px; --s4:40px; --s5:64px; --s6:112px;
+    --shadow-paper:0 2px 4px rgba(73,60,40,.12), 0 10px 22px rgba(73,60,40,.10);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  ::selection{background:var(--yellow-bright);color:var(--ink);}
+  body{
+    font-family:'Fraunces',serif;
+    background:var(--cream);
+    color:var(--ink);
+    line-height:1.65;
+    font-size:17px;
+    overflow-x:hidden;
+  }
+  .type{font-family:'Special Elite',monospace;}
+  .mono{font-family:'Courier Prime',monospace;}
+  a{color:inherit;}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 var(--s3);}
+
+  /* washi tape */
+  .washi{
+    position:absolute;
+    width:110px;height:30px;
+    background:repeating-linear-gradient(45deg, rgba(245,197,24,.55) 0 8px, rgba(255,212,59,.4) 8px 16px);
+    box-shadow:0 1px 3px rgba(73,60,40,.18);
+    pointer-events:none;
+  }
+  .washi.blue{background:repeating-linear-gradient(45deg, rgba(149,186,208,.6) 0 8px, rgba(191,216,230,.5) 8px 16px);}
+
+  /* postage stamp frame */
+  .stamp-frame{
+    background:var(--paper);
+    border:2px dashed rgba(26,24,22,.45);
+    outline:6px solid var(--paper);
+    outline-offset:0;
+    box-shadow:var(--shadow-paper);
+  }
+
+  /* ---------- NAV ---------- */
+  nav{
+    display:flex;align-items:center;justify-content:space-between;
+    max-width:1100px;margin:0 auto;
+    padding:var(--s3);
+    position:relative;z-index:5;
+  }
+  .logo{
+    font-family:'Special Elite',monospace;
+    font-size:1.35rem;
+    text-decoration:none;
+    letter-spacing:.06em;
+    position:relative;
+    padding-bottom:6px;
+  }
+  .logo::after{
+    content:"";
+    position:absolute;left:0;bottom:0;
+    width:100%;height:7px;
+    background:var(--yellow);
+    clip-path:polygon(0 30%,6% 0,15% 40%,24% 10%,33% 45%,44% 5%,55% 40%,64% 12%,75% 48%,84% 8%,93% 38%,100% 15%,100% 100%,0 100%);
+  }
+  .nav-links{display:flex;align-items:center;gap:var(--s4);list-style:none;}
+  .nav-links a{
+    font-family:'Special Elite',monospace;
+    text-decoration:none;
+    font-size:.92rem;
+    letter-spacing:.04em;
+    border-bottom:2px solid transparent;
+    transition:border-color .2s ease;
+  }
+  .nav-links a:not(.cta):hover{border-bottom-color:var(--yellow);}
+  .cta{
+    background:var(--ink);
+    color:var(--cream) !important;
+    padding:9px 20px;
+    transform:rotate(-1deg);
+    box-shadow:3px 3px 0 var(--yellow);
+    transition:transform .2s ease, box-shadow .2s ease;
+  }
+  .cta:hover{transform:rotate(0deg) translate(-1px,-1px);box-shadow:5px 5px 0 var(--yellow);}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    position:relative;
+    padding:var(--s6) 0 calc(var(--s6) - 20px);
+    text-align:center;
+  }
+  .paper-stack{
+    position:relative;
+    max-width:720px;
+    margin:0 auto;
+    padding:var(--s5) var(--s4) var(--s5);
+  }
+  .stack-layer{position:absolute;inset:0;pointer-events:none;}
+  .stack-layer svg{width:100%;height:100%;}
+  .layer-kraft{transform:rotate(-2.4deg) scale(1.04);}
+  .layer-sky{transform:rotate(1.8deg) scale(1.01) translate(10px,8px);}
+  .layer-top{transform:rotate(-.4deg);}
+  .stack-inner{position:relative;z-index:2;padding:var(--s3);}
+  .hero .kicker{
+    font-family:'Courier Prime',monospace;
+    font-size:.85rem;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:#6e6354;
+    display:block;
+    margin-bottom:var(--s3);
+  }
+  .wordmark{
+    font-family:'Special Elite',monospace;
+    font-size:clamp(2.6rem, 8vw, 5rem);
+    letter-spacing:.04em;
+    line-height:1;
+    display:block;
+  }
+  .torn-underscore{
+    display:block;
+    width:min(420px, 80%);
+    height:26px;
+    margin:var(--s2) auto var(--s4);
+  }
+  .hero p.lede{
+    max-width:480px;
+    margin:0 auto;
+    font-size:1.12rem;
+    font-style:italic;
+    color:#43403a;
+  }
+  .paper-stack .washi.w1{top:-12px;left:12%;transform:rotate(-8deg);}
+  .paper-stack .washi.w2{top:-10px;right:14%;transform:rotate(6deg);}
+  .hero-stamp{
+    position:absolute;
+    right:4%;top:18%;
+    width:118px;
+    padding:var(--s2);
+    transform:rotate(7deg);
+    font-family:'Courier Prime',monospace;
+    font-size:.72rem;
+    text-align:center;
+    line-height:1.4;
+  }
+  .hero-stamp svg{width:54px;height:54px;display:block;margin:0 auto var(--s1);}
+  .hero-note{
+    position:absolute;
+    left:3%;bottom:16%;
+    font-family:'Special Elite',monospace;
+    font-size:.85rem;
+    color:#6e6354;
+    transform:rotate(-5deg);
+    max-width:150px;
+  }
+
+  /* section headers */
+  .sec-label{
+    display:inline-block;
+    font-family:'Courier Prime',monospace;
+    font-size:.8rem;
+    letter-spacing:.24em;
+    text-transform:uppercase;
+    background:var(--ink);
+    color:var(--cream);
+    padding:5px 14px;
+    transform:rotate(-1.2deg);
+    margin-bottom:var(--s3);
+  }
+  h2{
+    font-family:'Fraunces',serif;
+    font-weight:640;
+    font-size:clamp(2rem, 4.6vw, 3.2rem);
+    line-height:1.12;
+    margin-bottom:var(--s2);
+  }
+  .sec-sub{max-width:520px;color:#43403a;font-size:1.05rem;margin-bottom:var(--s5);}
+
+  /* ---------- COMMUNITY: postcards + string ---------- */
+  .community{
+    position:relative;
+    padding:var(--s6) 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 80% 10%, rgba(217,199,167,.28), transparent 70%),
+      var(--cream);
+  }
+  .cards-field{position:relative;}
+  .string-svg{
+    position:absolute;
+    inset:-30px 0 0 0;
+    width:100%;height:calc(100% + 30px);
+    pointer-events:none;
+    z-index:3;
+  }
+  .postcards{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:var(--s5) var(--s4);
+    position:relative;
+    z-index:2;
+  }
+  .postcard{
+    position:relative;
+    background:var(--paper);
+    padding:var(--s4) var(--s3) var(--s3);
+    box-shadow:var(--shadow-paper);
+    transition:transform .25s ease, box-shadow .25s ease;
+  }
+  .postcard:nth-child(1){transform:rotate(-2deg);}
+  .postcard:nth-child(2){transform:rotate(1.4deg);margin-top:var(--s4);}
+  .postcard:nth-child(3){transform:rotate(-1deg);margin-top:var(--s2);}
+  .postcard:hover{transform:rotate(0) translateY(-5px);box-shadow:0 4px 8px rgba(73,60,40,.14), 0 18px 34px rgba(73,60,40,.16);}
+  .postcard .pinhead{
+    position:absolute;top:-9px;left:50%;transform:translateX(-50%);
+    width:18px;height:18px;border-radius:50%;
+    background:radial-gradient(circle at 35% 32%, #ffe27a, var(--yellow) 60%, #c79d0a);
+    box-shadow:0 2px 4px rgba(73,60,40,.4);
+    z-index:4;
+  }
+  .postcard .pc-head{
+    display:flex;justify-content:space-between;align-items:flex-start;
+    border-bottom:1px solid rgba(26,24,22,.18);
+    padding-bottom:var(--s1);
+    margin-bottom:var(--s2);
+  }
+  .postcard .pc-from{font-family:'Courier Prime',monospace;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:#6e6354;}
+  .postcard .pc-stamp{
+    width:36px;height:42px;
+    border:1.5px dashed rgba(26,24,22,.4);
+    display:grid;place-items:center;
+    flex:none;
+  }
+  .postcard .pc-stamp svg{width:20px;height:20px;}
+  .postcard p{font-size:.98rem;color:#33302b;}
+  .postcard p em{font-family:'Special Elite',monospace;font-style:normal;font-size:.92rem;}
+  .postcard .pc-sig{display:block;margin-top:var(--s2);font-family:'Special Elite',monospace;font-size:.85rem;color:#6e6354;}
+  .postcard.kraft{background:var(--kraft);}
+  .postcard.kraft p{color:#3a3226;}
+  .postcard.sky{background:var(--sky);}
+  .postcard.sky p{color:#2c3a42;}
+
+  /* ---------- GENEROSITY: envelope ---------- */
+  .generosity{
+    padding:var(--s6) 0;
+    position:relative;
+  }
+  .gen-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:var(--s5);
+    align-items:center;
+  }
+  .envelope{
+    position:relative;
+    width:min(440px,100%);
+    margin:0 auto;
+    aspect-ratio:440/300;
+  }
+  .env-back{
+    position:absolute;inset:auto 0 0 0;height:72%;
+    background:var(--kraft);
+    box-shadow:var(--shadow-paper);
+    z-index:1;
+  }
+  .env-letter{
+    position:absolute;
+    left:6%;right:6%;bottom:14%;
+    height:80%;
+    background:var(--paper);
+    box-shadow:0 -4px 14px rgba(73,60,40,.14);
+    padding:var(--s3);
+    transform:translateY(34%);
+    transition:transform .5s cubic-bezier(.2,.8,.25,1);
+    z-index:2;
+    overflow:hidden;
+  }
+  .env-letter .lt-head{font-family:'Special Elite',monospace;font-size:.9rem;margin-bottom:var(--s1);}
+  .env-letter p{font-size:.88rem;line-height:1.55;color:#33302b;}
+  .env-letter .lt-underline{display:block;width:90px;height:8px;margin-top:var(--s2);}
+  .env-front{
+    position:absolute;inset:auto 0 0 0;height:72%;
+    z-index:3;
+    pointer-events:none;
+  }
+  .env-front svg{width:100%;height:100%;}
+  .env-flap{
+    position:absolute;top:6%;left:0;right:0;height:34%;
+    z-index:0;
+  }
+  .env-flap svg{width:100%;height:100%;}
+  .envelope:hover .env-letter,
+  .envelope:focus-within .env-letter{transform:translateY(-18%);}
+  .envelope .washi{top:60%;left:-34px;transform:rotate(90deg);z-index:4;}
+  .gen-copy h2 em{font-style:italic;color:#8a6d12;}
+  .gen-points{list-style:none;margin-top:var(--s3);}
+  .gen-points li{
+    position:relative;
+    padding-left:30px;
+    margin-bottom:var(--s2);
+    color:#33302b;
+  }
+  .gen-points li svg{position:absolute;left:0;top:9px;width:18px;height:10px;}
+  .gen-hint{font-family:'Courier Prime',monospace;font-size:.8rem;color:#6e6354;margin-top:var(--s3);letter-spacing:.06em;}
+
+  /* ---------- TICKET CTA ---------- */
+  .ticket-sec{
+    padding:var(--s6) 0;
+    background:
+      radial-gradient(ellipse 50% 50% at 15% 80%, rgba(191,216,230,.35), transparent 70%),
+      var(--cream);
+    text-align:center;
+    position:relative;
+  }
+  .ticket{
+    position:relative;
+    display:inline-flex;
+    align-items:stretch;
+    background:var(--yellow);
+    box-shadow:var(--shadow-paper);
+    text-decoration:none;
+    transform:rotate(-1.5deg);
+    transition:transform .25s ease, box-shadow .25s ease;
+    margin-top:var(--s4);
+  }
+  .ticket:hover{transform:rotate(0) scale(1.03);box-shadow:0 6px 12px rgba(73,60,40,.18), 0 22px 40px rgba(73,60,40,.18);}
+  .ticket::before,.ticket::after{
+    content:"";
+    position:absolute;top:50%;
+    width:26px;height:26px;border-radius:50%;
+    background:var(--cream);
+    transform:translateY(-50%);
+  }
+  .ticket::before{left:-13px;}
+  .ticket::after{right:-13px;}
+  .tk-main{
+    padding:var(--s4) var(--s5);
+    border-right:2px dashed rgba(26,24,22,.5);
+  }
+  .tk-main .tk-admit{
+    font-family:'Special Elite',monospace;
+    font-size:1.7rem;
+    letter-spacing:.1em;
+    display:block;
+  }
+  .tk-main .tk-row{
+    font-family:'Courier Prime',monospace;
+    font-size:.75rem;
+    letter-spacing:.2em;
+    text-transform:uppercase;
+    color:rgba(26,24,22,.7);
+    display:block;
+    margin-top:var(--s1);
+  }
+  .tk-stub{
+    display:grid;place-items:center;
+    padding:0 var(--s3);
+    font-family:'Courier Prime',monospace;
+    font-size:.72rem;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    writing-mode:vertical-rl;
+    color:rgba(26,24,22,.75);
+  }
+  .ticket-sec .stamped{
+    display:inline-block;
+    font-family:'Special Elite',monospace;
+    font-size:.85rem;
+    border:2px solid rgba(178,38,38,.55);
+    color:rgba(178,38,38,.75);
+    padding:4px 12px;
+    transform:rotate(-6deg);
+    letter-spacing:.2em;
+    text-transform:uppercase;
+    margin-top:var(--s4);
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer{
+    background:var(--ink);
+    color:var(--cream);
+    padding:var(--s5) 0;
+  }
+  .foot-grid{display:flex;justify-content:space-between;align-items:center;gap:var(--s3);flex-wrap:wrap;}
+  .foot-logo{font-family:'Special Elite',monospace;font-size:1.15rem;letter-spacing:.06em;}
+  .foot-logo .ul{display:inline-block;width:42px;height:8px;background:var(--yellow);margin-left:6px;vertical-align:baseline;clip-path:polygon(0 35%,8% 0,18% 42%,30% 8%,42% 45%,54% 5%,66% 40%,78% 10%,90% 44%,100% 12%,100% 100%,0 100%);}
+  footer ul{display:flex;gap:var(--s3);list-style:none;}
+  footer a{font-family:'Courier Prime',monospace;font-size:.85rem;text-decoration:none;border-bottom:1px solid transparent;}
+  footer a:hover{border-bottom-color:var(--yellow);}
+  footer .colophon{font-family:'Courier Prime',monospace;font-size:.75rem;color:rgba(250,246,238,.55);margin-top:var(--s3);letter-spacing:.04em;}
+
+  /* ---------- MOBILE ---------- */
+  @media (max-width:768px){
+    .nav-links{gap:var(--s2);}
+    .nav-links li:not(:last-child){display:none;}
+    .hero{padding:var(--s5) 0;}
+    .hero-stamp,.hero-note{display:none;}
+    .postcards{grid-template-columns:1fr;}
+    .postcard:nth-child(n){margin-top:0;}
+    .string-svg{display:none;}
+    .gen-grid{grid-template-columns:1fr;}
+    .envelope .washi{display:none;}
+    .tk-main{padding:var(--s3) var(--s4);}
+    .foot-grid{flex-direction:column;text-align:center;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<nav>
+  <a class="logo" href="#top">underscore</a>
+  <ul class="nav-links">
+    <li><a href="#community">postcards</a></li>
+    <li><a href="#generosity">the letter</a></li>
+    <li><a href="#ticket">your ticket</a></li>
+    <li><a class="cta" href="#ticket">get in_</a></li>
+  </ul>
+</nav>
+
+<!-- ============ HERO ============ -->
+<header class="hero" id="top">
+  <!-- pen-pal stamp, top right -->
+  <div class="hero-stamp stamp-frame">
+    <svg viewBox="0 0 54 54" aria-hidden="true">
+      <rect x="8" y="36" width="38" height="9" rx="4.5" fill="#F5C518"/>
+      <circle cx="20" cy="20" r="3" fill="#1A1816"/>
+      <circle cx="34" cy="20" r="3" fill="#1A1816"/>
+    </svg>
+    first class.<br>always.
+  </div>
+  <p class="hero-note">assembled by hand. reassembled by friends.</p>
+
+  <div class="wrap">
+    <div class="paper-stack">
+      <span class="washi w1"></span>
+      <span class="washi w2 blue"></span>
+
+      <!-- torn paper layers -->
+      <div class="stack-layer layer-kraft" aria-hidden="true">
+        <svg viewBox="0 0 720 420" preserveAspectRatio="none">
+          <path d="M8 22 L60 10 L130 26 L210 8 L300 24 L390 6 L470 22 L560 9 L640 24 L712 12 L716 110 L704 200 L714 300 L702 398 L620 410 L530 396 L440 412 L350 398 L260 412 L170 397 L90 411 L12 400 L18 300 L6 200 L16 110 Z" fill="#D9C7A7"/>
+        </svg>
+      </div>
+      <div class="stack-layer layer-sky" aria-hidden="true">
+        <svg viewBox="0 0 720 420" preserveAspectRatio="none">
+          <path d="M14 28 L90 14 L180 30 L270 12 L360 28 L450 10 L540 26 L630 12 L708 26 L714 130 L700 230 L712 330 L700 396 L600 408 L500 394 L400 410 L300 396 L200 410 L100 396 L16 406 L22 300 L8 200 L18 110 Z" fill="#BFD8E6"/>
+        </svg>
+      </div>
+      <div class="stack-layer layer-top" aria-hidden="true">
+        <svg viewBox="0 0 720 420" preserveAspectRatio="none">
+          <path d="M10 18 L80 8 L165 22 L255 6 L345 20 L435 5 L525 19 L615 7 L710 18 L715 120 L703 215 L713 315 L704 402 L610 412 L515 398 L420 413 L325 399 L230 413 L135 398 L45 412 L8 402 L16 300 L5 195 L14 100 Z" fill="#FFFDF6" stroke="rgba(73,60,40,.08)"/>
+        </svg>
+      </div>
+
+      <div class="stack-inner">
+        <span class="kicker">est. the moment you showed up</span>
+        <span class="wordmark">underscore</span>
+        <!-- torn yellow strip: THE underscore -->
+        <svg class="torn-underscore" viewBox="0 0 420 26" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M4 8 L36 3 L72 10 L110 2 L150 9 L192 3 L234 10 L276 2 L318 9 L360 3 L398 9 L416 5 L414 19 L380 24 L340 17 L298 23 L256 16 L214 23 L172 16 L130 22 L88 16 L46 22 L8 18 Z" fill="#F5C518"/>
+        </svg>
+        <p class="lede">a community held together with paper, tape, and the kind of people who write back. the underscore is the string between us — follow it.</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ============ SECTION 2: COMMUNITY POSTCARDS ============ -->
+<section class="community" id="community">
+  <div class="wrap">
+    <span class="sec-label">from the community</span>
+    <h2>postcards off the pinboard.</h2>
+    <p class="sec-sub">real notes from real members, strung together on one yellow thread. that thread is the whole brand, honestly.</p>
+
+    <div class="cards-field">
+      <!-- the yellow string connecting the pins -->
+      <svg class="string-svg" viewBox="0 0 1100 360" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M-30 18 C 80 70, 130 22, 185 24 C 290 28, 330 120, 420 96 C 470 84, 500 60, 552 64 C 660 72, 700 150, 790 120 C 850 100, 870 50, 918 46 C 990 42, 1040 90, 1130 60"
+              fill="none" stroke="#F5C518" stroke-width="3.5" stroke-linecap="round"/>
+        <path d="M-30 18 C 80 70, 130 22, 185 24 C 290 28, 330 120, 420 96 C 470 84, 500 60, 552 64 C 660 72, 700 150, 790 120 C 850 100, 870 50, 918 46 C 990 42, 1040 90, 1130 60"
+              fill="none" stroke="rgba(26,24,22,.12)" stroke-width="3.5" stroke-linecap="round" transform="translate(0 3)"/>
+      </svg>
+
+      <div class="postcards">
+        <article class="postcard">
+          <span class="pinhead"></span>
+          <div class="pc-head">
+            <span class="pc-from">from: ada, week three</span>
+            <span class="pc-stamp"><svg viewBox="0 0 20 20"><rect x="2" y="13" width="16" height="4" rx="2" fill="#F5C518"/></svg></span>
+          </div>
+          <p>i posted half an idea at midnight, embarrassed. by breakfast three strangers had made it a whole one. <em>nobody asked for credit.</em></p>
+          <span class="pc-sig">— pinned with permission</span>
+        </article>
+
+        <article class="postcard kraft">
+          <span class="pinhead"></span>
+          <div class="pc-head">
+            <span class="pc-from">from: marcus, year two</span>
+            <span class="pc-stamp"><svg viewBox="0 0 20 20"><rect x="2" y="13" width="16" height="4" rx="2" fill="#1A1816"/></svg></span>
+          </div>
+          <p>other places ask what you do. here they ask what you're <em>starting</em>. it's a small difference the size of a door.</p>
+          <span class="pc-sig">— sent from the slow lane</span>
+        </article>
+
+        <article class="postcard sky">
+          <span class="pinhead"></span>
+          <div class="pc-head">
+            <span class="pc-from">from: june &amp; priya</span>
+            <span class="pc-stamp"><svg viewBox="0 0 20 20"><rect x="2" y="13" width="16" height="4" rx="2" fill="#F5C518"/></svg></span>
+          </div>
+          <p>we met in a thread about typewriter ribbons. we now run a tiny press together. blame the underscore — <em>it connects things.</em></p>
+          <span class="pc-sig">— two names, one line</span>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 3: GENEROSITY / ENVELOPE ============ -->
+<section class="generosity" id="generosity">
+  <div class="wrap">
+    <div class="gen-grid">
+      <div class="gen-copy">
+        <span class="sec-label">the generosity clause</span>
+        <h2>everything here arrives <em>postage paid.</em></h2>
+        <ul class="gen-points">
+          <li>
+            <svg viewBox="0 0 18 10" aria-hidden="true"><rect x="0" y="3" width="18" height="5" rx="2.5" fill="#F5C518"/></svg>
+            the library of templates, guides, and half-finished maps? free. take two.
+          </li>
+          <li>
+            <svg viewBox="0 0 18 10" aria-hidden="true"><rect x="0" y="3" width="18" height="5" rx="2.5" fill="#F5C518"/></svg>
+            office hours with people who've done the thing you're scared of. also free.
+          </li>
+          <li>
+            <svg viewBox="0 0 18 10" aria-hidden="true"><rect x="0" y="3" width="18" height="5" rx="2.5" fill="#F5C518"/></svg>
+            the only bill we send is a thank-you note. we lick the stamps ourselves.
+          </li>
+        </ul>
+        <p class="gen-hint">↘ hover the envelope. there's a letter in it. there's always a letter.</p>
+      </div>
+
+      <div class="envelope" tabindex="0" aria-label="An envelope. Hover or focus to slide the letter out.">
+        <span class="washi"></span>
+        <div class="env-flap" aria-hidden="true">
+          <svg viewBox="0 0 440 110" preserveAspectRatio="none">
+            <path d="M4 104 L218 6 L436 104 L420 108 L218 22 L20 108 Z" fill="#C9B58F"/>
+          </svg>
+        </div>
+        <div class="env-back" aria-hidden="true"></div>
+        <div class="env-letter">
+          <span class="lt-head">dear you,</span>
+          <p>whatever you're carrying — the draft, the doubt, the idea folded into eighths — bring it. we'll unfold it carefully and never laugh at the creases. that's a promise written in pen.</p>
+          <svg class="lt-underline" viewBox="0 0 90 8" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M1 5 C 20 2, 40 7, 60 4 S 82 3, 89 5" fill="none" stroke="#F5C518" stroke-width="3.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="env-front" aria-hidden="true">
+          <svg viewBox="0 0 440 220" preserveAspectRatio="none">
+            <path d="M2 4 L218 132 L438 4 L438 216 L2 216 Z" fill="#D9C7A7"/>
+            <path d="M2 4 L218 132 L438 4" fill="none" stroke="rgba(73,60,40,.25)" stroke-width="2"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 4: TICKET CTA ============ -->
+<section class="ticket-sec" id="ticket">
+  <div class="wrap">
+    <span class="sec-label">no velvet rope</span>
+    <h2>the door's a paper one.</h2>
+    <p class="sec-sub" style="margin:0 auto var(--s2);">tear along the dotted line and you're in. membership costs a name and a hello — we've never charged more, and we keep the change.</p>
+
+    <a class="ticket" href="#top">
+      <span class="tk-main">
+        <span class="tk-admit">ADMIT ONE_</span>
+        <span class="tk-row">row: front &nbsp;·&nbsp; seat: saved for you</span>
+      </span>
+      <span class="tk-stub">underscore</span>
+    </a>
+
+    <br>
+    <span class="stamped">approved · no expiry</span>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <span class="foot-logo">underscore<span class="ul" aria-hidden="true"></span></span>
+      <ul>
+        <li><a href="#community">postcards</a></li>
+        <li><a href="#generosity">the letter</a></li>
+        <li><a href="#ticket">ticket</a></li>
+        <li><a href="mailto:hello@underscore.example">write to us</a></li>
+      </ul>
+    </div>
+    <p class="colophon">cut, taped, and pasted by hand. no two visits exactly alike. © underscore — keep the stub.</p>
+  </div>
+</footer>
+
+</body>
+</html>

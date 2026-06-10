@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — The Night Garden</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%2316140F'/%3E%3Crect x='14' y='66' width='72' height='16' rx='4' fill='%23FFD43B'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Nunito+Sans:ital,wght@0,400;0,600;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night:#16140F;
+    --night-2:#1E1B13;
+    --night-3:#262217;
+    --yellow:#F5C518;
+    --yellow-2:#FFD43B;
+    --cream:#FAF6EE;
+    --ink:#1A1816;
+    --green:#5C7A3B;
+    --green-d:#44602C;
+    --amber:#D98E2B;
+    --text:#EDE6D6;
+    --text-dim:#B7AE97;
+    --s1:8px; --s2:16px; --s3:24px; --s4:40px; --s5:64px; --s6:104px; --s7:160px;
+    --maxw:1140px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--night);
+    color:var(--text);
+    font-family:'Nunito Sans',sans-serif;
+    font-size:17px;line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  ::selection{background:var(--yellow);color:var(--ink);}
+  .pixel{font-family:'VT323',monospace;font-weight:400;line-height:1;}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 var(--s4);}
+  .label{
+    font-family:'VT323',monospace;font-size:20px;letter-spacing:0.22em;
+    text-transform:uppercase;color:var(--amber);
+  }
+
+  /* ---------- nav ---------- */
+  nav{
+    position:sticky;top:0;z-index:60;
+    background:rgba(22,20,15,.88);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid rgba(245,197,24,.18);
+  }
+  .nav-inner{max-width:var(--maxw);margin:0 auto;padding:14px var(--s4);display:flex;align-items:center;gap:var(--s4);}
+  .logo{display:flex;align-items:baseline;gap:9px;text-decoration:none;color:var(--text);}
+  .logo .word{font-family:'VT323',monospace;font-size:28px;letter-spacing:0.04em;}
+  .logo .mark{
+    width:30px;height:8px;border-radius:2px;background:var(--yellow-2);
+    box-shadow:0 0 10px rgba(255,212,59,.8);
+    transition:box-shadow .25s ease;
+  }
+  .logo:hover .mark{box-shadow:0 0 18px rgba(255,212,59,1);}
+  .nav-links{margin-left:auto;display:flex;gap:var(--s3);align-items:center;}
+  .nav-links a{
+    color:var(--text-dim);text-decoration:none;font-size:14px;font-weight:600;
+    letter-spacing:0.06em;transition:color .15s ease;
+  }
+  .nav-links a:hover{color:var(--yellow-2);}
+  .btn{
+    display:inline-block;font-family:'VT323',monospace;font-size:20px;letter-spacing:0.08em;
+    background:var(--yellow);color:var(--ink);text-decoration:none;
+    padding:10px 22px;border-radius:6px;border:1px solid var(--yellow);
+    box-shadow:0 0 16px rgba(245,197,24,.35);
+    transition:box-shadow .2s ease, transform .2s ease, background .2s ease;
+  }
+  .btn:hover{background:var(--yellow-2);box-shadow:0 0 28px rgba(255,212,59,.6);transform:translateY(-2px);}
+  .btn:active{transform:translateY(0);}
+
+  /* ---------- pixel cells ---------- */
+  .plant{position:absolute;bottom:100%;pointer-events:none;}
+  .plant .px{
+    position:absolute;
+    opacity:0;transform:translateY(8px) scale(.4);
+    transition:opacity .26s steps(2), transform .26s steps(2);
+  }
+  .grown .px{opacity:1;transform:none;}
+
+  /* ---------- fireflies ---------- */
+  .firefly{
+    position:absolute;width:5px;height:5px;border-radius:50%;
+    background:var(--yellow-2);pointer-events:none;z-index:1;
+    animation:ffpulse var(--pd,3s) ease-in-out var(--pdel,0s) infinite,
+              ffdrift var(--dd,14s) ease-in-out var(--ddel,0s) infinite alternate;
+  }
+  @keyframes ffpulse{
+    0%,100%{opacity:.06;box-shadow:0 0 4px rgba(255,212,59,.2);}
+    50%{opacity:.95;box-shadow:0 0 12px rgba(255,212,59,.9),0 0 26px rgba(255,212,59,.4);}
+  }
+  @keyframes ffdrift{
+    0%{transform:translate(0,0);}
+    100%{transform:translate(var(--dx,40px),var(--dy,-30px));}
+  }
+
+  /* ---------- hero ---------- */
+  .hero{
+    position:relative;min-height:92vh;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:var(--s6) var(--s3) var(--s5);overflow:hidden;
+  }
+  .garden-stage{position:relative;width:340px;height:240px;margin-bottom:var(--s4);}
+  .glow-bar{
+    position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+    width:260px;height:16px;border-radius:4px;background:var(--yellow-2);
+    box-shadow:0 0 18px rgba(255,212,59,.9),0 0 60px rgba(255,212,59,.45),0 0 130px rgba(245,197,24,.25);
+    animation:barbreath 4.5s ease-in-out infinite;
+  }
+  @keyframes barbreath{
+    0%,100%{box-shadow:0 0 18px rgba(255,212,59,.9),0 0 60px rgba(255,212,59,.45),0 0 130px rgba(245,197,24,.25);}
+    50%{box-shadow:0 0 26px rgba(255,212,59,1),0 0 90px rgba(255,212,59,.6),0 0 170px rgba(245,197,24,.35);}
+  }
+  .hero h1{
+    font-family:'VT323',monospace;font-weight:400;
+    font-size:clamp(52px,9vw,104px);line-height:.95;
+    color:var(--cream);text-shadow:0 0 30px rgba(245,197,24,.25);
+    margin-bottom:var(--s3);
+  }
+  .hero h1 .glowword{color:var(--yellow-2);text-shadow:0 0 24px rgba(255,212,59,.7);}
+  .hero p{max-width:54ch;color:var(--text-dim);font-size:18px;margin:0 auto var(--s4);}
+  .hero .label{display:block;margin-bottom:var(--s3);}
+  .hero-ctas{display:flex;gap:var(--s3);justify-content:center;flex-wrap:wrap;}
+  .btn--ghost{
+    background:transparent;color:var(--yellow-2);box-shadow:none;
+    border:1px solid rgba(255,212,59,.5);
+  }
+  .btn--ghost:hover{background:rgba(255,212,59,.08);box-shadow:0 0 18px rgba(255,212,59,.25);}
+
+  /* ---------- night cards ---------- */
+  .cards{position:relative;padding:var(--s7) 0 var(--s6);overflow:hidden;}
+  .cards .label{display:block;text-align:center;}
+  .cards h2{
+    font-family:'VT323',monospace;font-size:clamp(40px,5.5vw,64px);
+    text-align:center;color:var(--cream);margin:var(--s2) 0 var(--s5);
+  }
+  .card-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s4);}
+  .card{
+    background:var(--night-2);
+    border:1px solid rgba(245,197,24,.14);
+    border-radius:14px;padding:var(--s4) var(--s4) var(--s4);
+    transition:border-color .25s ease, transform .25s ease, box-shadow .25s ease;
+  }
+  .card:hover{
+    border-color:rgba(255,212,59,.5);transform:translateY(-6px);
+    box-shadow:0 18px 40px rgba(0,0,0,.5),0 0 30px rgba(245,197,24,.08);
+  }
+  .mini-stage{position:relative;height:150px;margin-bottom:var(--s3);}
+  .mini-bar{
+    position:absolute;bottom:0;left:0;
+    width:96px;height:9px;border-radius:3px;background:var(--yellow);
+    box-shadow:0 0 12px rgba(245,197,24,.55);
+  }
+  .card h3{font-family:'VT323',monospace;font-size:30px;color:var(--yellow-2);margin-bottom:var(--s2);font-weight:400;}
+  .card p{color:var(--text-dim);font-size:15.5px;}
+
+  /* ---------- constellation ---------- */
+  .constellation{position:relative;padding:var(--s7) 0;text-align:center;overflow:hidden;background:var(--night);}
+  .constellation .label{display:block;}
+  .constellation h2{
+    font-family:'VT323',monospace;font-size:clamp(40px,5.5vw,64px);
+    color:var(--cream);margin:var(--s2) 0 var(--s2);
+  }
+  .constellation .sub{color:var(--text-dim);max-width:50ch;margin:0 auto var(--s4);}
+  .sky{width:100%;max-width:880px;height:auto;display:block;margin:0 auto;}
+  .sky .cline{
+    stroke:var(--yellow);stroke-width:1.6;fill:none;opacity:.85;
+    stroke-dasharray:var(--len,2000);stroke-dashoffset:var(--len,2000);
+    transition:stroke-dashoffset 3.6s ease .3s;
+  }
+  .sky.lit .cline{stroke-dashoffset:0;}
+  .sky .cdot{
+    fill:var(--yellow-2);opacity:0;transform-origin:center;
+    transition:opacity .4s ease;
+  }
+  .sky.lit .cdot{opacity:1;animation:dotpulse 3.2s ease-in-out infinite;}
+  @keyframes dotpulse{0%,100%{opacity:.75;}50%{opacity:1;}}
+  .sky .bgstar{fill:var(--cream);animation:twk 4s ease-in-out infinite;}
+  @keyframes twk{0%,100%{opacity:.1;}50%{opacity:.55;}}
+
+  /* ---------- dawn ---------- */
+  .dawn{
+    position:relative;overflow:hidden;
+    background:linear-gradient(180deg,var(--night) 0%,#241E12 26%,#5A4220 52%,#C98A3E 76%,#EFD9A8 92%,var(--cream) 100%);
+    padding:var(--s7) 0 0;text-align:center;
+  }
+  .dawn-inner{position:relative;z-index:2;padding-bottom:220px;}
+  .dawn .label{color:var(--yellow-2);}
+  .dawn h2{
+    font-family:'VT323',monospace;font-size:clamp(42px,6vw,72px);
+    color:var(--cream);margin:var(--s2) 0 var(--s2);text-shadow:0 2px 24px rgba(22,20,15,.5);
+  }
+  .dawn p{max-width:48ch;margin:0 auto var(--s4);color:#F3E9D2;text-shadow:0 1px 12px rgba(22,20,15,.45);}
+  .btn--sunrise{
+    background:var(--ink);color:var(--yellow-2);border-color:var(--ink);
+    box-shadow:0 8px 30px rgba(26,24,22,.45);
+  }
+  .btn--sunrise:hover{background:#000;color:var(--yellow-2);box-shadow:0 12px 36px rgba(26,24,22,.6);}
+  .sun{
+    position:absolute;left:50%;bottom:110px;transform:translateX(-50%);
+    width:190px;height:95px;border-radius:190px 190px 0 0;
+    background:var(--yellow-2);
+    box-shadow:0 0 60px rgba(255,212,59,.8),0 0 140px rgba(255,212,59,.4);
+    z-index:1;
+  }
+  .silhouettes{position:absolute;left:0;right:0;bottom:0;height:170px;z-index:3;pointer-events:none;}
+  .silhouettes .ground{
+    position:absolute;bottom:0;left:0;right:0;height:26px;background:var(--ink);
+  }
+  .silhouettes .plant .px{transition:none;opacity:1;transform:none;}
+
+  /* ---------- footer ---------- */
+  footer{background:var(--cream);color:var(--ink);padding:var(--s5) 0 var(--s4);}
+  .foot-grid{display:flex;justify-content:space-between;gap:var(--s4);flex-wrap:wrap;align-items:baseline;}
+  footer .logo{color:var(--ink);}
+  footer .logo .mark{box-shadow:none;background:var(--yellow);}
+  .foot-links{display:flex;gap:var(--s3);flex-wrap:wrap;}
+  .foot-links a{color:var(--ink);text-decoration:none;font-weight:600;font-size:14px;border-bottom:2px solid transparent;transition:border-color .15s ease;}
+  .foot-links a:hover{border-bottom-color:var(--yellow);}
+  .foot-base{margin-top:var(--s4);font-size:13.5px;opacity:.6;}
+
+  @media (max-width:768px){
+    .wrap{padding:0 var(--s3);}
+    .nav-inner{padding:12px var(--s3);}
+    .nav-links a:not(.btn){display:none;}
+    .hero{min-height:84vh;}
+    .garden-stage{width:280px;height:200px;}
+    .card-grid{grid-template-columns:1fr;}
+    .cards,.constellation{padding-top:var(--s6);padding-bottom:var(--s5);}
+    .dawn-inner{padding-bottom:190px;}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="logo" href="#top"><span class="word">underscore</span><span class="mark" aria-hidden="true"></span></a>
+    <div class="nav-links">
+      <a href="#grows">what grows</a>
+      <a href="#sky">the sky</a>
+      <a href="#dawn">dawn</a>
+      <a class="btn" href="#dawn">plant something</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ================= HERO ================= -->
+<header class="hero" id="top">
+  <div class="garden-stage" id="heroStage">
+    <div class="glow-bar" aria-hidden="true"></div>
+    <!-- plants injected by JS -->
+  </div>
+  <span class="label">the night garden</span>
+  <h1 class="pixel">even here,<br><span class="glowword">things grow.</span></h1>
+  <p>Underscore is a quiet corner of the internet where late-night ideas put down roots. Bring the seed of a thing — half a sentence, a sketch, a maybe. We'll keep the light on.</p>
+  <div class="hero-ctas">
+    <a class="btn" href="#dawn">plant something</a>
+    <a class="btn btn--ghost" href="#grows">wander the garden</a>
+  </div>
+</header>
+
+<!-- ================= NIGHT CARDS ================= -->
+<section class="cards" id="grows">
+  <div class="wrap">
+    <span class="label">field notes</span>
+    <h2 class="pixel">what grows at night</h2>
+    <div class="card-grid">
+      <div class="card js-card" data-plant="sprout">
+        <div class="mini-stage"><div class="mini-bar" aria-hidden="true"></div></div>
+        <h3>the slow idea</h3>
+        <p>Some ideas need six months of dark before they do anything at all. That's not procrastination — that's germination. We don't rush the roots.</p>
+      </div>
+      <div class="card js-card" data-plant="vine">
+        <div class="mini-stage"><div class="mini-bar" aria-hidden="true"></div></div>
+        <h3>the second draft</h3>
+        <p>First drafts get all the daylight. Second drafts get the dirt, the doubt, and the 2am rewrite. They come up stronger for it. They always do.</p>
+      </div>
+      <div class="card js-card" data-plant="flower">
+        <div class="mini-stage"><div class="mini-bar" aria-hidden="true"></div></div>
+        <h3>the unlikely friendship</h3>
+        <p>Two strangers, one thread, a shared obsession with something wonderfully small. The night is friendlier than anyone tells you.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CONSTELLATION ================= -->
+<section class="constellation" id="sky">
+  <div class="wrap">
+    <span class="label">look up</span>
+    <h2 class="pixel">there's a constellation called&nbsp;_</h2>
+    <p class="sub">Every gardener down here is a point of light up there. Connect enough of us and you get the oldest shape in the book: a line, holding steady, under everything.</p>
+  </div>
+  <svg class="sky" id="skySvg" viewBox="0 0 900 460" role="img" aria-label="Stars connecting into a giant underscore constellation">
+    <g id="bgStars"></g>
+    <path class="cline" id="cPath" d="M190 230 L300 218 L410 228 L520 216 L630 226 L712 221 L734 262 L642 296 L522 288 L402 298 L282 291 L182 295 L163 260 L190 230"/>
+    <g id="cDots"></g>
+  </svg>
+</section>
+
+<!-- ================= DAWN ================= -->
+<section class="dawn" id="dawn">
+  <div class="dawn-inner wrap">
+    <span class="label">eventually, always</span>
+    <h2 class="pixel">every night ends the same way.</h2>
+    <p>Morning. And whatever you planted in the dark — a little taller than you left it. Start now and beat the sun to it.</p>
+    <a class="btn btn--sunrise" href="#top">start before sunrise</a>
+  </div>
+  <div class="sun" aria-hidden="true"></div>
+  <div class="silhouettes" id="silhouettes" aria-hidden="true">
+    <div class="ground"></div>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <a class="logo" href="#top"><span class="word">underscore</span><span class="mark" aria-hidden="true"></span></a>
+      <div class="foot-links">
+        <a href="#grows">what grows</a>
+        <a href="#sky">the sky</a>
+        <a href="#dawn">dawn</a>
+        <a href="mailto:hello@underscore.example">say hello</a>
+      </div>
+    </div>
+    <p class="foot-base">© 2026 Underscore. Grown nightly, watered weekly. No pesticides, no jargon.</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  /* ---------- pixel plant patterns ---------- */
+  // [x, y(from bottom), color]
+  var C = {s:'#5C7A3B', d:'#44602C', f:'#F5C518', b:'#FFD43B', o:'#D98E2B'};
+  var PLANTS = {
+    flower: [
+      [5,0,'s'],[5,1,'s'],[5,2,'s'],[5,3,'s'],[5,4,'s'],[5,5,'s'],[5,6,'s'],
+      [4,2,'d'],[3,2,'d'],[3,3,'d'],[6,4,'d'],[7,4,'d'],[7,5,'d'],
+      [4,7,'f'],[5,7,'b'],[6,7,'f'],
+      [3,8,'f'],[4,8,'b'],[5,8,'o'],[6,8,'b'],[7,8,'f'],
+      [4,9,'f'],[5,9,'b'],[6,9,'f'],[5,10,'f']
+    ],
+    vine: [
+      [2,0,'s'],[2,1,'s'],[3,2,'s'],[3,3,'s'],[2,4,'s'],[2,5,'s'],[3,6,'s'],[3,7,'s'],
+      [1,1,'d'],[4,3,'d'],[1,4,'d'],[1,5,'d'],[4,7,'d'],
+      [2,8,'b'],[3,8,'f'],[3,9,'b']
+    ],
+    sprout: [
+      [1,0,'s'],[1,1,'s'],[1,2,'s'],
+      [0,2,'d'],[2,3,'d'],[0,3,'d'],
+      [1,3,'f'],[1,4,'b'],[0,4,'f'],[2,4,'f'],[1,5,'b']
+    ]
+  };
+
+  function renderPlant(stage, name, cell, leftPct, stagger){
+    var pat = PLANTS[name];
+    var holder = document.createElement('div');
+    holder.className = 'plant';
+    holder.style.left = leftPct;
+    var maxX = 0;
+    pat.forEach(function(c){ if(c[0]>maxX) maxX=c[0]; });
+    holder.style.width = ((maxX+1)*cell)+'px';
+    // sort bottom-up so it "renders" like loading
+    var cells = pat.slice().sort(function(a,b){ return a[1]-b[1] || a[0]-b[0]; });
+    cells.forEach(function(c,i){
+      var d = document.createElement('div');
+      d.className = 'px';
+      d.style.width = d.style.height = cell+'px';
+      d.style.left = (c[0]*cell)+'px';
+      d.style.bottom = (c[1]*cell)+'px';
+      d.style.background = C[c[2]];
+      d.style.transitionDelay = (i*stagger)+'ms';
+      holder.appendChild(d);
+    });
+    stage.appendChild(holder);
+    return holder;
+  }
+
+  /* hero garden: three plants on the glow bar */
+  var heroStage = document.getElementById('heroStage');
+  renderPlant(heroStage, 'flower', 13, '32%', 90);
+  renderPlant(heroStage, 'vine',   12, '18%', 110);
+  renderPlant(heroStage, 'sprout', 12, '63%', 130);
+  setTimeout(function(){ heroStage.classList.add('grown'); }, 500);
+
+  /* card mini-plants: grow when scrolled into view */
+  var cardIO = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        e.target.classList.add('grown');
+        cardIO.unobserve(e.target);
+      }
+    });
+  }, {threshold:.45});
+  document.querySelectorAll('.js-card').forEach(function(card){
+    var stage = card.querySelector('.mini-stage');
+    var plant = renderPlant(stage, card.dataset.plant, 10, '12px', 90);
+    plant.style.bottom = '9px'; /* sit on the mini underscore bar */
+    cardIO.observe(card);
+  });
+
+  /* ---------- fireflies ---------- */
+  function spawnFireflies(sectionSel, n){
+    var sec = document.querySelector(sectionSel);
+    if(!sec) return;
+    for(var i=0;i<n;i++){
+      var f = document.createElement('div');
+      f.className = 'firefly';
+      f.style.left = (4+Math.random()*92).toFixed(1)+'%';
+      f.style.top = (6+Math.random()*82).toFixed(1)+'%';
+      f.style.setProperty('--pd', (2.2+Math.random()*3).toFixed(2)+'s');
+      f.style.setProperty('--pdel', (Math.random()*4).toFixed(2)+'s');
+      f.style.setProperty('--dd', (10+Math.random()*14).toFixed(2)+'s');
+      f.style.setProperty('--ddel', (Math.random()*6).toFixed(2)+'s');
+      f.style.setProperty('--dx', ((Math.random()*120-60)).toFixed(0)+'px');
+      f.style.setProperty('--dy', ((Math.random()*90-45)).toFixed(0)+'px');
+      sec.appendChild(f);
+    }
+  }
+  spawnFireflies('.hero', 14);
+  spawnFireflies('.cards', 8);
+  spawnFireflies('.constellation', 6);
+
+  /* ---------- constellation ---------- */
+  var pts = [[190,230],[300,218],[410,228],[520,216],[630,226],[712,221],[734,262],
+             [642,296],[522,288],[402,298],[282,291],[182,295],[163,260]];
+  var dots = document.getElementById('cDots');
+  var NS = 'http://www.w3.org/2000/svg';
+  pts.forEach(function(p,i){
+    var c = document.createElementNS(NS,'circle');
+    c.setAttribute('class','cdot');
+    c.setAttribute('cx',p[0]); c.setAttribute('cy',p[1]); c.setAttribute('r',4.2);
+    c.style.transitionDelay = (i*0.22)+'s';
+    c.style.animationDelay = (i*0.4)+'s';
+    dots.appendChild(c);
+  });
+  // background stars
+  var bg = document.getElementById('bgStars');
+  for(var i=0;i<60;i++){
+    var s = document.createElementNS(NS,'circle');
+    s.setAttribute('class','bgstar');
+    s.setAttribute('cx',(Math.random()*900).toFixed(1));
+    s.setAttribute('cy',(Math.random()*460).toFixed(1));
+    s.setAttribute('r',(Math.random()*1.4+0.5).toFixed(2));
+    s.style.animationDelay = (Math.random()*4).toFixed(2)+'s';
+    bg.appendChild(s);
+  }
+  var sky = document.getElementById('skySvg');
+  var cPath = document.getElementById('cPath');
+  var L = cPath.getTotalLength();
+  cPath.style.setProperty('--len', L);
+  var skyIO = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){ sky.classList.add('lit'); skyIO.unobserve(sky); }
+    });
+  }, {threshold:.4});
+  skyIO.observe(sky);
+
+  /* ---------- dawn silhouettes ---------- */
+  var sil = document.getElementById('silhouettes');
+  var spots = [['flower','8%',11],['sprout','22%',10],['vine','34%',11],['flower','52%',13],
+               ['sprout','68%',10],['vine','80%',11],['sprout','91%',9]];
+  spots.forEach(function(sp){
+    var p = renderPlant(sil, sp[0], sp[2], sp[1], 0);
+    p.style.bottom = '26px'; /* on the ground bar */
+    p.querySelectorAll('.px').forEach(function(px){
+      px.style.background = '#1A1816';
+      px.style.transitionDelay = '0ms';
+    });
+  });
+  sil.classList.add('grown');
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>underscore_ — hi. we're underscore.</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='10' y='55' width='80' height='26' rx='13' fill='%23F5C518'/%3E%3Ccircle cx='38' cy='68' r='5' fill='%231A1816'/%3E%3Ccircle cx='62' cy='68' r='5' fill='%231A1816'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito+Sans:ital,opsz,wght@0,6..12,400;0,6..12,600;0,6..12,700;1,6..12,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --yellow:#F5C518;
+    --yellow-bright:#FFD43B;
+    --yellow-pale:#FBEFC2;
+    --peach:#FBE3CE;
+    --coral:#F07A5A;
+    --ink:#1A1816;
+    --cream:#FAF6EE;
+    --white:#FFFDF7;
+    --s1:8px; --s2:16px; --s3:24px; --s4:40px; --s5:64px; --s6:112px;
+    --squish:cubic-bezier(.34,1.56,.64,1);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  ::selection{background:var(--yellow-bright);color:var(--ink);}
+  body{
+    font-family:'Nunito Sans',sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    line-height:1.65;
+    font-size:17px;
+    overflow-x:hidden;
+  }
+  h1,h2,h3,.display{font-family:'Baloo 2',sans-serif;}
+  a{color:inherit;}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 var(--s3);}
+
+  /* blobs */
+  .blob{position:absolute;pointer-events:none;z-index:0;}
+
+  /* ---------- NAV ---------- */
+  nav{
+    display:flex;align-items:center;justify-content:space-between;
+    max-width:1080px;margin:0 auto;
+    padding:var(--s3);
+    position:relative;z-index:10;
+  }
+  .logo{
+    display:flex;align-items:center;gap:10px;
+    text-decoration:none;
+    font-family:'Baloo 2',sans-serif;
+    font-weight:800;
+    font-size:1.45rem;
+    line-height:1;
+  }
+  .logo svg{width:44px;height:24px;transition:transform .3s var(--squish);}
+  .logo:hover svg{transform:translateY(-3px) rotate(-6deg);}
+  .nav-links{display:flex;align-items:center;gap:var(--s4);list-style:none;}
+  .nav-links a{
+    text-decoration:none;
+    font-weight:700;
+    font-size:.95rem;
+    padding:6px 2px;
+    border-radius:99px;
+    transition:color .2s ease;
+  }
+  .nav-links a:not(.cta):hover{color:var(--coral);}
+  .cta{
+    background:var(--ink);
+    color:var(--cream);
+    padding:10px 24px !important;
+    border-radius:99px;
+    transition:transform .25s var(--squish), background .2s ease !important;
+  }
+  .cta:hover{transform:scale(1.07);background:#33302a;}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    position:relative;
+    padding:var(--s6) 0 var(--s6);
+    overflow:hidden;
+  }
+  .hero .blob.b1{top:-120px;right:-100px;width:480px;height:440px;background:var(--yellow-pale);border-radius:54% 46% 60% 40% / 48% 58% 42% 52%;}
+  .hero .blob.b2{bottom:-160px;left:-120px;width:420px;height:380px;background:var(--peach);border-radius:42% 58% 48% 52% / 56% 44% 60% 40%;}
+  .hero-grid{
+    position:relative;z-index:1;
+    display:grid;
+    grid-template-columns:1.2fr .8fr;
+    gap:var(--s5);
+    align-items:center;
+  }
+  .hero h1{
+    font-weight:800;
+    font-size:clamp(2.8rem, 6.4vw, 4.6rem);
+    line-height:1.08;
+    margin-bottom:var(--s3);
+  }
+  .hero h1 .accent{color:var(--coral);}
+  .hero p.lede{
+    font-size:1.18rem;
+    max-width:480px;
+    color:#45413a;
+    margin-bottom:var(--s4);
+  }
+  .btn-row{display:flex;gap:var(--s2);align-items:center;flex-wrap:wrap;}
+  .pill{
+    display:inline-block;
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    font-size:1.05rem;
+    text-decoration:none;
+    padding:14px 34px;
+    border-radius:99px;
+    transition:transform .25s var(--squish), box-shadow .25s ease, background .2s ease;
+  }
+  .pill.primary{
+    background:var(--yellow);
+    box-shadow:0 4px 0 #cfa50e;
+  }
+  .pill.primary:hover{transform:translateY(-3px) scale(1.04);box-shadow:0 7px 0 #cfa50e;background:var(--yellow-bright);}
+  .pill.ghost{
+    background:transparent;
+    border:3px solid var(--ink);
+  }
+  .pill.ghost:hover{transform:scale(1.05);background:var(--white);}
+  .hero-mascot{
+    display:grid;place-items:center;
+  }
+  .hero-mascot svg{
+    width:min(300px, 70vw);
+    animation:bounce 2.6s var(--squish) infinite;
+    transform-origin:50% 100%;
+  }
+  @keyframes bounce{
+    0%,100%{transform:translateY(0) scale(1,1);}
+    12%{transform:translateY(2px) scale(1.06,.92);}
+    38%{transform:translateY(-26px) scale(.96,1.05);}
+    52%{transform:translateY(-30px) scale(1,1);}
+    66%{transform:translateY(-26px) scale(.97,1.04);}
+    92%{transform:translateY(2px) scale(1.05,.94);}
+  }
+  .mascot-shadow{
+    width:140px;height:16px;
+    background:rgba(26,24,22,.10);
+    border-radius:50%;
+    margin:6px auto 0;
+    animation:shadowPulse 2.6s var(--squish) infinite;
+  }
+  @keyframes shadowPulse{
+    0%,100%{transform:scaleX(1);opacity:.9;}
+    50%{transform:scaleX(.72);opacity:.5;}
+  }
+  .hero-hint{
+    font-size:.85rem;
+    color:#7a7468;
+    text-align:center;
+    margin-top:var(--s2);
+    font-style:italic;
+  }
+
+  /* ---------- FEATURES ---------- */
+  .features{
+    position:relative;
+    background:var(--white);
+    border-radius:64px 64px 0 0;
+    padding:var(--s6) 0;
+  }
+  /* mascot peeking over the section edge */
+  .peeker{
+    position:absolute;
+    top:-26px;left:12%;
+    width:120px;
+    z-index:2;
+  }
+  .section-head{text-align:center;max-width:560px;margin:0 auto var(--s5);}
+  .eyebrow{
+    display:inline-block;
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    font-size:.85rem;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    background:var(--yellow-pale);
+    padding:6px 18px;
+    border-radius:99px;
+    margin-bottom:var(--s2);
+  }
+  h2{
+    font-weight:800;
+    font-size:clamp(2rem, 4.4vw, 3.1rem);
+    line-height:1.12;
+    margin-bottom:var(--s2);
+  }
+  .section-head p{color:#45413a;font-size:1.08rem;}
+  .feat-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:var(--s4);
+  }
+  .feat-card{
+    background:var(--cream);
+    border-radius:36px;
+    padding:var(--s4) var(--s3) var(--s4);
+    text-align:center;
+    transition:transform .3s var(--squish), box-shadow .3s ease;
+  }
+  .feat-card:hover{transform:translateY(-8px);box-shadow:0 18px 36px rgba(26,24,22,.09);}
+  .feat-card svg{width:130px;height:86px;margin-bottom:var(--s2);}
+  .feat-card:hover svg{animation:hop .5s var(--squish);}
+  @keyframes hop{
+    0%,100%{transform:translateY(0);}
+    40%{transform:translateY(-9px) scale(.98,1.04);}
+    70%{transform:translateY(1px) scale(1.04,.96);}
+  }
+  .feat-card h3{font-weight:700;font-size:1.35rem;margin-bottom:var(--s1);}
+  .feat-card p{font-size:.97rem;color:#45413a;}
+
+  /* ---------- ROW OF MASCOTS ---------- */
+  .row-sec{
+    padding:var(--s6) 0;
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+  }
+  .row-sec .blob.b3{top:30%;left:-140px;width:340px;height:320px;background:var(--peach);border-radius:60% 40% 52% 48% / 44% 60% 40% 56%;}
+  .row-sec .blob.b4{bottom:-80px;right:-90px;width:300px;height:280px;background:var(--yellow-pale);border-radius:46% 54% 58% 42% / 52% 46% 58% 44%;}
+  .mascot-row{
+    position:relative;z-index:1;
+    margin:var(--s5) auto var(--s3);
+    max-width:880px;
+  }
+  .mascot-row svg{width:100%;height:auto;display:block;}
+  .row-sec .caption{
+    font-size:1.05rem;
+    color:#45413a;
+    max-width:520px;
+    margin:0 auto;
+  }
+  .row-sec .caption strong{color:var(--coral);}
+
+  /* ---------- CTA ---------- */
+  .cta-sec{
+    padding:var(--s5) 0 var(--s6);
+  }
+  .cta-card{
+    position:relative;
+    background:var(--ink);
+    color:var(--cream);
+    border-radius:48px;
+    padding:var(--s5) var(--s4);
+    display:grid;
+    grid-template-columns:auto 1fr auto;
+    gap:var(--s4);
+    align-items:center;
+    overflow:hidden;
+  }
+  .cta-card .blob.b5{top:-90px;right:-70px;width:260px;height:240px;background:rgba(245,197,24,.14);border-radius:56% 44% 60% 40% / 46% 58% 42% 54%;}
+  .cta-mascot svg{width:150px;height:auto;}
+  /* blink: eyelids scale over the eyes */
+  .blink-eye{
+    transform-origin:center;
+    animation:blink 4.2s infinite;
+  }
+  .blink-eye.delay{animation-delay:.04s;}
+  @keyframes blink{
+    0%, 91%, 100%{transform:scaleY(1);}
+    93%, 95%{transform:scaleY(.08);}
+    97%{transform:scaleY(1);}
+  }
+  .cta-copy h2{color:var(--cream);margin-bottom:var(--s1);}
+  .cta-copy p{color:rgba(250,246,238,.78);max-width:440px;font-size:1.05rem;}
+  .cta-card .pill.primary{white-space:nowrap;}
+
+  /* ---------- FOOTER ---------- */
+  footer{
+    padding:0 0 var(--s5);
+  }
+  .foot-inner{
+    display:flex;justify-content:space-between;align-items:center;
+    flex-wrap:wrap;gap:var(--s3);
+    border-top:3px solid rgba(26,24,22,.08);
+    padding-top:var(--s4);
+  }
+  .foot-logo{display:flex;align-items:center;gap:8px;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:1.15rem;}
+  .foot-logo svg{width:36px;height:20px;}
+  footer ul{display:flex;gap:var(--s3);list-style:none;}
+  footer a{text-decoration:none;font-weight:600;font-size:.92rem;border-bottom:2px solid transparent;transition:border-color .2s ease;}
+  footer a:hover{border-bottom-color:var(--yellow);}
+  .foot-note{width:100%;font-size:.85rem;color:#7a7468;margin-top:var(--s2);}
+
+  /* reveal on scroll */
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity .6s ease, transform .6s var(--squish);}
+  .reveal.in{opacity:1;transform:translateY(0);}
+
+  /* ---------- MOBILE ---------- */
+  @media (max-width:768px){
+    .nav-links{gap:var(--s2);}
+    .nav-links li:not(:last-child){display:none;}
+    .hero{padding:var(--s5) 0;}
+    .hero-grid{grid-template-columns:1fr;text-align:center;}
+    .hero p.lede{margin-left:auto;margin-right:auto;}
+    .btn-row{justify-content:center;}
+    .feat-grid{grid-template-columns:1fr;}
+    .features{border-radius:40px 40px 0 0;}
+    .peeker{width:90px;top:-20px;}
+    .cta-card{grid-template-columns:1fr;text-align:center;justify-items:center;padding:var(--s4) var(--s3);}
+    .foot-inner{flex-direction:column;text-align:center;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .hero-mascot svg,.mascot-shadow,.blink-eye{animation:none;}
+    .reveal{opacity:1;transform:none;transition:none;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<nav>
+  <a class="logo" href="#top" aria-label="underscore home">
+    <svg viewBox="0 0 120 64" aria-hidden="true">
+      <rect x="6" y="28" width="108" height="30" rx="15" fill="#F5C518"/>
+      <circle cx="46" cy="43" r="5.5" fill="#1A1816"/>
+      <circle cx="74" cy="43" r="5.5" fill="#1A1816"/>
+    </svg>
+    underscore
+  </a>
+  <ul class="nav-links">
+    <li><a href="#what">what we do</a></li>
+    <li><a href="#row">the row</a></li>
+    <li><a href="#join">join</a></li>
+    <li><a class="cta" href="#join">come play_</a></li>
+  </ul>
+</nav>
+
+<!-- ============ HERO ============ -->
+<header class="hero" id="top">
+  <span class="blob b1" aria-hidden="true"></span>
+  <span class="blob b2" aria-hidden="true"></span>
+  <div class="wrap">
+    <div class="hero-grid">
+      <div>
+        <h1>hi. we're<br>underscore<span class="accent">.</span></h1>
+        <p class="lede">we're the little line that waits under your cursor — the one that believes you'll type something great. join a community that holds space (and holds hands) while you start.</p>
+        <div class="btn-row">
+          <a class="pill primary" href="#join">start your line_</a>
+          <a class="pill ghost" href="#what">have a look around</a>
+        </div>
+      </div>
+      <div class="hero-mascot" aria-hidden="true">
+        <div>
+          <svg viewBox="0 0 240 130">
+            <rect x="20" y="62" width="200" height="52" rx="26" fill="#F5C518"/>
+            <circle cx="95" cy="88" r="9" fill="#1A1816"/>
+            <circle cx="145" cy="88" r="9" fill="#1A1816"/>
+            <!-- little rosy cheeks -->
+            <circle cx="73" cy="96" r="6" fill="#F07A5A" opacity=".4"/>
+            <circle cx="167" cy="96" r="6" fill="#F07A5A" opacity=".4"/>
+          </svg>
+          <div class="mascot-shadow"></div>
+          <p class="hero-hint">this is dot. dot is very glad you're here.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ============ SECTION 2: FEATURES ============ -->
+<section class="features" id="what">
+  <!-- mascot peeking over the edge -->
+  <svg class="peeker" viewBox="0 0 120 52" aria-hidden="true">
+    <rect x="8" y="20" width="104" height="46" rx="23" fill="#F5C518"/>
+    <circle cx="46" cy="40" r="5.5" fill="#1A1816"/>
+    <circle cx="74" cy="40" r="5.5" fill="#1A1816"/>
+  </svg>
+
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">what we do</span>
+      <h2>small line. big job.</h2>
+      <p>three things, done warmly and without fuss. no dashboards pretending to be friends — just actual help from actual people.</p>
+    </div>
+
+    <div class="feat-grid">
+      <article class="feat-card reveal">
+        <!-- mascot sprouting a leaf -->
+        <svg viewBox="0 0 130 86" aria-hidden="true">
+          <path d="M65 36 C 65 20, 72 12, 84 8 C 84 22, 77 31, 67 35 Z" fill="#7FB069"/>
+          <path d="M65 38 L65 22" stroke="#5E8A4C" stroke-width="3" stroke-linecap="round"/>
+          <rect x="15" y="38" width="100" height="30" rx="15" fill="#F5C518"/>
+          <circle cx="52" cy="53" r="5.5" fill="#1A1816"/>
+          <circle cx="78" cy="53" r="5.5" fill="#1A1816"/>
+        </svg>
+        <h3>grow your thing</h3>
+        <p>bring a seed of an idea and we'll water it with feedback, tools, and the occasional gentle "ship it already."</p>
+      </article>
+
+      <article class="feat-card reveal">
+        <!-- mascot waving -->
+        <svg viewBox="0 0 130 86" aria-hidden="true">
+          <rect x="100" y="14" width="12" height="34" rx="6" fill="#F5C518" transform="rotate(24 106 48)"/>
+          <rect x="15" y="42" width="100" height="30" rx="15" fill="#F5C518"/>
+          <circle cx="52" cy="57" r="5.5" fill="#1A1816"/>
+          <circle cx="78" cy="57" r="5.5" fill="#1A1816"/>
+          <circle cx="36" cy="63" r="4.5" fill="#F07A5A" opacity=".4"/>
+        </svg>
+        <h3>meet your people</h3>
+        <p>everyone here was new once, and remembers it. say hi in the welcome thread and watch what happens. (it's nice. what happens is nice.)</p>
+      </article>
+
+      <article class="feat-card reveal">
+        <!-- mascot reading -->
+        <svg viewBox="0 0 130 86" aria-hidden="true">
+          <path d="M45 14 L65 22 L85 14 L85 38 L65 46 L45 38 Z" fill="#FFFDF7" stroke="#1A1816" stroke-width="3" stroke-linejoin="round"/>
+          <path d="M65 22 L65 46" stroke="#1A1816" stroke-width="3"/>
+          <rect x="15" y="48" width="100" height="30" rx="15" fill="#F5C518"/>
+          <ellipse cx="52" cy="63" rx="5.5" ry="4" fill="#1A1816"/>
+          <ellipse cx="78" cy="63" rx="5.5" ry="4" fill="#1A1816"/>
+        </svg>
+        <h3>learn out loud</h3>
+        <p>guides, workshops, and a library that's free forever. take what you need, leave a note in the margin for the next person.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 3: THE ROW ============ -->
+<section class="row-sec" id="row">
+  <span class="blob b3" aria-hidden="true"></span>
+  <span class="blob b4" aria-hidden="true"></span>
+  <div class="wrap">
+    <div class="section-head reveal" style="margin-bottom:0;">
+      <span class="eyebrow">the row</span>
+      <h2>stronger in a row.</h2>
+    </div>
+
+    <div class="mascot-row reveal" aria-hidden="true">
+      <svg viewBox="0 0 880 110">
+        <!-- five mascots linked end-to-end, one long joined line -->
+        <rect x="20"  y="44" width="160" height="34" rx="17" fill="#F5C518"/>
+        <rect x="180" y="44" width="160" height="34" rx="17" fill="#F07A5A"/>
+        <rect x="340" y="44" width="160" height="34" rx="17" fill="#F5C518"/>
+        <rect x="500" y="44" width="160" height="34" rx="17" fill="#FFD43B"/>
+        <rect x="660" y="44" width="160" height="34" rx="17" fill="#F5C518"/>
+        <!-- joins: where they hold on -->
+        <circle cx="180" cy="61" r="8" fill="#1A1816" opacity=".18"/>
+        <circle cx="340" cy="61" r="8" fill="#1A1816" opacity=".18"/>
+        <circle cx="500" cy="61" r="8" fill="#1A1816" opacity=".18"/>
+        <circle cx="660" cy="61" r="8" fill="#1A1816" opacity=".18"/>
+        <!-- eyes for each -->
+        <circle cx="80"  cy="61" r="5" fill="#1A1816"/><circle cx="118" cy="61" r="5" fill="#1A1816"/>
+        <circle cx="240" cy="61" r="5" fill="#1A1816"/><circle cx="278" cy="61" r="5" fill="#1A1816"/>
+        <circle cx="400" cy="61" r="5" fill="#1A1816"/><circle cx="438" cy="61" r="5" fill="#1A1816"/>
+        <circle cx="560" cy="61" r="5" fill="#1A1816"/><circle cx="598" cy="61" r="5" fill="#1A1816"/>
+        <circle cx="720" cy="61" r="5" fill="#1A1816"/><circle cx="758" cy="61" r="5" fill="#1A1816"/>
+        <!-- a tiny one hopping to join the end -->
+        <g>
+          <rect x="836" y="30" width="40" height="18" rx="9" fill="#F07A5A" transform="rotate(-10 856 39)"/>
+          <circle cx="850" cy="38" r="2.8" fill="#1A1816"/>
+          <circle cx="862" cy="36" r="2.8" fill="#1A1816"/>
+        </g>
+      </svg>
+    </div>
+
+    <p class="caption reveal">one underscore holds a word up. a row of them holds a <strong>whole community</strong> up. scoot over, there's room on the end.</p>
+  </div>
+</section>
+
+<!-- ============ SECTION 4: CTA ============ -->
+<section class="cta-sec" id="join">
+  <div class="wrap">
+    <div class="cta-card reveal">
+      <span class="blob b5" aria-hidden="true"></span>
+      <div class="cta-mascot" aria-hidden="true">
+        <svg viewBox="0 0 240 130">
+          <rect x="20" y="62" width="200" height="52" rx="26" fill="#F5C518"/>
+          <circle class="blink-eye" cx="95" cy="88" r="9" fill="#1A1816"/>
+          <circle class="blink-eye delay" cx="145" cy="88" r="9" fill="#1A1816"/>
+          <circle cx="73" cy="96" r="6" fill="#F07A5A" opacity=".4"/>
+          <circle cx="167" cy="96" r="6" fill="#F07A5A" opacity=".4"/>
+        </svg>
+      </div>
+      <div class="cta-copy">
+        <h2>dot is waiting<span style="color:var(--coral)">.</span></h2>
+        <p>joining takes a minute, costs nothing, and comes with a community that genuinely wants to see what you make. dot will blink at you until you click. dot has all day.</p>
+      </div>
+      <a class="pill primary" href="#top">join underscore_</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="wrap">
+    <div class="foot-inner">
+      <span class="foot-logo">
+        <svg viewBox="0 0 120 64" aria-hidden="true">
+          <rect x="6" y="28" width="108" height="30" rx="15" fill="#F5C518"/>
+          <circle cx="46" cy="43" r="5.5" fill="#1A1816"/>
+          <circle cx="74" cy="43" r="5.5" fill="#1A1816"/>
+        </svg>
+        underscore
+      </span>
+      <ul>
+        <li><a href="#what">what we do</a></li>
+        <li><a href="#row">the row</a></li>
+        <li><a href="#join">join</a></li>
+        <li><a href="mailto:hello@underscore.example">say hi</a></li>
+      </ul>
+      <p class="foot-note">© underscore. made with soft shapes and firm beliefs. dot approves this footer.</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // gentle reveal-on-scroll for sections and cards
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+    }
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+
+</body>
+</html>

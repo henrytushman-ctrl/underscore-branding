@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>underscore_ — the line before the first word</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231A1816'/%3E%3Crect x='18' y='70' width='64' height='13' rx='3' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800;900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --yellow:#F5C518;
+    --yellow-bright:#FFD43B;
+    --ink:#1A1816;
+    --cream:#FAF6EE;
+    --s1:.5rem; --s2:1rem; --s3:1.5rem; --s4:2.5rem; --s5:4rem; --s6:6.5rem; --s7:10rem;
+    --max:1320px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  ::selection{background:var(--yellow);color:var(--ink)}
+  body{
+    font-family:'Archivo',sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    line-height:1.4;
+  }
+  .mono{font-family:'IBM Plex Mono',monospace;font-size:.75rem;letter-spacing:.08em;font-weight:500}
+  .wrap{max-width:var(--max);margin:0 auto;padding:0 var(--s4)}
+  a{color:inherit;text-decoration:none}
+
+  /* ---------- nav ---------- */
+  nav{
+    position:sticky;top:0;z-index:50;
+    background:var(--cream);
+    border-bottom:2px solid var(--ink);
+  }
+  .nav-inner{
+    max-width:var(--max);margin:0 auto;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:var(--s2) var(--s4);
+  }
+  .logo{font-weight:900;font-size:1.2rem;letter-spacing:-.02em}
+  .logo .u{color:var(--yellow);font-weight:900}
+  .logo:hover .u{color:var(--ink)}
+  .nav-links{display:flex;gap:var(--s4);align-items:center}
+  .nav-links a{
+    font-size:.9rem;font-weight:600;
+    border-bottom:3px solid transparent;
+    padding-bottom:2px;
+    transition:border-color .15s ease;
+  }
+  .nav-links a:hover{border-bottom-color:var(--yellow)}
+  .nav-cta{
+    background:var(--ink);color:var(--cream);
+    padding:.6rem 1.4rem;font-weight:700;font-size:.9rem;
+    transition:background .15s ease,color .15s ease;
+  }
+  .nav-cta:hover{background:var(--yellow);color:var(--ink)}
+
+  /* ---------- hero ---------- */
+  header.hero{
+    padding:var(--s6) 0 var(--s5);
+    border-bottom:2px solid var(--ink);
+  }
+  .hero-label{
+    display:flex;justify-content:space-between;
+    padding:0 var(--s4);max-width:var(--max);margin:0 auto var(--s4);
+    text-transform:lowercase;
+  }
+  .hero-word{
+    font-weight:900;
+    font-size:clamp(3.4rem,13.4vw,15.5rem);
+    line-height:.86;
+    letter-spacing:-.045em;
+    text-transform:lowercase;
+    padding:0 var(--s4);
+    max-width:var(--max);margin:0 auto;
+    word-break:keep-all;
+  }
+  .hero-word .glyph{
+    color:var(--yellow);
+    animation:none;
+  }
+  .hero-sub{
+    max-width:var(--max);margin:var(--s5) auto 0;
+    padding:0 var(--s4);
+    display:grid;grid-template-columns:1fr 1fr;gap:var(--s4);
+    align-items:end;
+  }
+  .hero-sub h2{
+    font-size:clamp(1.3rem,2.4vw,1.9rem);
+    font-weight:600;line-height:1.25;letter-spacing:-.01em;
+    text-transform:lowercase;
+  }
+  .hero-sub .right{
+    justify-self:end;text-align:right;
+    display:flex;flex-direction:column;gap:var(--s2);align-items:flex-end;
+  }
+  .hero-btn{
+    display:inline-block;background:var(--yellow);color:var(--ink);
+    font-weight:800;font-size:1rem;padding:1rem 2.2rem;
+    border:2px solid var(--ink);
+    transition:transform .15s ease,box-shadow .15s ease;
+  }
+  .hero-btn:hover{transform:translate(-3px,-3px);box-shadow:5px 5px 0 var(--ink)}
+
+  /* ---------- section heads ---------- */
+  .sec-head{
+    display:flex;justify-content:space-between;align-items:baseline;
+    margin-bottom:var(--s5);text-transform:lowercase;
+  }
+
+  /* ---------- principles (yellow) ---------- */
+  section.principles{
+    background:var(--yellow);
+    padding:var(--s6) 0;
+    border-bottom:2px solid var(--ink);
+  }
+  .principle{
+    padding:var(--s4) 0 var(--s3);
+  }
+  .principle + .principle{margin-top:var(--s3)}
+  .principle .row{
+    display:flex;align-items:baseline;gap:var(--s4);flex-wrap:wrap;
+  }
+  .principle .num{align-self:flex-start;padding-top:1.2rem}
+  .principle h3{
+    font-size:clamp(3rem,8.5vw,8.5rem);
+    font-weight:900;line-height:.95;letter-spacing:-.04em;
+    text-transform:lowercase;
+  }
+  .principle p{
+    max-width:34ch;font-size:1.05rem;font-weight:500;line-height:1.5;
+    margin-left:auto;align-self:center;text-transform:lowercase;
+  }
+  .bar{
+    height:14px;background:var(--ink);
+    width:0;margin-top:var(--s3);
+    transition:width 1s cubic-bezier(.77,0,.18,1);
+  }
+  .principles .bar{background:var(--cream)}
+  .principle.in .bar{width:100%}
+  .principle:hover h3{color:var(--cream);transition:color .2s ease}
+
+  /* ---------- work strip (cream) ---------- */
+  section.work{
+    background:var(--cream);
+    padding:var(--s6) 0;
+    border-bottom:2px solid var(--ink);
+  }
+  .work-grid{
+    display:grid;grid-template-columns:repeat(3,1fr);
+    border:2px solid var(--ink);
+  }
+  .work-cell{
+    padding:var(--s4);
+    border-right:2px solid var(--ink);
+    min-height:230px;
+    display:flex;flex-direction:column;justify-content:space-between;gap:var(--s3);
+    transition:background .15s ease;
+  }
+  .work-cell:last-child{border-right:none}
+  .work-cell:hover{background:var(--yellow)}
+  .work-cell h4{
+    font-size:clamp(1.4rem,2.2vw,1.9rem);font-weight:800;letter-spacing:-.02em;
+    text-transform:lowercase;line-height:1.1;
+  }
+  .work-cell p{font-size:.95rem;font-weight:500;max-width:30ch;text-transform:lowercase}
+
+  /* ---------- manifesto (black) ---------- */
+  section.manifesto{
+    background:var(--ink);color:var(--cream);
+    padding:var(--s7) 0;
+    text-align:center;
+    border-bottom:2px solid var(--ink);
+  }
+  .manifesto .giant-underscore{
+    display:block;margin:0 auto var(--s5);
+    width:min(46vw,420px);height:auto;
+  }
+  .manifesto p{
+    font-size:clamp(1.4rem,3vw,2.4rem);
+    font-weight:600;line-height:1.3;letter-spacing:-.01em;
+    max-width:26ch;margin:0 auto;text-transform:lowercase;
+  }
+  .manifesto .mono{color:var(--yellow);display:block;margin-bottom:var(--s4)}
+
+  /* ---------- cta (cream) ---------- */
+  section.cta{
+    background:var(--cream);
+    padding:var(--s7) 0 var(--s6);
+    border-bottom:2px solid var(--ink);
+    text-align:center;
+  }
+  .cta h2{
+    font-weight:900;
+    font-size:clamp(4rem,16vw,17rem);
+    line-height:.9;letter-spacing:-.045em;
+    text-transform:lowercase;
+  }
+  .cta h2 .blink{
+    color:var(--yellow);
+    animation:blink 1.05s steps(1,end) infinite;
+  }
+  @keyframes blink{0%,55%{opacity:1}56%,100%{opacity:0}}
+  .cta p{
+    margin:var(--s4) auto 0;max-width:38ch;
+    font-size:1.1rem;font-weight:500;text-transform:lowercase;
+  }
+  .cta .hero-btn{margin-top:var(--s4)}
+
+  /* ---------- footer ---------- */
+  footer{
+    background:var(--ink);color:var(--cream);
+    padding:var(--s5) 0;
+  }
+  .foot-inner{
+    max-width:var(--max);margin:0 auto;padding:0 var(--s4);
+    display:flex;justify-content:space-between;align-items:flex-end;gap:var(--s4);flex-wrap:wrap;
+  }
+  .foot-logo{font-weight:900;font-size:2rem;letter-spacing:-.03em}
+  .foot-logo .u{color:var(--yellow)}
+  .foot-links{display:flex;gap:var(--s3);flex-wrap:wrap}
+  .foot-links a{
+    font-size:.85rem;font-weight:600;
+    border-bottom:2px solid transparent;
+    transition:border-color .15s ease;
+  }
+  .foot-links a:hover{border-bottom-color:var(--yellow)}
+  .foot-note{font-family:'IBM Plex Mono',monospace;font-size:.72rem;opacity:.7;width:100%;margin-top:var(--s3)}
+
+  /* ---------- mobile ---------- */
+  @media (max-width:768px){
+    .wrap{padding:0 var(--s3)}
+    .nav-inner{padding:var(--s2) var(--s3)}
+    .nav-links a:not(.nav-cta){display:none}
+    .hero-word,.hero-label,.hero-sub{padding-left:var(--s3);padding-right:var(--s3)}
+    .hero-sub{grid-template-columns:1fr;gap:var(--s3)}
+    .hero-sub .right{justify-self:start;text-align:left;align-items:flex-start}
+    .principle .row{flex-direction:column;gap:var(--s2)}
+    .principle p{margin-left:0}
+    .work-grid{grid-template-columns:1fr}
+    .work-cell{border-right:none;border-bottom:2px solid var(--ink);min-height:0}
+    .work-cell:last-child{border-bottom:none}
+    .foot-inner{flex-direction:column;align-items:flex-start}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="logo" href="#top">underscore<span class="u">_</span></a>
+    <div class="nav-links">
+      <a href="#principles">principles</a>
+      <a href="#work">what we make</a>
+      <a href="#manifesto">manifesto</a>
+      <a class="nav-cta" href="#start">say hi</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="hero-label mono">
+    <span>00 — a studio for starts</span>
+    <span>est. before the first word</span>
+  </div>
+  <h1 class="hero-word">underscore<span class="glyph">_</span></h1>
+  <div class="hero-sub">
+    <h2>the cursor sits low and waits. so do we — right before the good part, holding the place where something begins.</h2>
+    <div class="right">
+      <span class="mono">scroll for the rest →</span>
+      <a class="hero-btn" href="#start">start something</a>
+    </div>
+  </div>
+</header>
+
+<section class="principles" id="principles">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="mono">three things we believe</span>
+      <span class="mono">no fourth thing</span>
+    </div>
+
+    <div class="principle">
+      <div class="row">
+        <span class="num mono">01</span>
+        <h3>begin anyway</h3>
+        <p>every good thing was once a blank line and a small amount of nerve. we go first so you don't have to go alone.</p>
+      </div>
+      <div class="bar"></div>
+    </div>
+
+    <div class="principle">
+      <div class="row">
+        <span class="num mono">02</span>
+        <h3>connect everything</h3>
+        <p>the underscore joins words_like_this. we do the same with people — quietly, sturdily, no glue visible.</p>
+      </div>
+      <div class="bar"></div>
+    </div>
+
+    <div class="principle">
+      <div class="row">
+        <span class="num mono">03</span>
+        <h3>give more than you take</h3>
+        <p>whitespace is generosity. so is showing up, answering the email, and leaving room for someone else's idea.</p>
+      </div>
+      <div class="bar"></div>
+    </div>
+  </div>
+</section>
+
+<section class="work" id="work">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="mono">what we make</span>
+      <span class="mono">plainly put</span>
+    </div>
+    <div class="work-grid">
+      <div class="work-cell">
+        <span class="mono">a</span>
+        <h4>first versions</h4>
+        <p>brands, products, and names at the moment they need a spine. we build the part everyone is scared of: the start.</p>
+      </div>
+      <div class="work-cell">
+        <span class="mono">b</span>
+        <h4>connective tissue</h4>
+        <p>the systems between things — type, color, words, rules — so what you make next still looks like you.</p>
+      </div>
+      <div class="work-cell">
+        <span class="mono">c</span>
+        <h4>room to breathe</h4>
+        <p>we take things out. fewer words, fewer boxes, more margin. you will be surprised how loud quiet can be.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="manifesto" id="manifesto">
+  <div class="wrap">
+    <span class="mono">the whole manifesto, honestly</span>
+    <svg class="giant-underscore" viewBox="0 0 420 64" aria-hidden="true" role="img">
+      <rect x="0" y="20" width="420" height="44" rx="8" fill="#F5C518"/>
+    </svg>
+    <p>we are the pause before the first word — small, low, and holding the place for whatever comes next.</p>
+  </div>
+</section>
+
+<section class="cta" id="start">
+  <div class="wrap">
+    <h2>start<span class="blink">_</span></h2>
+    <p>no forms, no funnels, no "let's circle back." write to us like a person and we'll write back like one.</p>
+    <a class="hero-btn" href="mailto:hello@underscore.studio">write the first word</a>
+  </div>
+</section>
+
+<footer>
+  <div class="foot-inner">
+    <a class="foot-logo" href="#top">underscore<span class="u">_</span></a>
+    <div class="foot-links">
+      <a href="#principles">principles</a>
+      <a href="#work">what we make</a>
+      <a href="#manifesto">manifesto</a>
+      <a href="mailto:hello@underscore.studio">hello@underscore.studio</a>
+    </div>
+    <p class="foot-note">© 2026 underscore_ — made with more whitespace than strictly necessary.</p>
+  </div>
+</footer>
+
+<script>
+  // animate the yellow/cream bars in when each principle scrolls into view
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('in');
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.45 });
+  document.querySelectorAll('.principle').forEach(p => io.observe(p));
+</script>
+
+</body>
+</html>
