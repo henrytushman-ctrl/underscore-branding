@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underscore — The Poster Wall</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231A1816'/%3E%3Crect x='5' y='22' width='22' height='4' fill='%23F5C518'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,500;0,600;0,700;0,800;0,900;1,600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --yellow:#F5C518;
+    --ink:#1A1816;
+    --cream:#FAF6EE;
+    --s1:8px; --s2:16px; --s3:24px; --s4:40px; --s5:64px; --s6:96px;
+    --sans:'Archivo', 'Inter Tight', Helvetica, Arial, sans-serif;
+    --mono:'IBM Plex Mono', ui-monospace, monospace;
+    --nav-h:56px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{
+    scroll-behavior:smooth;
+    scroll-snap-type:y proximity;
+    scroll-padding-top:var(--nav-h);
+  }
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;scroll-snap-type:none;}
+    *,*::before,*::after{animation:none!important;transition:none!important;}
+    .blink{opacity:1!important;}
+  }
+  ::selection{background:var(--yellow);color:var(--ink);}
+  body{
+    background:var(--ink);
+    color:var(--ink);
+    font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;
+    line-height:1.4;
+  }
+  .mono{font-family:var(--mono);}
+
+  /* ---------- nav ---------- */
+  nav{
+    position:fixed;top:0;left:0;right:0;z-index:100;
+    height:var(--nav-h);
+    background:var(--ink);
+    border-bottom:1px solid rgba(250,246,238,.18);
+    display:flex;align-items:center;
+  }
+  .nav-inner{
+    width:100%;max-width:1480px;margin:0 auto;
+    padding:0 var(--s3);
+    display:flex;align-items:center;gap:var(--s4);
+  }
+  .logo{
+    display:flex;align-items:baseline;gap:9px;
+    text-decoration:none;color:var(--cream);
+    font-weight:800;font-size:17px;letter-spacing:.01em;text-transform:uppercase;
+  }
+  .nav-links{display:flex;gap:var(--s3);margin-left:auto;align-items:center;}
+  .nav-links a{
+    font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;
+    color:rgba(250,246,238,.7);text-decoration:none;
+    border-bottom:2px solid transparent;padding-bottom:2px;
+    transition:color .15s, border-color .15s;
+  }
+  .nav-links a:hover{color:var(--cream);border-bottom-color:var(--yellow);}
+  .btn{
+    display:inline-block;
+    font-family:var(--mono);font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--ink);background:var(--yellow);
+    padding:9px 18px;text-decoration:none;
+    transition:background .15s,color .15s;
+  }
+  .btn:hover{background:var(--cream);}
+
+  /* ---------- posters ---------- */
+  .poster{
+    min-height:100vh;
+    scroll-snap-align:start;
+    position:relative;
+    display:flex;flex-direction:column;
+    padding:calc(var(--nav-h) + var(--s5)) clamp(20px,6vw,96px) var(--s5);
+    overflow:hidden;
+  }
+  .p-cream{background:var(--cream);color:var(--ink);}
+  .p-yellow{background:var(--yellow);color:var(--ink);}
+  .p-ink{background:var(--ink);color:var(--cream);}
+
+  /* crop marks */
+  .cm{position:absolute;width:26px;height:26px;pointer-events:none;}
+  .cm::before,.cm::after{content:"";position:absolute;background:currentColor;opacity:.55;}
+  .cm::before{width:1px;height:100%;}
+  .cm::after{height:1px;width:100%;}
+  .cm.tl{top:calc(var(--nav-h) + 14px);left:14px;}
+  .cm.tl::before{left:0;} .cm.tl::after{top:0;}
+  .cm.tr{top:calc(var(--nav-h) + 14px);right:14px;}
+  .cm.tr::before{right:0;} .cm.tr::after{top:0;}
+  .cm.bl{bottom:14px;left:14px;}
+  .cm.bl::before{left:0;} .cm.bl::after{bottom:0;}
+  .cm.br{bottom:14px;right:14px;}
+  .cm.br::before{right:0;} .cm.br::after{bottom:0;}
+
+  .p-no{
+    position:absolute;top:calc(var(--nav-h) + 18px);right:54px;
+    font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+    opacity:.65;
+  }
+  .p-credit{
+    margin-top:auto;
+    padding-top:var(--s4);
+    border-top:1px solid currentColor;
+    display:flex;justify-content:space-between;gap:var(--s2);flex-wrap:wrap;
+    font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+    opacity:.85;
+  }
+
+  /* ---- poster 1: hero ---- */
+  #p1 .hero-mark{margin:auto 0;}
+  #p1 .glyph{
+    display:block;
+    width:min(64vw,720px);height:clamp(28px,6vw,64px);
+    background:var(--yellow);
+    margin-bottom:var(--s4);
+  }
+  #p1 h1{
+    font-size:clamp(56px,11vw,148px);
+    font-weight:900;line-height:.95;letter-spacing:-.035em;text-transform:uppercase;
+  }
+  #p1 .sub{
+    margin-top:var(--s3);
+    font-family:var(--mono);font-size:clamp(13px,1.4vw,16px);letter-spacing:.06em;
+    max-width:46ch;opacity:.8;
+  }
+
+  /* ---- poster 2: pioneering ---- */
+  #p2 .comp{margin:auto 0;position:relative;}
+  #p2 .word{
+    font-weight:900;text-transform:uppercase;letter-spacing:-.04em;line-height:.82;
+    font-size:clamp(72px,17.5vw,240px);
+    word-break:break-word;
+  }
+  #p2 .word .shift{display:block;margin-left:clamp(24px,12vw,180px);}
+  #p2 .bar{
+    position:absolute;
+    left:calc(-1 * clamp(20px,6vw,96px));
+    bottom:clamp(-10px,-1vw,-4px);
+    width:62vw;height:clamp(20px,3.4vw,40px);
+    background:var(--ink);
+  }
+  #p2 .gloss{
+    margin-top:clamp(48px,7vw,84px);
+    max-width:38ch;
+    font-size:clamp(16px,1.8vw,21px);font-weight:600;line-height:1.45;
+  }
+
+  /* ---- poster 3: the core ---- */
+  #p3 .grid{
+    margin:auto 0;
+    display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);
+    gap:clamp(24px,5vw,80px);align-items:start;
+  }
+  #p3 h2{
+    font-size:clamp(48px,8vw,110px);
+    font-weight:900;line-height:.92;letter-spacing:-.03em;text-transform:uppercase;
+  }
+  #p3 h2 .y{color:var(--yellow);}
+  #p3 .names{
+    position:relative;
+    columns:2;column-gap:var(--s3);
+    font-family:var(--mono);font-size:12px;line-height:2.05;letter-spacing:.02em;
+    opacity:.92;
+  }
+  #p3 .names span{display:block;break-inside:avoid;white-space:nowrap;}
+  #p3 .names .overlay{
+    position:absolute;left:-4%;right:-4%;top:58%;
+    height:clamp(22px,3vw,38px);
+    background:var(--yellow);
+    display:block;
+  }
+  #p3 .stats{
+    margin-top:clamp(32px,5vw,64px);
+    display:grid;grid-template-columns:repeat(3,auto);gap:clamp(20px,6vw,90px);
+  }
+  #p3 .stats .v{
+    font-weight:900;letter-spacing:-.03em;line-height:1;
+    font-size:clamp(40px,7vw,96px);
+    font-variant-numeric:tabular-nums;
+  }
+  #p3 .stats .k{
+    display:block;margin-top:10px;
+    font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;opacity:.7;
+  }
+
+  /* ---- poster 4: quote ---- */
+  #p4 blockquote{margin:auto 0;}
+  #p4 .q{
+    font-weight:800;letter-spacing:-.03em;line-height:1.02;
+    font-size:clamp(40px,7.6vw,104px);
+    max-width:14ch;
+  }
+  #p4 .q .ul{
+    box-shadow:inset 0 -0.14em 0 var(--yellow);
+  }
+  #p4 cite{
+    display:block;margin-top:var(--s4);
+    font-style:normal;font-family:var(--mono);
+    font-size:12px;letter-spacing:.18em;text-transform:uppercase;opacity:.7;
+  }
+
+  /* ---- poster 5: CTA ---- */
+  #p5 .cta{margin:auto 0;}
+  #p5 h2{
+    font-weight:900;text-transform:uppercase;letter-spacing:-.035em;line-height:.92;
+    font-size:clamp(52px,10.5vw,150px);
+  }
+  #p5 h2 .blink{
+    color:var(--yellow);
+    animation:blink 1.2s steps(1,end) infinite;
+  }
+  @keyframes blink{0%,60%{opacity:1;}61%,100%{opacity:0;}}
+  #p5 .cta p{
+    margin-top:var(--s4);
+    font-family:var(--mono);font-size:clamp(13px,1.4vw,16px);letter-spacing:.04em;
+    max-width:44ch;opacity:.8;
+  }
+  #p5 .cta .btn{
+    margin-top:var(--s4);font-size:14px;padding:16px 36px;
+  }
+  #p5 .cta .btn:hover{background:var(--cream);color:var(--ink);}
+
+  /* ---------- footer ---------- */
+  footer.site{
+    background:var(--ink);color:rgba(250,246,238,.7);
+    border-top:1px solid rgba(250,246,238,.18);
+    padding:var(--s4) clamp(20px,6vw,96px);
+    display:flex;justify-content:space-between;gap:var(--s3);flex-wrap:wrap;
+    font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  }
+  footer.site a{color:rgba(250,246,238,.7);text-decoration:none;border-bottom:2px solid transparent;}
+  footer.site a:hover{color:var(--cream);border-bottom-color:var(--yellow);}
+  footer.site .mark{color:var(--cream);font-weight:500;}
+
+  /* ---------- responsive ---------- */
+  @media (max-width:768px){
+    .nav-links a:not(.btn){display:none;}
+    .poster{padding:calc(var(--nav-h) + var(--s4)) var(--s3) var(--s4);}
+    .p-no{right:var(--s3);}
+    #p3 .grid{grid-template-columns:1fr;}
+    #p3 .names{columns:2;}
+    #p3 .stats{grid-template-columns:1fr;gap:var(--s3);}
+    #p2 .bar{left:calc(-1 * var(--s3));width:80vw;}
+    .p-credit{flex-direction:column;gap:6px;}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="logo" href="#p1" aria-label="Underscore home">
+      <svg width="22" height="15" viewBox="0 0 22 15" aria-hidden="true"><rect x="0" y="10" width="22" height="4" fill="#F5C518"/></svg>
+      Underscore
+    </a>
+    <div class="nav-links">
+      <a href="#p2">Posters</a>
+      <a href="#p3">Core</a>
+      <a href="#p4">Voices</a>
+      <a class="btn" href="#p5">Join the Core</a>
+    </div>
+  </div>
+</nav>
+
+<!-- POSTER 1 — HERO -->
+<section class="poster p-cream" id="p1">
+  <span class="cm tl"></span><span class="cm tr"></span><span class="cm bl"></span><span class="cm br"></span>
+  <span class="p-no">Poster 01 / 05</span>
+  <div class="hero-mark">
+    <span class="glyph" aria-hidden="true"></span>
+    <h1>Under&shy;score</h1>
+    <p class="sub">A network of builders, operators, and experts who give their time to each other. The mark works below the line. So do we.</p>
+  </div>
+  <div class="p-credit">
+    <span>Underscore — series of five</span>
+    <span>The Core · Est. 2021</span>
+    <span>Set in Archivo &amp; Plex Mono</span>
+  </div>
+</section>
+
+<!-- POSTER 2 — PIONEERING -->
+<section class="poster p-yellow" id="p2">
+  <span class="cm tl"></span><span class="cm tr"></span><span class="cm bl"></span><span class="cm br"></span>
+  <span class="p-no">Poster 02 / 05</span>
+  <div class="comp">
+    <div class="word">Pioneer<span class="shift">ing_</span></div>
+    <span class="bar" aria-hidden="true"></span>
+    <p class="gloss">Frontiers are not announced. Someone just starts, and the grid bends to fit the work. We back the ones who start.</p>
+  </div>
+  <div class="p-credit">
+    <span>Trait 01 — Pioneering</span>
+    <span>Underscore</span>
+    <span>2026</span>
+  </div>
+</section>
+
+<!-- POSTER 3 — THE CORE -->
+<section class="poster p-ink" id="p3">
+  <span class="cm tl"></span><span class="cm tr"></span><span class="cm bl"></span><span class="cm br"></span>
+  <span class="p-no">Poster 03 / 05</span>
+  <div class="grid">
+    <div>
+      <h2>The<br>Core<span class="y">_</span></h2>
+      <p style="margin-top:24px;max-width:30ch;font-size:15px;line-height:1.6;opacity:.8;">Members give first and ask later. Names below are real people; the list runs to one thousand two hundred.</p>
+    </div>
+    <div class="names" aria-label="Members of the Core">
+      <span>Maya Chen — founder, Oakland</span>
+      <span>Sam Osei — engineer, Boston</span>
+      <span>Ana Reyes — designer, Mexico City</span>
+      <span>David Park — operator, Seoul</span>
+      <span>Leila Haddad — researcher, Beirut</span>
+      <span>Jonas Weber — builder, Berlin</span>
+      <span>Priya Nair — product, Bangalore</span>
+      <span>Tom Aiello — manufacturer, Detroit</span>
+      <span>Grace Mwangi — operator, Nairobi</span>
+      <span>Marco Silva — engineer, Lisbon</span>
+      <span>Yuki Tanaka — designer, Tokyo</span>
+      <span>Omar Farouk — founder, Cairo</span>
+      <span>Ingrid Holm — researcher, Oslo</span>
+      <span>Lucas Moreau — builder, Lyon</span>
+      <span>Aisha Bello — product, Lagos</span>
+      <span>Elena Vasquez — manufacturer, Valencia</span>
+      <span>Noah Fischer — engineer, Tel Aviv</span>
+      <span>Hana Kim — operator, Busan</span>
+      <span>Rafael Costa — founder, São Paulo</span>
+      <span>Clara Lindqvist — designer, Stockholm</span>
+      <span class="overlay" aria-hidden="true"></span>
+    </div>
+  </div>
+  <div class="stats">
+    <div><span class="v">1,200+</span><span class="k">Members</span></div>
+    <div><span class="v">40</span><span class="k">Cities</span></div>
+    <div><span class="v">9,000</span><span class="k">Hours given</span></div>
+  </div>
+  <div class="p-credit" style="margin-top:48px;">
+    <span>The Core — partial roll</span>
+    <span>Founded 2021</span>
+    <span>Underscore</span>
+  </div>
+</section>
+
+<!-- POSTER 4 — QUOTE -->
+<section class="poster p-cream" id="p4">
+  <span class="cm tl"></span><span class="cm tr"></span><span class="cm bl"></span><span class="cm br"></span>
+  <span class="p-no">Poster 04 / 05</span>
+  <blockquote>
+    <p class="q">“I asked for an hour. <span class="ul">I got forty.</span>”</p>
+    <cite>Priya Nair — Product, Bangalore · Member since 2022</cite>
+  </blockquote>
+  <div class="p-credit">
+    <span>Voices of the Core — 01</span>
+    <span>Recorded March 2026</span>
+    <span>Underscore</span>
+  </div>
+</section>
+
+<!-- POSTER 5 — CTA -->
+<section class="poster p-ink" id="p5">
+  <span class="cm tl"></span><span class="cm tr"></span><span class="cm bl"></span><span class="cm br"></span>
+  <span class="p-no">Poster 05 / 05</span>
+  <div class="cta">
+    <h2>Join the<br>Core<span class="blink">_</span></h2>
+    <p>The line is still being written. If you build things and can give an hour, there's a place in it for you.</p>
+    <a class="btn" href="#p5">Join the Core</a>
+  </div>
+  <div class="p-credit">
+    <span>Underscore — applications open</span>
+    <span>1,200+ members · 40 cities</span>
+    <span>Give first, ask later</span>
+  </div>
+</section>
+
+<footer class="site">
+  <span class="mark">underscore_</span>
+  <span>The Poster Wall · Series of five · 2026</span>
+  <span><a href="#p3">The Core</a> · <a href="#p4">Voices</a> · <a href="#p5">Join</a></span>
+</footer>
+
+</body>
+</html>
